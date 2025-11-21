@@ -11,6 +11,7 @@ default allow := false
 allow if {
   # All commits in the push satisfy commit_ok
   every c in input.commits { commit_ok(c) }
+  count(deny) == 0
 }
 
 # Multi-domain high risk when touching both payment-gateway and auth-service
@@ -95,6 +96,42 @@ has_phi_impact_metadata(c) if {
   has_line_prefix(c.message, "phi-impact:")
 }
 
+# --- New structured metadata prefixes (WHY: extend beyond HIPAA/PHI to FDA/SOX/GDPR) ---
+has_fda_510k_metadata(c) if { has_line_prefix(c.message, "fda-510k:") }
+has_sox_control_metadata(c) if { has_line_prefix(c.message, "sox-control:") }
+has_gdpr_data_class_metadata(c) if { has_line_prefix(c.message, "gdpr-data-class:") }
+
+# Domain triggers (WHY: enforce domain-specific metadata when referenced) 
+fda_device_domain(c) if { contains(lower(c.message), "device") }
+sox_domain(c) if { contains(lower(c.message), "sox") }
+sox_domain(c) if { contains(lower(c.message), "financial") }
+sox_domain(c) if { contains(lower(c.message), "audit") }
+gdpr_domain(c) if { contains(lower(c.message), "gdpr") }
+
+# Device (FDA) commits must include FDA-510k metadata line
+commit_ok(c) if {
+  fda_device_domain(c)
+  valid_format(c.message)
+  not low_signal(c.message)
+  has_fda_510k_metadata(c)
+}
+
+# SOX domain commits must include SOX-Control metadata line
+commit_ok(c) if {
+  sox_domain(c)
+  valid_format(c.message)
+  not low_signal(c.message)
+  has_sox_control_metadata(c)
+}
+
+# GDPR domain commits must include GDPR-Data-Class metadata line
+commit_ok(c) if {
+  gdpr_domain(c)
+  valid_format(c.message)
+  not low_signal(c.message)
+  has_gdpr_data_class_metadata(c)
+}
+
 # Adjust healthcare compliance requirement (single-domain): if term appears require HIPAA line
 commit_ok(c) if {
   valid_format(c.message)
@@ -102,4 +139,43 @@ commit_ok(c) if {
   healthcare_compliance_required(c)
   not multi_domain_high_risk(c)
   has_compliance_metadata(c)
+}
+
+# --- Granular deny messages (WHY: improve developer feedback) ---
+# We accumulate reasons for each commit; CI can surface them.
+
+deny[reason] if {
+  some c in input.commits
+  multi_domain_high_risk(c)
+  not has_compliance_metadata(c)
+  reason := sprintf("commit %s missing HIPAA line for multi-domain change", [c.sha])
+}
+
+deny[reason] if {
+  some c in input.commits
+  multi_domain_high_risk(c)
+  has_compliance_metadata(c)
+  not has_phi_impact_metadata(c)
+  reason := sprintf("commit %s missing PHI-Impact line for multi-domain change", [c.sha])
+}
+
+deny[reason] if {
+  some c in input.commits
+  fda_device_domain(c)
+  not has_fda_510k_metadata(c)
+  reason := sprintf("commit %s missing FDA-510k metadata line", [c.sha])
+}
+
+deny[reason] if {
+  some c in input.commits
+  sox_domain(c)
+  not has_sox_control_metadata(c)
+  reason := sprintf("commit %s missing SOX-Control metadata line", [c.sha])
+}
+
+deny[reason] if {
+  some c in input.commits
+  gdpr_domain(c)
+  not has_gdpr_data_class_metadata(c)
+  reason := sprintf("commit %s missing GDPR-Data-Class metadata line", [c.sha])
 }

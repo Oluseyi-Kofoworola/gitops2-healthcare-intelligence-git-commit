@@ -91,12 +91,26 @@ jobs:
           echo "### 🔐 Policy Validation" >> $GITHUB_STEP_SUMMARY
           opa test policies/ -v | tee opa-results.txt
           
+          # Collect deny reasons for feedback
+          opa eval -f json -d policies -I 'data.enterprise.git.deny' > deny-reasons.json || true
+          if [ -s deny-reasons.json ]; then
+            echo "### ❗ Deny Reasons" >> $GITHUB_STEP_SUMMARY
+            jq -r '.result[0].expressions[0].value[]' deny-reasons.json >> $GITHUB_STEP_SUMMARY || true
+          fi
+          
           if [ $? -eq 0 ]; then
             echo "✅ All policies passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Policy violations detected" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
+      
+      - name: Upload Deny Reasons
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: opa-deny-reasons
+          path: deny-reasons.json
       
       - name: Validate Commit Compliance
         if: needs.risk-assessment.outputs.compliance_domains != ''
@@ -122,6 +136,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: | 
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: go-${{ runner.os }}-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            go-${{ runner.os }}-${{ env.GO_VERSION }}-
+      
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -131,7 +155,14 @@ jobs:
         working-directory: services/${{ matrix.service }}
         run: |
           go test ./... -v -cover -coverprofile=coverage.out
-          go tool cover -func=coverage.out
+          go tool cover -func=coverage.out | tee coverage-func.txt
+          TOTAL=$(grep 'total:' coverage-func.txt | awk '{print $3}' | sed 's/%//')
+          MIN=60
+          if (( $(echo "$TOTAL < $MIN" | bc -l) )); then
+            echo "Coverage $TOTAL% below threshold $MIN%" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "✅ Coverage $TOTAL% meets threshold $MIN%" >> $GITHUB_STEP_SUMMARY
       
       - name: Run Integration Tests
         if: fromJSON(needs.risk-assessment.outputs.risk_score) > 0.5
@@ -156,6 +187,12 @@ jobs:
         with:
           name: coverage-${{ matrix.service }}
           path: services/${{ matrix.service }}/coverage.out
+      
+      - name: Upload Coverage Function Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-func-${{ matrix.service }}
+          path: services/${{ matrix.service }}/coverage-func.txt
 
       - name: Upload to Codecov
         if: always()
@@ -209,19 +246,24 @@ jobs:
             --baseline HEAD~5 \
             --target HEAD \
             --threshold-ms 200 \
-            --json > regression-report.json || true
+            --json --output regression-report.json
           
           if [ -f regression-report.json ]; then
-            REGRESSION_FOUND=$(jq -r '.regression_detected // false' regression-report.json 2>/dev/null || echo false)
+            REGRESSION_FOUND=$(jq -r '.regression_detected // false' regression-report.json)
+            echo "### 📊 Regression Report Generated" >> $GITHUB_STEP_SUMMARY
             if [ "$REGRESSION_FOUND" = "true" ]; then
-              echo "⚠️ Performance regression detected" >> $GITHUB_STEP_SUMMARY
+              echo "⚠️ Performance regressions detected" >> $GITHUB_STEP_SUMMARY
             else
               echo "✅ No regressions detected" >> $GITHUB_STEP_SUMMARY
             fi
-            echo "### 📊 Regression Report Generated" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ Regression report not generated" >> $GITHUB_STEP_SUMMARY
           fi
+      
+      - name: Upload Regression Report
+        if: steps.eval.outputs.trigger == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-report
+          path: regression-report.json
       
       - name: Skip Notice
         if: steps.eval.outputs.trigger != 'true'
@@ -259,6 +301,8 @@ jobs:
         if: steps.domains.outputs.domains != ''
         run: |
           python3 tools/ai_compliance_framework.py analyze-commit HEAD --json > compliance-report.json
+          # Basic SBOM generation placeholder (future: syft/trivy integration)
+          echo '{"sbom":"placeholder"}' > sbom.json
           COMPLIANCE_STATUS=$(jq -r '.commit_analysis.compliance_status' compliance-report.json)
           RISK_SCORE=$(jq -r '.commit_analysis.risk_score' compliance-report.json)
           echo "### 🏥 Healthcare Compliance Report" >> $GITHUB_STEP_SUMMARY
@@ -280,6 +324,13 @@ jobs:
         with:
           name: compliance-report
           path: compliance-report.json
+      
+      - name: Upload SBOM
+        if: steps.domains.outputs.domains != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.json
 
   # Stage 6: Deployment Strategy Selection (Always runs; removed branch restriction)
   deploy-strategy:
@@ -367,3 +418,9 @@ jobs:
           echo "5. ✅ Risk-Adaptive Workflows - Dynamic deployment selection" >> $GITHUB_STEP_SUMMARY
           echo "6. ✅ Semantic Foundation - Conventional Commits parsed" >> $GITHUB_STEP_SUMMARY
           echo "7. ✅ Git Intelligence Engine - Forensics & regression detection" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Coverage reports per service" >> $GITHUB_STEP_SUMMARY
+          echo "- Regression report (if triggered)" >> $GITHUB_STEP_SUMMARY
+          echo "- Compliance report + SBOM (if domains present)" >> $GITHUB_STEP_SUMMARY
+          echo "- OPA deny reasons (if any)" >> $GITHUB_STEP_SUMMARY

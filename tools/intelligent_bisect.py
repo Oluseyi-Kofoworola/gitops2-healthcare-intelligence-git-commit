@@ -70,6 +70,8 @@ def main() -> None:
         help="Shell command to run for each commit (performance or regression test)",
     )
     parser.add_argument("--threshold-ms", type=float, default=200.0, help="Latency threshold in ms for flagging regressions")
+    parser.add_argument("--output", default="regression-report.json", help="Path to JSON report output")
+    parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON summary to --output path")
 
     args = parser.parse_args()
 
@@ -119,8 +121,26 @@ def main() -> None:
 
     suspected = [r for r in results if r["regression"]]
 
+    summary_obj = {
+        "service": args.service,
+        "threshold_ms": args.threshold_ms,
+        "commit_range": commit_range,
+        "total_commits": len(results),
+        "regression_detected": len(suspected) > 0,
+        "suspected_commits": suspected,
+        "results": results,
+    }
+
     print("📊 Regression summary (demo):")
-    print(json.dumps({"service": args.service, "threshold_ms": args.threshold_ms, "results": results}, indent=2))
+    print(json.dumps(summary_obj, indent=2))
+
+    if args.json:
+        try:
+            with open(args.output, "w", encoding="utf-8") as f:
+                json.dump(summary_obj, f, indent=2)
+            print(f"📝 JSON report written to {args.output}")
+        except OSError as e:
+            print(f"⚠️ Failed to write JSON report: {e}", file=sys.stderr)
 
     if suspected:
         print("\n🚨 Suspected regression-inducing commits:")
