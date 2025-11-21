@@ -6,17 +6,26 @@ import (
 )
 
 type PaymentRequest struct {
-	AmountCents int64  `json:"amount_cents"`
-	Currency    string `json:"currency"`
-	CustomerID  string `json:"customer_id"`
-	Method      string `json:"method"`
+	// Dual support: tests may send `amount` while service prefers cents.
+	Amount       float64 `json:"amount,omitempty"`
+	AmountCents  int64   `json:"amount_cents,omitempty"`
+	Currency     string  `json:"currency"`
+	CustomerID   string  `json:"customer_id"`
+	Method       string  `json:"method"`
+	// Healthcare context (used by monitoring/tests)
+	PatientID    string  `json:"patient_id,omitempty"`
+	DeviceID     string  `json:"device_id,omitempty"`
+	Description  string  `json:"description,omitempty"`
 }
 
 type PaymentResponse struct {
-	Status      string `json:"status"`
-	AuthCode    string `json:"auth_code"`
-	ProcessedAt int64  `json:"processed_at_unix"`
-	HighValue   bool   `json:"high_value,omitempty"` // Added for high-value payment tracking
+	Status        string `json:"status"`
+	AuthCode      string `json:"auth_code"`
+	ProcessedAt   int64  `json:"processed_at_unix"`
+	HighValue     bool   `json:"high_value,omitempty"` // Added for high-value payment tracking
+	// Audit + tracing for compliance endpoints
+	TransactionID string `json:"transaction_id,omitempty"`
+	AuditID       string `json:"audit_id,omitempty"`
 }
 
 // ProcessPayment simulates payment authorization.
