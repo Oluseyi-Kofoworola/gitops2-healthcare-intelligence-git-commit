@@ -16,6 +16,14 @@ func NewServer(cfg Config) *http.Server {
 
     router.Get("/health", handler.Health)
     router.Post("/charge", handler.Charge)
+    // Provide explicit route for ProcessPayment if integration tests call HTTP path differently
+    router.Post("/process", handler.ProcessPayment)
+
+    // Optional monitoring endpoints used by healthcare monitoring
+    router.Get("/metrics", handler.MetricsHandler)
+    router.Get("/compliance/status", handler.ComplianceStatusHandler)
+    router.Get("/audit/trail", handler.AuditTrailHandler)
+    router.Get("/alerts", handler.AlertingHandler)
 
     addr := ":" + cfg.Port
     log.Printf("starting %s on %s (max processing %dms)", cfg.ServiceName, addr, cfg.MaxProcessingMillis)

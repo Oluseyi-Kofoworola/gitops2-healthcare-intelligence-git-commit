@@ -26,6 +26,32 @@ By default it prints the message to stdout so it can be piped into `git commit`.
 import argparse
 import json
 import textwrap
+import os
+from pathlib import Path
+
+CONFIG_PATH = Path(__file__).resolve().parents[1] / "config" / "git-forensics-config.yaml"
+
+try:
+    import yaml  # type: ignore
+except ImportError:
+    yaml = None  # Optional dependency
+
+
+def _get_default_model() -> str:
+    # env override takes precedence
+    model = os.getenv("AI_MODEL_DEFAULT")
+    if model:
+        return model
+    # fallback to config if available
+    if yaml and CONFIG_PATH.exists():
+        try:
+            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+                cfg = yaml.safe_load(f) or {}
+                ai_agents = cfg.get("ai_agents", {}) or {}
+                return ai_agents.get("default_model", "gpt-4")
+        except (OSError, ValueError, TypeError):
+            return "gpt-4"
+    return "gpt-4"
 
 
 def simulate_policy_check(args: argparse.Namespace) -> dict:
@@ -112,6 +138,9 @@ def build_commit_message(args: argparse.Namespace) -> str:
     lines.append("")
     lines.append("Business-Aligned Summary:")
     lines.extend(business_summary.split("\n"))
+
+    lines.append("")
+    lines.append(f"AI Model: {_get_default_model()}")
 
     wrapped = []
     for line in lines:
