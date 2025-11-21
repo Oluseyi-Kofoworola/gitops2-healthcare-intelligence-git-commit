@@ -1,5 +1,10 @@
 # GitOps 2.0 – AI-Native Enterprise Engineering Platform
 
+[![Build Status](https://img.shields.io/github/actions/workflow/status/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit/risk-adaptive-pipeline.yml?branch=main)](../../actions)
+[![License](https://img.shields.io/github/license/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit)](LICENSE)
+[![Compliance](https://img.shields.io/badge/Compliance-HIPAA%20|%20FDA%20|%20SOX-green)](#)
+[![AI Model](https://img.shields.io/badge/AI%20Model-gpt--5.1--codex-blue)](#)
+
 This repository is a **production-ready blueprint for GitOps 2.0**, showing how to transform Git from a passive log into an AI-native engineering intelligence platform. Every component is mapped to the principles in "GitOps 2.0: The AI-Native Engineering Manifesto for the Next Decade" and enhanced with **healthcare-specific compliance, security, and AI audit capabilities**.
 
 ## 🏥 Healthcare Enterprise Ready
@@ -329,50 +334,11 @@ Every action generates an immutable audit record:
 
 ---
 
-## 🎯 GitOps 2.0 Manifesto Alignment
-
-This repository demonstrates ALL 7 principles:
-
-| Principle | Implementation | Tool/Workflow |
-|-----------|----------------|---------------|
-| **1. Intent-Driven Commits** | Business goals embedded in commits | `git intent`, `git copilot` |
-| **2. AI-Native Intelligence** | Machine learning risk assessment | `tools/git_intel/risk_scorer.py` |
-| **3. Machine-Readable Records** | JSON output at every stage | All tools support `--json` |
-| **4. Policy-Driven Governance** | OPA enforcement, not suggestion | `policies/enterprise-commit.rego` |
-| **5. Risk-Adaptive Workflows** | Dynamic CI/CD based on risk | `.github/workflows/risk-adaptive-pipeline.yml` |
-| **6. Semantic Foundation** | Conventional Commits throughout | All commit tools |
-| **7. Git Intelligence Engine** | Forensics & regression detection | `intelligent_bisect.py` |
-
-**Coverage**: 100% (6/6 tools demonstrating all 7 principles)
-
----
-
-## 💼 Business Value
-
-### For Healthcare Organizations
-- 99.9% HIPAA compliance rate
-- Zero PHI exposure incidents
-- 75% faster regulatory reviews
-- 100% FDA/SOX audit readiness
-
-### For Engineering Teams
-- 83% faster incident resolution
-- 94% reduction in audit prep time
-- Industry-leading GitOps 2.0 reference
-- Complete regression prevention
-
-### For Executives
-- Demonstrable ROI metrics
-- Reduced compliance costs
-- Faster time-to-market
-- Zero security incidents
-- Competitive advantage through AI-native engineering
-
----
-
 ## 📖 License
 
 Apache 2.0 - See [LICENSE](LICENSE) for details.
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ---
 

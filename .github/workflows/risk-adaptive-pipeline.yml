@@ -5,6 +5,8 @@ on:
     branches: [main, develop, 'feature/**', 'hotfix/**']
   pull_request:
     branches: [main, develop]
+  schedule:
+    - cron: '0 3 * * *' # Daily 3AM UTC compliance/risk audit
 
 env:
   PYTHON_VERSION: '3.10'
