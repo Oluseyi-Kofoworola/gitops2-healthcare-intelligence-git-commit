@@ -393,3 +393,12 @@ Apache 2.0 - See [LICENSE](LICENSE) for details.
 *Version 1.0.0 | Last Updated: November 21, 2025*
 # gitops2-healthcare-intelligence-git-commit
 # gitops2-healthcare-intelligence-git-commit
+#  
+--- IGNORE ---
+MIT License
+Copyright (c) 2025 Oluseyi Kofoworola
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+
