@@ -13,11 +13,21 @@ allow if {
   every c in input.commits { commit_ok(c) }
 }
 
+# Multi-domain high risk when touching both payment-gateway and auth-service
+multi_domain_high_risk(c) if {
+  some i
+  some j
+  contains(c.changed_files[i], "payment-gateway")
+  contains(c.changed_files[j], "auth-service")
+}
+
+# Baseline commit rule: exclude multi-domain high risk so metadata rules can apply
 commit_ok(c) if {
   valid_format(c.message)
   not low_signal(c.message)
   not regex.match("^security\\([^)]+\\):", c.message)
   not healthcare_compliance_required(c)
+  not multi_domain_high_risk(c)
 }
 
 commit_ok(c) if {
@@ -41,6 +51,14 @@ commit_ok(c) if {
   valid_format(c.message)
   not low_signal(c.message)
   security_commit_touches_critical(c)
+}
+
+# Multi-domain high risk requires explicit compliance metadata (WHY: cross-domain changes elevate audit risk)
+commit_ok(c) if {
+  multi_domain_high_risk(c)
+  valid_format(c.message)
+  not low_signal(c.message)
+  has_compliance_metadata(c)
 }
 
 valid_format(msg) if {
