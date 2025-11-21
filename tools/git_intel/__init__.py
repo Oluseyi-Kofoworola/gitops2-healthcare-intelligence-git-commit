@@ -1,0 +1,1 @@
+"""Git Intelligence demo package."""

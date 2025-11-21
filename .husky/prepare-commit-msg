@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Placeholder: you could template commit messages here with enterprise metadata.

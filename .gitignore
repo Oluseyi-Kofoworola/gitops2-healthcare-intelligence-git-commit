@@ -1,0 +1,442 @@
+# GitOps 2.0 Healthcare Enterprise Platform - .gitignore
+# This gitignore is designed for healthcare AI-native engineering teams
+# following GitOps 2.0 principles with HIPAA/FDA/SOX compliance
+
+# =============================================================================
+# CRITICAL HEALTHCARE SECURITY - NEVER COMMIT
+# =============================================================================
+
+# PHI and Patient Data
+**/phi/**
+**/patient-data/**
+**/medical-records/**
+**/*-phi-*
+**/*patient*
+**/*medical*
+**/*hipaa*
+**/*health*
+**/*clinical*
+
+# Credentials and Secrets
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+secrets/
+.secrets/
+**/*secret*
+**/*password*
+**/*credential*
+**/*token*
+**/.env*
+**/*.env*
+
+# Healthcare Compliance Keys
+fda-*.key
+hipaa-*.key
+sox-*.key
+compliance-*.pem
+audit-*.key
+
+# Database Connection Strings
+**/connection-strings/**
+**/*connection*
+**/*db-*
+**/*database*
+
+*.so
+.Python
+__pycache__/
+*.py[cod]
+*$py.class
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.spyderproject
+.spyproject
+.rope_project_settings
+
+# Go
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+# Test binary, built with `go test -c`
+*.test
+# Output of the go coverage tool
+*.out
+# Dependency directories (remove the comment below to include it)
+vendor/
+# Go workspace file
+go.work
+go.work.sum
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+pids
+*.pid
+*.seed
+*.pid.lock
+lib-cov
+coverage
+.nyc_output
+.grunt
+bower_components
+.lock-wscript
+build/Release
+.npm
+.eslintcache
+.stylelintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+.cache
+.parcel-cache
+.next
+out
+.nuxt
+dist
+.cache/
+.vuepress/dist
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+.vscode-test
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Java
+*.class
+*.log
+*.ctxt
+.mtj.tmp/
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# =============================================================================
+# HEALTHCARE AI & MACHINE LEARNING
+# =============================================================================
+
+# Model Files
+*.h5
+*.pkl
+*.pickle
+*.joblib
+*.model
+*.pt
+*.pth
+*.onnx
+*.pb
+*.tflite
+models/
+checkpoints/
+saved_models/
+
+# Healthcare ML Training Data
+training-data/
+medical-datasets/
+clinical-data/
+patient-embeddings/
+diagnostic-models/
+
+# Jupyter Notebooks (compiled)
+.ipynb_checkpoints/
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# TensorBoard
+runs/
+
+# =============================================================================
+# INFRASTRUCTURE & DEVOPS
+# =============================================================================
+
+# Terraform
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+.terraform/
+.terraform.lock.hcl
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+*-kubeconfig
+.kube/
+
+# Docker
+*.dockerignore
+.docker/
+
+# Helm
+charts/*.tgz
+
+# Azure
+.azure/
+*.publishsettings
+ServiceConfiguration.Local.cscfg
+ServiceConfiguration.Cloud.cscfg
+
+# AWS
+.aws/
+*.pem
+
+# GCP
+*.json
+service-account*.json
+gcp-*.json
+
+# =============================================================================
+# ENTERPRISE HEALTHCARE SPECIFIC
+# =============================================================================
+
+# Compliance Reports (generated)
+compliance-reports/
+audit-logs/
+sox-reports/
+hipaa-assessments/
+fda-submissions/
+
+# Healthcare Configuration (with secrets)
+healthcare-config/
+medical-device-config/
+phi-encryption-config/
+hipaa-config/
+
+# Temporary Compliance Files
+*.compliance
+*.audit
+*.hipaa
+*.fda
+*.sox
+
+# Healthcare Testing
+test-phi/
+mock-patient-data/
+synthetic-medical-records/
+
+# Clinical Validation
+clinical-validation-results/
+fda-test-results/
+medical-device-logs/
+
+# =============================================================================
+# GITOPS 2.0 SPECIFIC
+# =============================================================================
+
+# Risk Scoring Cache
+risk-scores/
+.risk-cache/
+
+# AI Generated Content (for review)
+ai-generated/
+copilot-suggestions/
+
+# Regression Test Results
+regression-results/
+performance-benchmarks/
+
+# OPA Policy Cache
+.opa/
+policy-cache/
+
+# Git Intelligence
+git-intel-cache/
+commit-analysis/
+
+# =============================================================================
+# DEVELOPMENT TOOLS
+# =============================================================================
+
+# IDEs
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+.history/
+*.swp
+*.swo
+*~
+.idea/
+*.iws
+*.iml
+*.ipr
+.fleet
+.project
+.classpath
+.settings/
+.metadata
+
+# OS Generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# =============================================================================
+# TEMPORARY & BACKUP FILES
+# =============================================================================
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*~
+.#*
+\#*#
+
+# Archive files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# =============================================================================
+# HEALTHCARE ENTERPRISE EXCLUSIONS
+# =============================================================================
+
+# But keep these important files
+!.gitkeep
+!README.md
+!LICENSE
+!CONTRIBUTING.md
+!CODE_OF_CONDUCT.md
+!SECURITY.md
+!.github/
+!docs/
+!examples/
+!templates/
+
+# Keep compliance templates (without secrets)
+!compliance-templates/
+!audit-templates/
+!security-templates/
+
+# Keep public documentation
+!healthcare-docs/
+!architecture-docs/
+!api-docs/
+
+# =============================================================================
+# END OF HEALTHCARE ENTERPRISE .GITIGNORE
+# =============================================================================

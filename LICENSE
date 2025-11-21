@@ -1,0 +1,42 @@
+MIT License
+
+Copyright (c) 2025 Oluseyi Kofoworola
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## Important Healthcare Compliance Notice
+
+This software is a **teaching and demonstration asset** for healthcare compliance automation patterns. It is **NOT** certified, validated, or approved for:
+
+- Processing real Protected Health Information (PHI)
+- Use in FDA-regulated medical devices
+- SOX-compliant financial reporting systems
+- Production healthcare environments
+
+**If you intend to use these patterns in a production healthcare system:**
+1. Conduct a thorough HIPAA Security Risk Assessment
+2. Obtain appropriate FDA clearance/approval if applicable
+3. Implement proper SOX controls and auditing
+4. Engage qualified healthcare compliance counsel
+5. Perform independent security and compliance validation
+6. Ensure proper Business Associate Agreements (BAAs) are in place
+
+**The authors and contributors provide this software for educational purposes only and assume no liability for its use in regulated healthcare environments.**

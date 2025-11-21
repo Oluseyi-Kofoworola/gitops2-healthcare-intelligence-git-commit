@@ -1,0 +1,308 @@
+name: GitOps 2.0 - Risk-Adaptive Pipeline
+
+on:
+  push:
+    branches: [main, develop, 'feature/**', 'hotfix/**']
+  pull_request:
+    branches: [main, develop]
+
+env:
+  PYTHON_VERSION: '3.10'
+  GO_VERSION: '1.22'
+
+jobs:
+  # Stage 1: Calculate Risk Score
+  risk-assessment:
+    name: AI-Driven Risk Assessment
+    runs-on: ubuntu-latest
+    outputs:
+      risk_score: ${{ steps.calculate.outputs.risk_score }}
+      risk_level: ${{ steps.calculate.outputs.risk_level }}
+      compliance_domains: ${{ steps.calculate.outputs.compliance_domains }}
+      deployment_strategy: ${{ steps.calculate.outputs.deployment_strategy }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for risk analysis
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+      
+      - name: Calculate Risk Score
+        id: calculate
+        run: |
+          # Run AI-driven risk scorer
+          python3 tools/git_intel/risk_scorer.py --max-commits 10 --json > risk-output.json
+          
+          # Extract risk metrics
+          RISK_SCORE=$(jq -r '.summary.average_risk_score // 0.5' risk-output.json)
+          RISK_LEVEL=$(jq -r '.summary.risk_distribution.high // 0' risk-output.json)
+          
+          # Determine deployment strategy based on risk
+          if (( $(echo "$RISK_SCORE > 0.8" | bc -l) )); then
+            STRATEGY="manual-approval"
+          elif (( $(echo "$RISK_SCORE > 0.5" | bc -l) )); then
+            STRATEGY="canary"
+          else
+            STRATEGY="standard"
+          fi
+          
+          echo "risk_score=$RISK_SCORE" >> $GITHUB_OUTPUT
+          echo "risk_level=$RISK_LEVEL" >> $GITHUB_OUTPUT
+          echo "deployment_strategy=$STRATEGY" >> $GITHUB_OUTPUT
+          
+          # Extract compliance domains
+          DOMAINS=$(jq -r '.commits[0].compliance_requirements // []' risk-output.json | jq -r 'join(",")')
+          echo "compliance_domains=$DOMAINS" >> $GITHUB_OUTPUT
+          
+          echo "### 🎯 Risk Assessment Results" >> $GITHUB_STEP_SUMMARY
+          echo "- **Risk Score**: $RISK_SCORE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployment Strategy**: $STRATEGY" >> $GITHUB_STEP_SUMMARY
+          echo "- **Compliance Domains**: $DOMAINS" >> $GITHUB_STEP_SUMMARY
+
+  # Stage 2: Policy Enforcement (OPA)
+  policy-validation:
+    name: Healthcare Compliance Policy Check
+    runs-on: ubuntu-latest
+    needs: risk-assessment
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup OPA
+        uses: open-policy-agent/setup-opa@v2
+        with:
+          version: latest
+      
+      - name: Run OPA Policy Tests
+        run: |
+          echo "### 🔐 Policy Validation" >> $GITHUB_STEP_SUMMARY
+          opa test policies/ -v | tee opa-results.txt
+          
+          if [ $? -eq 0 ]; then
+            echo "✅ All policies passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Policy violations detected" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+      
+      - name: Validate Commit Compliance
+        if: needs.risk-assessment.outputs.compliance_domains != ''
+        run: |
+          echo "Validating compliance for: ${{ needs.risk-assessment.outputs.compliance_domains }}"
+          
+          # Check if HIPAA compliance is required
+          if [[ "${{ needs.risk-assessment.outputs.compliance_domains }}" == *"HIPAA"* ]]; then
+            echo "⚕️ HIPAA compliance validation required" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Stage 3: Build & Test (Risk-Adaptive)
+  build-and-test:
+    name: Build & Test (Risk Level ${{ needs.risk-assessment.outputs.risk_level }})
+    runs-on: ubuntu-latest
+    needs: [risk-assessment, policy-validation]
+    
+    strategy:
+      matrix:
+        service: [payment-gateway]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      
+      - name: Run Unit Tests
+        working-directory: services/${{ matrix.service }}
+        run: |
+          go test ./... -v -cover -coverprofile=coverage.out
+          go tool cover -func=coverage.out
+      
+      - name: Run Integration Tests
+        if: needs.risk-assessment.outputs.risk_score > '0.5'
+        working-directory: services/${{ matrix.service }}
+        run: |
+          echo "🧪 Running integration tests for high-risk changes"
+          go test -tags=integration ./... -v
+      
+      - name: Build Service
+        working-directory: services/${{ matrix.service }}
+        run: |
+          go build -o ${{ matrix.service }} .
+
+  # Stage 4: Regression Detection (High Risk Only)
+  regression-detection:
+    name: AI-Driven Regression Detection
+    runs-on: ubuntu-latest
+    needs: [risk-assessment, build-and-test]
+    if: needs.risk-assessment.outputs.risk_score > '0.6'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      
+      - name: Run Intelligent Bisect
+        run: |
+          echo "🔍 Running AI-driven regression detection"
+          python3 tools/intelligent_bisect.py \
+            --baseline HEAD~5 \
+            --target HEAD \
+            --threshold-ms 200 \
+            --json > regression-report.json
+          
+          # Check for regressions
+          REGRESSION_FOUND=$(jq -r '.regression_detected // false' regression-report.json)
+          
+          if [ "$REGRESSION_FOUND" = "true" ]; then
+            echo "⚠️ Performance regression detected" >> $GITHUB_STEP_SUMMARY
+            CULPRIT=$(jq -r '.culprit_commit // "unknown"' regression-report.json)
+            echo "- Culprit: $CULPRIT" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No regressions detected" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Stage 5: Healthcare Compliance Scan
+  compliance-scan:
+    name: Healthcare Compliance Framework
+    runs-on: ubuntu-latest
+    needs: risk-assessment
+    if: contains(needs.risk-assessment.outputs.compliance_domains, 'HIPAA') || contains(needs.risk-assessment.outputs.compliance_domains, 'FDA')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+      
+      - name: Run AI Compliance Framework
+        run: |
+          python3 tools/ai_compliance_framework.py analyze-commit HEAD --json > compliance-report.json
+          
+          COMPLIANCE_STATUS=$(jq -r '.commit_analysis.compliance_status' compliance-report.json)
+          RISK_SCORE=$(jq -r '.commit_analysis.risk_score' compliance-report.json)
+          
+          echo "### 🏥 Healthcare Compliance Report" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: $COMPLIANCE_STATUS" >> $GITHUB_STEP_SUMMARY
+          echo "- **Risk Score**: $RISK_SCORE" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$COMPLIANCE_STATUS" = "NON_COMPLIANT" ]; then
+            echo "❌ Compliance violations detected - deployment blocked" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+      
+      - name: Upload Compliance Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-report
+          path: compliance-report.json
+
+  # Stage 6: Deployment Strategy Selection
+  deploy-strategy:
+    name: Select Deployment Strategy
+    runs-on: ubuntu-latest
+    needs: [risk-assessment, build-and-test, compliance-scan]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Display Deployment Plan
+        run: |
+          echo "### 🚀 Deployment Strategy" >> $GITHUB_STEP_SUMMARY
+          echo "**Selected Strategy**: ${{ needs.risk-assessment.outputs.deployment_strategy }}" >> $GITHUB_STEP_SUMMARY
+          
+          case "${{ needs.risk-assessment.outputs.deployment_strategy }}" in
+            "manual-approval")
+              echo "⚠️ **HIGH RISK** - Manual approval required before deployment" >> $GITHUB_STEP_SUMMARY
+              echo "- Risk Score: ${{ needs.risk-assessment.outputs.risk_score }}" >> $GITHUB_STEP_SUMMARY
+              echo "- Requires: Security team approval + Compliance officer sign-off" >> $GITHUB_STEP_SUMMARY
+              ;;
+            "canary")
+              echo "📊 **MEDIUM RISK** - Canary deployment strategy" >> $GITHUB_STEP_SUMMARY
+              echo "- Stage 1: 5% traffic for 15 minutes" >> $GITHUB_STEP_SUMMARY
+              echo "- Stage 2: 25% traffic for 30 minutes" >> $GITHUB_STEP_SUMMARY
+              echo "- Stage 3: 100% traffic if metrics healthy" >> $GITHUB_STEP_SUMMARY
+              echo "- Auto-rollback if error rate > 1%" >> $GITHUB_STEP_SUMMARY
+              ;;
+            "standard")
+              echo "✅ **LOW RISK** - Standard deployment" >> $GITHUB_STEP_SUMMARY
+              echo "- Direct deployment to production" >> $GITHUB_STEP_SUMMARY
+              echo "- Automated health checks enabled" >> $GITHUB_STEP_SUMMARY
+              ;;
+          esac
+      
+      - name: Manual Approval Gate
+        if: needs.risk-assessment.outputs.deployment_strategy == 'manual-approval'
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: compliance-team,security-team
+          minimum-approvals: 2
+          issue-title: "High-Risk Deployment Approval Required"
+          issue-body: |
+            ### 🚨 High-Risk Change Detected
+            
+            **Risk Score**: ${{ needs.risk-assessment.outputs.risk_score }}
+            **Compliance Domains**: ${{ needs.risk-assessment.outputs.compliance_domains }}
+            
+            Please review and approve this deployment.
+
+  # Stage 7: Summary Report
+  workflow-summary:
+    name: GitOps 2.0 Workflow Summary
+    runs-on: ubuntu-latest
+    needs: [risk-assessment, policy-validation, build-and-test]
+    if: always()
+    
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "# 🎯 GitOps 2.0 Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Risk-Adaptive Intelligence" >> $GITHUB_STEP_SUMMARY
+          echo "- **Risk Score**: ${{ needs.risk-assessment.outputs.risk_score }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployment Strategy**: ${{ needs.risk-assessment.outputs.deployment_strategy }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Compliance Domains**: ${{ needs.risk-assessment.outputs.compliance_domains }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Pipeline Stages" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Risk Assessment: Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ${{ needs.policy-validation.result == 'success' && '✅' || '❌' }} Policy Validation: ${{ needs.policy-validation.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ${{ needs.build-and-test.result == 'success' && '✅' || '❌' }} Build & Test: ${{ needs.build-and-test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## GitOps 2.0 Principles Demonstrated" >> $GITHUB_STEP_SUMMARY
+          echo "1. ✅ Intent-Driven Commits - Analyzed via semantic parsing" >> $GITHUB_STEP_SUMMARY
+          echo "2. ✅ AI-Native Intelligence - Risk scoring with ML" >> $GITHUB_STEP_SUMMARY
+          echo "3. ✅ Machine-Readable Records - JSON output at every stage" >> $GITHUB_STEP_SUMMARY
+          echo "4. ✅ Policy-Driven Governance - OPA enforcement" >> $GITHUB_STEP_SUMMARY
+          echo "5. ✅ Risk-Adaptive Workflows - Dynamic deployment selection" >> $GITHUB_STEP_SUMMARY
+          echo "6. ✅ Semantic Foundation - Conventional Commits parsed" >> $GITHUB_STEP_SUMMARY
+          echo "7. ✅ Git Intelligence Engine - Forensics & regression detection" >> $GITHUB_STEP_SUMMARY
