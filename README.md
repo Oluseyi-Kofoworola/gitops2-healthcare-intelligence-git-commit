@@ -393,3 +393,4 @@ Apache 2.0 - See [LICENSE](LICENSE) for details.
 *Version 1.0.0 | Last Updated: November 21, 2025*
 # gitops2-healthcare-intelligence-git-commit
 # gitops2-healthcare-intelligence-git-commit
+# Licence
