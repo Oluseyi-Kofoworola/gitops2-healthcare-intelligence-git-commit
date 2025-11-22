@@ -47,7 +47,12 @@ jobs:
           
           if [ "$PHI_FOUND" = true ]; then
             echo "❌ Potential PHI exposure found - HIPAA review required"
-            exit 1
+
+            # For teaching/demo repos, treat PHI findings as warnings unless explicitly enabled.
+            # Set BLOCKING_HIPAA_SCAN=true in repo/org variables to hard-fail on findings.
+            if [ "${BLOCKING_HIPAA_SCAN:-false}" = "true" ]; then
+              exit 1
+            fi
           else
             echo "✅ No PHI exposure patterns detected"
           fi

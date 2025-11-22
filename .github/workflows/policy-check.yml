@@ -55,16 +55,16 @@ jobs:
         run: |
           echo "🧪 Testing policies against sample commits..."
           
-          # Test HIPAA compliance
-          echo '{"commits": [{"sha": "test123", "message": "feat(phi): add patient encryption\nPHI-Impact: HIGH\nAudit-Trail: enabled", "changed_files": ["services/phi-service/encryption.go"]}]}' | \
-            opa eval -d policies/ "data.enterprise.commit.allow" --input-file - | grep -q true || {
+          # Test HIPAA compliance (must include HIPAA + PHI-Impact lines per enterprise.git policy)
+          echo '{"commits": [{"sha": "test123", "message": "feat(phi): add patient encryption\nHIPAA: compliant\nPHI-Impact: HIGH\nAudit-Trail: enabled", "changed_files": ["services/phi-service/encryption.go"]}]}' | \
+            opa eval -d policies/ "data.enterprise.git.allow" --input-file - | grep -q true || {
               echo "❌ HIPAA policy test failed"
               exit 1
             }
           
           # Test FDA compliance  
           echo '{"commits": [{"sha": "test456", "message": "feat(device): update algorithm\nFDA-510k: compliant\nClinical-Safety: NO_CLINICAL_IMPACT", "changed_files": ["services/medical-device/diagnostic.go"]}]}' | \
-            opa eval -d policies/ "data.enterprise.commit.allow" --input-file - | grep -q true || {
+            opa eval -d policies/ "data.enterprise.git.allow" --input-file - | grep -q true || {
               echo "❌ FDA policy test failed"
               exit 1
             }

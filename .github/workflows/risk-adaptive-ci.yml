@@ -109,6 +109,10 @@ jobs:
     name: "Security & Vulnerability Scan"
     runs-on: ubuntu-latest
     needs: risk-assessment
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     
     steps:
       - uses: actions/checkout@v4
@@ -122,8 +126,8 @@ jobs:
           output: 'trivy-results.sarif'
           
       - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v2
         if: always()
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
           
@@ -218,7 +222,7 @@ jobs:
               ;;
           esac
           
-          echo "✅ Deployment Strategy: $(echo ${{ steps.deploy-strategy.outputs.strategy }})"
+          echo "✅ Deployment Strategy: $STRATEGY"
           
       - name: Simulate Canary Deployment
         if: steps.deploy-strategy.outputs.strategy != 'rolling' 
@@ -323,7 +327,9 @@ jobs:
           path: |
             compliance-report.json
             deployment-evidence.json
-          retention-days: 2555  # 7 years for healthcare compliance
+          # GitHub artifact retention is capped by repo/org settings (often 90 days).
+          # For true 7-year HIPAA retention, export these artifacts to compliant long-term storage.
+          retention-days: 90
 
   approval-gate:
     name: Healthcare Compliance Approval Gate

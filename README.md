@@ -12,6 +12,29 @@
 
 ---
 
+## 📚 Documentation Navigation
+
+All documentation is organized into focused hubs to eliminate sprawl:
+
+### Core Documentation Hubs
+
+| Hub | Purpose | Link |
+|-----|---------|------|
+| 🏗️ **Engineering Journal** | Infrastructure, CI/CD history, world-class status | [`ENGINEERING_JOURNAL.md`](./ENGINEERING_JOURNAL.md) |
+| 🔒 **Compliance & Security** | HIPAA/FDA/SOX pipelines, evidence, security decisions | [`COMPLIANCE_AND_SECURITY_JOURNAL.md`](./COMPLIANCE_AND_SECURITY_JOURNAL.md) |
+| 🚀 **Getting Started** | Quick setup, demos, and onboarding | [`START_HERE.md`](./START_HERE.md) |
+
+### Specialized Documentation
+
+| Category | Documents |
+|----------|-----------|
+| **Executive** | [Summary](./executive/EXECUTIVE_SUMMARY.md) · [One-Pager](./executive/ONE_PAGER.md) · [Presentation](./executive/PRESENTATION_OUTLINE.md) |
+| **Compliance** | [Global Compliance](./docs/GLOBAL_COMPLIANCE.md) · [Telemetry](./docs/PIPELINE_TELEMETRY_LOGS.md) · [Forensics](./docs/INCIDENT_FORENSICS_DEMO.md) |
+| **AI Integration** | [Copilot Workflow](/.copilot/COPILOT_WORKFLOW_DEMO.md) · [VS Code Setup](/.copilot/README-VSCODE-INTEGRATION.md) |
+| **Contributing** | [Guide](./CONTRIBUTING.md) · [Code of Conduct](./CODE_OF_CONDUCT.md) · [Security](./SECURITY.md) |
+
+---
+
 ## 🎯 What Is This?
 
 The **GitOps 2.0 Healthcare Intelligence Platform** is the world's first production-ready reference implementation that demonstrates how to transform Git from a passive version control system into an **AI-native engineering intelligence platform** for healthcare enterprises.
@@ -28,7 +51,7 @@ This repository closes all gaps between vision and implementation, delivering:
 ## 🚀 Quick Start (5 Minutes)
 
 ### Prerequisites
-```bash
+\`\`\`bash
 # Required
 ✓ Go 1.22+
 ✓ Python 3.10+
@@ -38,10 +61,10 @@ This repository closes all gaps between vision and implementation, delivering:
 ✓ OPA CLI (brew install opa)
 ✓ jq (brew install jq)
 ✓ GitHub Copilot (VS Code extension)
-```
+\`\`\`
 
 ### Run the Healthcare Demo
-```bash
+\`\`\`bash
 # Clone the repository
 git clone https://github.com/ITcredibl/gitops2-healthcare-intelligence.git
 cd gitops2-healthcare-intelligence
@@ -51,18 +74,7 @@ cd gitops2-healthcare-intelligence
 
 # Or validate everything first
 ./final-validation.sh
-```
-
-### Install Git Aliases (Recommended)
-```bash
-# Install GitOps 2.0 git aliases
-./setup-git-aliases.sh
-
-# Now use AI-powered git commands
-git healthcare --type security --scope phi --description "implement encryption"
-git risk --max-commits 20 --detail
-git comply analyze-commit HEAD --json
-```
+\`\`\`
 
 ---
 
@@ -89,33 +101,21 @@ git comply analyze-commit HEAD --json
 ## ✨ Key Features
 
 ### 1. 🤖 AI Copilot Integration
-**Location:** `.copilot/` directory
 
 Generate HIPAA-compliant commits in 30 seconds with GitHub Copilot integration:
 
-```bash
+\`\`\`bash
 # AI-powered healthcare commit generation
-git copilot commit --type security --scope phi --risk high
-
-# Or use the Python tool directly
-python3 tools/healthcare_commit_generator.py \
-  --type security \
-  --scope phi \
-  --description "implement patient data encryption" \
+python3 tools/healthcare_commit_generator.py \\
+  --type security \\
+  --scope phi \\
+  --description "implement patient data encryption" \\
   --files "services/phi-service/encryption.go"
-```
-
-**Features:**
-- ✅ Automated compliance metadata generation (HIPAA/FDA/SOX)
-- ✅ Risk-based reviewer assignment
-- ✅ Clinical safety impact assessment
-- ✅ Regulatory audit trail creation
-- ✅ VS Code integration with context files
+\`\`\`
 
 **Impact:** 30-second commits (was 15 minutes), 99% reviewer accuracy
 
 ### 2. 🔄 Risk-Adaptive CI/CD
-**Location:** `.github/workflows/risk-adaptive-ci.yml`
 
 Intelligent pipeline that adapts deployment strategy based on AI risk assessment:
 
@@ -126,94 +126,48 @@ Intelligent pipeline that adapts deployment strategy based on AI risk assessment
 | **High (70-90%)** | Blue-Green | Single approval |
 | **Critical (>90%)** | Manual review | Dual approval |
 
-**Features:**
-- ✅ AI-powered risk assessment per commit
-- ✅ Automated compliance scanning (HIPAA/FDA/SOX)
-- ✅ Trivy security scanning
-- ✅ 7-year artifact retention for audits
-- ✅ Automated rollback on failures
-
 **Impact:** 2-4 hour deployments (was 2-4 weeks), 99.9% automation
 
 ### 3. 🔐 Policy-as-Code Enforcement
-**Location:** `policies/healthcare/`
 
 OPA policies enforce healthcare compliance at commit time:
 
-```bash
+\`\`\`bash
 # Test all policies
 opa test policies/ --verbose
 
 # Validate a commit
 python3 tools/ai_compliance_framework.py analyze-commit HEAD --json
-```
-
-**Policies:**
-- ✅ **HIPAA PHI Protection** - Detects PHI exposure, enforces encryption
-- ✅ **FDA Medical Device Controls** - Validates clinical safety impact
-- ✅ **SOX Financial Controls** - Enforces audit evidence requirements
-- ✅ **High-Risk Dual Approval** - Risk-based approval workflows
-- ✅ **Commit Metadata Required** - Ensures regulatory compliance metadata
+\`\`\`
 
 **Impact:** 100% automated enforcement, pre-commit violation detection
 
 ### 4. 🔍 AI Forensics & Incident Response
-**Location:** `scripts/intelligent-bisect.sh`
 
 AI-powered regression detection and automated incident response:
 
-```bash
+\`\`\`bash
 # Run intelligent bisect for performance regression
-./scripts/intelligent-bisect.sh \
-  --start-commit HEAD~10 \
-  --end-commit HEAD \
-  --metric latency \
+./scripts/intelligent-bisect.sh \\
+  --start-commit HEAD~10 \\
+  --end-commit HEAD \\
+  --metric latency \\
   --threshold 200
-
-# Or use Python tool
-python3 tools/intelligent_bisect.py \
-  --baseline HEAD~8 \
-  --target HEAD \
-  --test-cmd "go test ./..." \
-  --threshold-ms 200
-```
-
-**Features:**
-- ✅ Automated performance regression detection
-- ✅ Healthcare-specific risk assessment
-- ✅ Patient safety impact analysis
-- ✅ Clinical workflow evaluation
-- ✅ Financial impact analysis
-- ✅ Intelligent rollback recommendations
-- ✅ Regulatory incident reports (JSON)
+\`\`\`
 
 **Impact:** Minutes to detect incidents (was hours), <30 min MTTR
 
 ### 5. 🏥 Healthcare Services
-**Location:** `services/`
 
 Production-ready microservices with healthcare compliance:
 
-```bash
+\`\`\`bash
 # Payment Gateway (SOX Financial Controls)
-cd services/payment-gateway
-go test ./... -cover
-make run
+cd services/payment-gateway && go test ./... -cover
 
 # Auth Service (HIPAA Access Controls)
-cd services/auth-service
-go test ./... -cover
-
-# PHI Service (HIPAA Encryption)
-cd services/phi-service
-go build
-```
-
-**Services:**
-- ✅ **Payment Gateway** - SOX-compliant financial transaction processing
-- ✅ **Auth Service** - HIPAA-compliant access control and authorization
-- ✅ **PHI Service** - HIPAA-compliant patient data encryption
-- ✅ **Medical Device** - FDA-regulated device management
+cd services/auth-service && go test ./... -cover
+\`\`\`
 
 ---
 
@@ -241,8 +195,6 @@ go build
 
 ## 🤖 AI Healthcare Agents
 
-This platform integrates specialized AI agents for healthcare compliance:
-
 | Agent | Purpose | Impact |
 |-------|---------|--------|
 | **Compliance Assistant** | HIPAA/FDA/SOX validation | Automated compliance checking |
@@ -255,176 +207,62 @@ This platform integrates specialized AI agents for healthcare compliance:
 ## 🛠️ Tools & Scripts
 
 ### AI-Powered Tools
-```bash
-# Healthcare commit generator
+\`\`\`bash
 python3 tools/healthcare_commit_generator.py --help
-
-# AI compliance framework
 python3 tools/ai_compliance_framework.py analyze-commit HEAD --json
-
-# Risk scoring
 python3 tools/git_intel/risk_scorer.py --json
-
-# Intelligent bisect
 python3 tools/intelligent_bisect.py --help
-
-# Compliance monitoring
-python3 tools/compliance_monitor.py
-```
+\`\`\`
 
 ### Automation Scripts
-```bash
-# Healthcare demo (10 minutes)
-./healthcare-demo.sh
-
-# Enterprise setup
-./setup-healthcare-enterprise.sh
-
-# Validation
-./final-validation.sh
-
-# Security audit
-./security-validation.sh
-
-# Code quality
-./validate-code-quality.sh
-```
+\`\`\`bash
+./healthcare-demo.sh          # 10-minute demonstration
+./final-validation.sh         # Complete validation
+./security-validation.sh      # Security audit
+\`\`\`
 
 ---
 
 ## 📁 Repository Structure
 
-```
+\`\`\`
 gitops2-healthcare-intelligence/
 ├── .copilot/                   # GitHub Copilot healthcare integration
-│   ├── healthcare-commit-guidelines.yml
-│   ├── copilot-context-healthcare.json
-│   ├── commit-message-prompt.txt
-│   ├── README-VSCODE-INTEGRATION.md
-│   └── examples/
 ├── .github/workflows/          # Risk-adaptive CI/CD pipelines
-│   ├── risk-adaptive-ci.yml
-│   └── compliance-scan.yml
 ├── policies/                   # OPA Policy-as-Code
-│   ├── healthcare/
-│   │   ├── hipaa_phi_required.rego
-│   │   ├── high_risk_dual_approval.rego
-│   │   └── commit_metadata_required.rego
-│   └── enterprise-commit.rego
 ├── services/                   # Healthcare microservices
-│   ├── payment-gateway/        # SOX-compliant payment processing
-│   ├── auth-service/           # HIPAA access controls
-│   ├── phi-service/            # HIPAA encryption
-│   └── medical-device/         # FDA device management
 ├── tools/                      # AI-native GitOps 2.0 tools
-│   ├── healthcare_commit_generator.py
-│   ├── ai_compliance_framework.py
-│   ├── intelligent_bisect.py
-│   ├── compliance_monitor.py
-│   └── git_intel/
-│       └── risk_scorer.py
-├── scripts/                    # Automation scripts
-│   └── intelligent-bisect.sh
-├── docs/                       # Documentation
-│   ├── DEPLOYMENT_GUIDE.md
-│   ├── COMPLIANCE_DETAILS.md
-│   └── API_REFERENCE.md
-├── healthcare-demo.sh          # 10-minute demonstration
-├── setup-healthcare-enterprise.sh  # Enterprise deployment
-└── final-validation.sh         # Complete validation
-```
+├── ENGINEERING_JOURNAL.md      # Infrastructure & CI/CD history
+├── COMPLIANCE_AND_SECURITY_JOURNAL.md  # Security & compliance
+└── START_HERE.md              # Quick start guide
+\`\`\`
 
 ---
 
 ## 🎓 Getting Started
 
 ### 1. Run the Demo
-The fastest way to understand the platform:
-```bash
+\`\`\`bash
 ./healthcare-demo.sh
-```
-
-This 10-minute demonstration shows:
-- ✅ Environment validation
-- ✅ Policy enforcement
-- ✅ AI risk assessment
-- ✅ Commit generation
-- ✅ Service testing
-- ✅ AI forensics
-- ✅ Compliance monitoring
-- ✅ Business impact & ROI
+\`\`\`
 
 ### 2. Set Up for Your Team
-```bash
-# Enterprise deployment
+\`\`\`bash
 ./setup-healthcare-enterprise.sh
+\`\`\`
 
-# This configures:
-# - Git hooks for compliance validation
-# - CI/CD workflows for HIPAA/FDA/SOX
-# - Team onboarding documentation
-# - Compliance monitoring dashboards
-```
-
-### 3. Integrate GitHub Copilot
-```bash
-# 1. Open VS Code
-# 2. Install GitHub Copilot extension
-# 3. Copy .copilot/ to your VS Code workspace
-# 4. Start using AI-powered commits
-
-# See: .copilot/README-VSCODE-INTEGRATION.md
-```
-
-### 4. Validate Everything
-```bash
-# Run complete validation
+### 3. Validate Everything
+\`\`\`bash
 ./final-validation.sh
-
-# Output: 20/20 tests passing
-```
-
----
-
-## 📖 Documentation
-
-### For Executives
-- **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)** - Enterprise rollout strategy
-- **[Business Case](docs/BUSINESS_CASE.md)** - ROI analysis and metrics
-
-### For Engineers
-- **[VS Code Integration](.copilot/README-VSCODE-INTEGRATION.md)** - Copilot setup guide
-- **[Implementation Details](docs/IMPLEMENTATION_UPDATE.md)** - Technical gap analysis
-- **[API Reference](docs/API_REFERENCE.md)** - Service API documentation
-
-### For Compliance Teams
-- **[Compliance Details](docs/COMPLIANCE_DETAILS.md)** - HIPAA/FDA/SOX frameworks
-- **[Security Policy](SECURITY.md)** - Vulnerability reporting
-- **[Audit Guide](docs/AUDIT_GUIDE.md)** - Evidence collection procedures
+\`\`\`
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-### Commit Standards
-All commits must follow Conventional Commits with healthcare metadata:
-
-```bash
-# Use AI tools to generate compliant commits
-git copilot commit --type feat --scope payment --risk medium
-
-# Or manual format:
-type(scope): description
-
-Business Impact: [business context]
-Compliance: HIPAA, FDA, SOX
-Risk Level: [LOW|MEDIUM|HIGH|CRITICAL]
-Clinical Safety: [impact assessment]
-Testing: [test coverage]
-Reviewers: @team-members
-```
+All commits must follow Conventional Commits with healthcare metadata.
 
 ---
 
@@ -432,7 +270,6 @@ Reviewers: @team-members
 
 - **Vulnerability Reporting**: Use GitHub Security Advisories
 - **PHI Handling**: Never commit real Protected Health Information
-- **Secrets Management**: Use environment variables or secret managers
 - **Security Scanning**: Automated CodeQL and Trivy scanning
 
 See [SECURITY.md](SECURITY.md) for details.
@@ -447,21 +284,19 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 ## 🏆 Results
 
-**Platform Status**: ✅ **PUBLICATION READY** (v2.0.0)
+**Platform Status**: ✅ **PRODUCTION READY** (v2.0.0)
 
 ### Validation
 - ✅ 20/20 tests passing (100%)
-- ✅ All Go services building and testing
-- ✅ All Python tools validated
+- ✅ All services building and testing
 - ✅ Complete documentation
 - ✅ Executive-ready demonstration
 
 ### Implementation
-- ✅ 5/5 critical gaps closed
+- ✅ Infrastructure stabilized (Dependabot, OPA, GitHub Actions, Go toolchain)
+- ✅ CI/CD workflows optimized (CodeQL, compliance, artifact retention)
+- ✅ 5/5 refinement gaps closed
 - ✅ ~7,500+ lines of production code
-- ✅ 16 new files created
-- ✅ 80%+ test coverage
-- ✅ 100% GitOps 2.0 alignment
 
 ### Business Impact
 - ✅ $800K/year savings demonstrated
@@ -471,46 +306,9 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 ---
 
-## 🌟 What's Next?
-
-### Immediate (This Week)
-1. Publish Medium article
-2. Create demo video walkthrough
-3. Announce to healthcare communities
-4. Engage with early adopters
-
-### Short Term (30 Days)
-1. Gather community feedback
-2. Collect healthcare enterprise use cases
-3. Expand compliance frameworks
-4. Build partner ecosystem
-
-### Strategic (90 Days)
-1. Scale across healthcare portfolios
-2. Establish AI-native engineering culture
-3. Plan enterprise support offerings
-4. Measure community adoption
-
----
-
-## 💬 Community
-
-- **GitHub Issues**: Bug reports and feature requests
-- **Discussions**: Questions and community support
-- **LinkedIn**: Follow for updates and announcements
-- **Medium**: Read the full GitOps 2.0 Healthcare vision
-
----
-
 ## 🙏 Acknowledgments
 
 Built with ❤️ for healthcare engineering excellence.
-
-Special thanks to:
-- The GitHub Copilot team for AI-native development tools
-- The Open Policy Agent community for Policy-as-Code
-- Healthcare compliance experts for regulatory guidance
-- Early adopters and contributors
 
 ---
 
@@ -520,4 +318,4 @@ Special thanks to:
 
 *For detailed release history, see [CHANGELOG.md](CHANGELOG.md)*
 
-*Version 2.0.0 | Last Updated: November 21, 2025*
+*Version 2.0.0 | Last Updated: November 22, 2025*
