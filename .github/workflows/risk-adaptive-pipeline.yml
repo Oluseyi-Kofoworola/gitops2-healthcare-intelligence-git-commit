@@ -175,7 +175,7 @@ jobs:
             go-${{ runner.os }}-${{ env.GO_VERSION }}-
       
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
       
@@ -316,7 +316,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
       
