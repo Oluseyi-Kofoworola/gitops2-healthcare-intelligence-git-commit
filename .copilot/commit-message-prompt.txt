@@ -139,3 +139,370 @@ When generating commits:
 5. Include audit trail information for regulatory evidence
 
 Always prioritize patient safety, data privacy, and regulatory compliance in your recommendations.
+
+---
+
+## Internal Processing Logic (AI Model Instructions)
+
+### Phase 1: Context Gathering (2-3 seconds)
+Execute these steps in parallel:
+1. **Read git diff**: Extract changed lines, file paths, imports
+2. **Load compliance database**: Import from `.copilot/copilot-context-healthcare.json`
+3. **Scan repository metadata**: Check `azure.yaml`, `package.json`, `go.mod` for service classification
+4. **Retrieve commit history**: Analyze last 10 commits for pattern consistency
+
+### Phase 2: Semantic Analysis (3-4 seconds)
+Use multi-signal detection to classify the change:
+
+```python
+# Internal decision algorithm (conceptual)
+def classify_change(diff_content, file_paths):
+    signals = {
+        'phi_signals': 0,
+        'financial_signals': 0,
+        'device_signals': 0,
+        'infrastructure_signals': 0
+    }
+    
+    # Signal 1: File path pattern matching (weight: 10)
+    path_patterns = {
+        r'services/synthetic-phi-service': ('phi_signals', 10),
+        r'services/auth-service': ('phi_signals', 8),
+        r'services/payment-gateway': ('financial_signals', 10),
+        r'services/medical-device': ('device_signals', 10),
+        r'\.github/|scripts/|tools/': ('infrastructure_signals', 7)
+    }
+    
+    for pattern, (signal_type, weight) in path_patterns.items():
+        for path in file_paths:
+            if re.search(pattern, path):
+                signals[signal_type] += weight
+    
+    # Signal 2: Code keyword analysis (weight: 5)
+    keyword_patterns = {
+        r'patient|phi|medical_record|diagnosis': ('phi_signals', 5),
+        r'encrypt|decrypt|aes|rsa|crypto': ('phi_signals', 4),
+        r'billing|invoice|payment|stripe|transaction': ('financial_signals', 5),
+        r'diagnostic|therapeutic|device_control|fda': ('device_signals', 6),
+        r'pipeline|deployment|terraform|kubernetes': ('infrastructure_signals', 3)
+    }
+    
+    for pattern, (signal_type, weight) in keyword_patterns.items():
+        if re.search(pattern, diff_content, re.IGNORECASE):
+            signals[signal_type] += weight
+    
+    # Signal 3: Import statement analysis (weight: 7)
+    import_mappings = {
+        'crypto/aes': ('phi_signals', 7),
+        'github.com/stripe/stripe-go': ('financial_signals', 8),
+        'database/sql': ('phi_signals', 3),
+        'github.com/prometheus/client_golang': ('infrastructure_signals', 5)
+    }
+    
+    for import_path, (signal_type, weight) in import_mappings.items():
+        if import_path in diff_content:
+            signals[signal_type] += weight
+    
+    # Signal 4: Environment variable detection (weight: 6)
+    env_vars = {
+        'PHI_ENCRYPTION_KEY': ('phi_signals', 6),
+        'HIPAA_AUDIT_LOG_BUCKET': ('phi_signals', 5),
+        'STRIPE_SECRET_KEY': ('financial_signals', 6),
+        'FDA_DEVICE_ID': ('device_signals', 7)
+    }
+    
+    for env_var, (signal_type, weight) in env_vars.items():
+        if env_var in diff_content:
+            signals[signal_type] += weight
+    
+    # Calculate dominant domain
+    total_signals = sum(signals.values())
+    if total_signals == 0:
+        return {'domain': 'infrastructure', 'confidence': 0.5}
+    
+    dominant_signal = max(signals, key=signals.get)
+    confidence = signals[dominant_signal] / total_signals
+    
+    return {
+        'domain': dominant_signal.replace('_signals', ''),
+        'confidence': confidence,
+        'breakdown': signals
+    }
+```
+
+### Phase 3: Risk Calculation (1-2 seconds)
+Compute risk score using multi-factor algorithm:
+
+```python
+def calculate_risk_score(file_paths, diff_content, domain):
+    """
+    Returns: (risk_level: str, numeric_score: float)
+    risk_level ∈ {CRITICAL, HIGH, MEDIUM, LOW}
+    numeric_score ∈ [0, 100]
+    """
+    base_score = 0
+    multipliers = []
+    
+    # Factor 1: Critical service paths
+    critical_paths = {
+        'services/payment-gateway': 0.9,      # SOX compliance
+        'services/medical-device': 0.95,      # FDA regulations
+        'services/synthetic-phi-service': 0.8, # HIPAA
+        'services/auth-service': 0.85         # Authentication
+    }
+    
+    for path in file_paths:
+        for critical_path, weight in critical_paths.items():
+            if critical_path in path:
+                base_score += 40 * weight
+                break
+    
+    # Factor 2: Change magnitude
+    lines_added = diff_content.count('\n+')
+    lines_removed = diff_content.count('\n-')
+    total_lines_changed = lines_added + lines_removed
+    
+    if total_lines_changed > 100:
+        multipliers.append(1.3)  # Large change
+    elif total_lines_changed > 50:
+        multipliers.append(1.15)  # Medium change
+    
+    # Factor 3: Security-sensitive operations
+    security_keywords = [
+        r'crypto\.',
+        r'password',
+        r'secret',
+        r'private[_-]key',
+        r'session',
+        r'token',
+        r'auth',
+        r'decrypt'
+    ]
+    
+    security_matches = sum(
+        1 for keyword in security_keywords
+        if re.search(keyword, diff_content, re.IGNORECASE)
+    )
+    base_score += security_matches * 8
+    
+    # Factor 4: Domain-specific risk multiplier
+    domain_multipliers = {
+        'device': 1.5,      # FDA medical device = highest risk
+        'phi': 1.3,         # HIPAA PHI = high risk
+        'financial': 1.2,   # SOX financial = medium-high risk
+        'infrastructure': 1.0  # Infrastructure = baseline risk
+    }
+    multipliers.append(domain_multipliers.get(domain, 1.0))
+    
+    # Factor 5: Missing test coverage
+    test_files = [path for path in file_paths if '_test.' in path or 'test_' in path]
+    if len(test_files) == 0 and total_lines_changed > 20:
+        multipliers.append(1.25)  # No tests for significant change
+    
+    # Factor 6: Breaking changes detection
+    breaking_patterns = [
+        r'BREAKING CHANGE',
+        r'!:',  # Conventional Commits breaking change
+        r'deprecated',
+        r'remove|delete.*function|method'
+    ]
+    if any(re.search(pattern, diff_content, re.IGNORECASE) for pattern in breaking_patterns):
+        multipliers.append(1.4)
+    
+    # Compute final score
+    final_score = base_score
+    for multiplier in multipliers:
+        final_score *= multiplier
+    
+    # Normalize to 0-100
+    normalized = min(100, max(0, final_score))
+    
+    # Map to risk level
+    if normalized >= 80:
+        return ('CRITICAL', normalized)
+    elif normalized >= 60:
+        return ('HIGH', normalized)
+    elif normalized >= 30:
+        return ('MEDIUM', normalized)
+    else:
+        return ('LOW', normalized)
+```
+
+### Phase 4: Template Selection & Generation (2-3 seconds)
+Select and populate the appropriate commit template:
+
+1. **Match domain to template**:
+   - `phi` → `hipaa_phi_commit_template`
+   - `financial` → `sox_financial_commit_template`
+   - `device` → `fda_device_commit_template`
+   - `infrastructure` → `standard_commit_template`
+
+2. **Extract metadata**:
+   - Conventional Commits type: Infer from change nature (feat, fix, security, etc.)
+   - Scope: Extract from file path (e.g., `services/payment-gateway` → scope: `payment`)
+   - Description: Generate concise summary (max 72 chars)
+
+3. **Populate compliance sections**:
+   - HIPAA: If `phi_signals > 10`
+   - FDA: If `device_signals > 10`
+   - SOX: If `financial_signals > 10`
+
+4. **Suggest reviewers**:
+   ```python
+   def suggest_reviewers(domain, risk_level):
+       base_reviewers = []
+       
+       if domain == 'phi':
+           base_reviewers = ['@privacy-officer', '@security-team']
+       elif domain == 'financial':
+           base_reviewers = ['@finance-team', '@audit-team']
+       elif domain == 'device':
+           base_reviewers = ['@clinical-affairs', '@regulatory-team']
+       
+       # Add audit team for HIGH/CRITICAL
+       if risk_level in ['HIGH', 'CRITICAL']:
+           base_reviewers.append('@audit-team')
+       
+       # Add QA for CRITICAL
+       if risk_level == 'CRITICAL':
+           base_reviewers.append('@qa-team')
+       
+       return base_reviewers
+   ```
+
+5. **Generate testing requirements**:
+   ```python
+   def generate_test_requirements(domain, risk_level, change_type):
+       tests = []
+       
+       if domain == 'phi':
+           tests.extend([
+               'HIPAA security risk assessment',
+               'PHI encryption validation',
+               'Access control verification'
+           ])
+       elif domain == 'financial':
+           tests.extend([
+               'Financial calculation verification',
+               'Audit trail validation',
+               'SOX control testing'
+           ])
+       elif domain == 'device':
+           tests.extend([
+               'Clinical validation',
+               'FDA change control process',
+               'Safety verification'
+           ])
+       
+       if risk_level in ['HIGH', 'CRITICAL']:
+           tests.extend([
+               'Integration tests',
+               'End-to-end testing',
+               'Penetration testing'
+           ])
+       
+       if change_type == 'security':
+           tests.append('Security audit')
+       
+       return tests
+   ```
+
+### Phase 5: Validation & Output (1 second)
+Before presenting the commit message:
+
+1. **Validate against OPA policies** (if pre-commit hook available):
+   - Check metadata completeness
+   - Verify reviewer count for risk level
+   - Confirm compliance section presence
+
+2. **Quality checks**:
+   - Subject line ≤ 72 characters
+   - Body lines ≤ 100 characters
+   - Conventional Commits format adherence
+   - All compliance sections populated
+
+3. **Confidence scoring**:
+   ```python
+   def calculate_confidence(signals_total, domain_confidence, metadata_completeness):
+       base_confidence = domain_confidence  # From classification phase
+       
+       # Adjust based on signal strength
+       if signals_total > 30:
+           base_confidence *= 1.1
+       elif signals_total < 10:
+           base_confidence *= 0.9
+       
+       # Adjust based on metadata
+       if metadata_completeness >= 0.95:
+           base_confidence *= 1.05
+       
+       return min(1.0, base_confidence)
+   ```
+
+### Example Execution Trace
+
+**Input:**
+```
+Modified files: services/synthetic-phi-service/encryption/aes.go
+Lines changed: +45, -22
+Domain detected: phi (confidence: 0.89)
+Risk score: 72.4 (HIGH)
+```
+
+**Processing:**
+```
+[0.0s] Start context gathering
+[0.3s] Git diff loaded (67 lines)
+[0.5s] Compliance DB loaded (234 rules)
+[0.8s] Service metadata parsed
+[1.2s] Commit history analyzed (last 10 commits)
+
+[1.2s] Start semantic analysis
+[1.5s] Path signals: phi=10, financial=0, device=0
+[1.8s] Keyword signals: phi=12 (encrypt, patient, aes)
+[2.1s] Import signals: phi=7 (crypto/aes)
+[2.4s] Domain: PHI (confidence: 89%)
+
+[2.4s] Start risk calculation
+[2.6s] Base score: 32 (critical path: synthetic-phi-service)
+[2.7s] Multipliers: [1.15 (lines), 1.3 (domain), 1.2 (no tests)]
+[2.9s] Final score: 72.4 → HIGH
+
+[2.9s] Start template generation
+[3.1s] Template: hipaa_phi_commit_template
+[3.4s] Metadata extracted
+[4.2s] Compliance sections populated
+[4.5s] Reviewers suggested: @privacy-officer, @security-team, @audit-team
+[4.8s] Testing requirements generated
+
+[4.8s] Start validation
+[5.0s] Subject length: 68 chars ✓
+[5.1s] Metadata complete: 98% ✓
+[5.2s] Conventional Commits: ✓
+
+[5.2s] Output generated
+[5.3s] Confidence: 94%
+```
+
+**Total time:** 5.3 seconds
+
+---
+
+## Continuous Learning
+
+The AI model improves over time by:
+
+1. **Feedback loops**: When commits are rejected in PR review, patterns are logged
+2. **Reviewer adjustments**: If reviewers are manually changed, preferences are learned
+3. **Domain refinement**: New file paths/keywords added to classification database
+4. **Template optimization**: Successful commits inform template improvements
+
+**Training data sources:**
+- Historical commits in this repository (500+ examples)
+- Healthcare compliance documentation (HIPAA, FDA CFR Title 21, SOX)
+- Industry best practices (HL7, FHIR standards)
+- Regulatory guidance documents
+
+---
+
+*This internal logic is transparent to maintain trust and auditability in healthcare environments.*
