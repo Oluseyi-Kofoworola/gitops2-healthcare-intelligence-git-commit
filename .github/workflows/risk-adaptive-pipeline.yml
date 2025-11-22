@@ -11,7 +11,7 @@ on:
 
 env:
   PYTHON_VERSION: '3.10'
-  GO_VERSION: '1.22'
+  GO_VERSION: '1.23'
 
 jobs:
   # Stage 1: Calculate Risk Score
@@ -237,11 +237,13 @@ jobs:
         if: matrix.service == 'auth-service'
         run: |
           echo "Merging coverage profiles for holistic report" >> $GITHUB_STEP_SUMMARY
-          go install github.com/wadey/gocovmerge@latest
-          ls services/*/coverage.out
-          gocovmerge services/payment-gateway/coverage.out services/auth-service/coverage.out > merged-coverage.out || true
+          # Use native Go tooling instead of gocovmerge to avoid version conflicts
+          # Concatenate coverage files (works for Go 1.20+)
+          cat services/payment-gateway/coverage.out > merged-coverage.out || true
+          # Append other coverage, skip the mode line
+          tail -n +2 services/auth-service/coverage.out >> merged-coverage.out || true
           if [ -f merged-coverage.out ]; then
-            echo "Merged coverage generated" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Merged coverage generated ($(wc -l < merged-coverage.out) lines)" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Upload Merged Coverage
