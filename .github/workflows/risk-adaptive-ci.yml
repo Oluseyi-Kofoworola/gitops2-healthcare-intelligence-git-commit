@@ -181,7 +181,7 @@ jobs:
           go test -v ./... -tags=healthcare_integration
           
       - name: Upload Coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           file: services/${{ matrix.service }}/coverage.out
           flags: ${{ matrix.service }}
