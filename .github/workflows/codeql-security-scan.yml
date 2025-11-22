@@ -34,14 +34,14 @@ jobs:
           fetch-depth: 0
 
       - name: Initialize CodeQL (per-language)
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           # Basic config only - no custom queries to avoid advanced config conflicts
 
       - name: Autobuild Go
         if: matrix.language == 'go'
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@v4
 
       - name: Setup Python
         if: matrix.language == 'python'
@@ -55,7 +55,7 @@ jobs:
           pip install pyyaml || true
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{ matrix.language }}"
         continue-on-error: true

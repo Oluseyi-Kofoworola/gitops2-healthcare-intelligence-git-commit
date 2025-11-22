@@ -223,7 +223,8 @@ jobs:
     name: Daily Compliance Summary
     runs-on: ubuntu-latest
     needs: [hipaa-compliance-scan, fda-compliance-scan, sox-compliance-scan]
-    if: always() && github.event_name == 'schedule'
+    # Always run daily summary, even if previous jobs fail
+    if: always()
     
     steps:
       - uses: actions/checkout@v4
