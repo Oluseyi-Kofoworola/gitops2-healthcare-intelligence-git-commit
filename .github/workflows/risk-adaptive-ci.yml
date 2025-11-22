@@ -324,7 +324,7 @@ jobs:
           echo "✅ Compliance report generated for regulatory audit"
           
       - name: Upload Compliance Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: healthcare-compliance-evidence
           path: |

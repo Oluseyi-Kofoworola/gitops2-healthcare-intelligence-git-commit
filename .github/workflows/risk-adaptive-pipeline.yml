@@ -135,7 +135,7 @@ jobs:
       
       - name: Upload Deny Reasons
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: opa-deny-reasons
           path: deny-reasons.json
@@ -222,13 +222,13 @@ jobs:
           ./scripts/run_regression_check.sh
       
       - name: Upload Coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-${{ matrix.service }}
           path: services/${{ matrix.service }}/coverage.out
       
       - name: Upload Coverage Function Summary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-func-${{ matrix.service }}
           path: services/${{ matrix.service }}/coverage-func.txt
@@ -248,7 +248,7 @@ jobs:
 
       - name: Upload Merged Coverage
         if: matrix.service == 'auth-service'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-merged
           path: merged-coverage.out
@@ -286,7 +286,7 @@ jobs:
           output: 'trivy-results.sarif'
 
       - name: Upload Security Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sbom-and-trivy
           path: |
@@ -356,7 +356,7 @@ jobs:
       
       - name: Upload Regression Report
         if: steps.eval.outputs.trigger == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: regression-report
           path: regression-report.json
@@ -415,7 +415,7 @@ jobs:
       
       - name: Upload Compliance Report
         if: steps.domains.outputs.domains != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: compliance-report
           path: compliance-report.json
@@ -537,7 +537,7 @@ jobs:
             echo "No compliance-report.json present" >> compliance-daily.md
           fi
       - name: Upload Daily Compliance Summary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: daily-compliance-summary
           path: compliance-daily.md
