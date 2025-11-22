@@ -19,7 +19,7 @@ jobs:
       requires_approval: ${{ steps.risk.outputs.approval_required }}
       
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           
@@ -72,7 +72,7 @@ jobs:
     needs: risk-assessment
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Setup OPA
         uses: open-policy-agent/setup-opa@v2
@@ -115,7 +115,7 @@ jobs:
       actions: read
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -160,7 +160,7 @@ jobs:
         service: [payment-gateway, auth-service]
         
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Setup Go
         uses: actions/setup-go@v4
@@ -200,7 +200,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Deployment Strategy Selection
         id: deploy-strategy
@@ -282,7 +282,7 @@ jobs:
     if: always()
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Generate Compliance Report
         run: |

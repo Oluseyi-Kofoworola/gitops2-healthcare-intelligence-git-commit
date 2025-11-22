@@ -10,7 +10,7 @@ jobs:
     outputs:
       risk-level: ${{ steps.risk.outputs.risk-level }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Python
         uses: actions/setup-python@v5
@@ -35,7 +35,7 @@ jobs:
     needs: analyze-commits
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Go
         uses: actions/setup-go@v5
