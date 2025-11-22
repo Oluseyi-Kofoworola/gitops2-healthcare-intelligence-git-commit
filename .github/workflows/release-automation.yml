@@ -95,7 +95,7 @@ jobs:
           [ -f dist/checksums.sha256 ] && head -n 10 dist/checksums.sha256 >> $GITHUB_STEP_SUMMARY || true
 
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: release-build-${{ steps.meta.outputs.version }}
           path: dist

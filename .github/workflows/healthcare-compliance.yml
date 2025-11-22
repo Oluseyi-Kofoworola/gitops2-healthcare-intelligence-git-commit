@@ -34,7 +34,7 @@ jobs:
         python3 tools/ai_compliance_framework.py > compliance-report.md
         
     - name: Upload Compliance Artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: compliance-reports
         path: compliance-report.md
