@@ -277,7 +277,7 @@ jobs:
           cat daily-compliance-report.json
           
       - name: Upload Compliance Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: daily-compliance-report-${{ github.run_number }}
           path: daily-compliance-report.json

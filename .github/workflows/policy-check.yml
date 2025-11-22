@@ -106,7 +106,7 @@ jobs:
           cat policy-report.json
           
       - name: Upload Policy Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: healthcare-policy-report
           path: policy-report.json
