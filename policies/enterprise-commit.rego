@@ -75,8 +75,10 @@ is_low_friction_file(file) if { startswith(file, "tools/") }
 is_low_friction_file(file) if { startswith(file, ".github/") }
 is_low_friction_file(file) if { startswith(file, "config/") }
 is_low_friction_file(file) if { startswith(file, "policies/") }
+is_low_friction_file(file) if { startswith(file, "internal/") }
 is_low_friction_file(file) if { endswith(file, ".md") }
 is_low_friction_file(file) if { endswith(file, ".txt") }
+is_low_friction_file(file) if { endswith(file, ".sh") }
 is_low_friction_file(file) if { endswith(file, "_test.go") }
 is_low_friction_file(file) if { endswith(file, "_test.py") }
 is_low_friction_file(file) if { endswith(file, ".example.yml") }

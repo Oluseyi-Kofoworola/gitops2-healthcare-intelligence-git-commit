@@ -39,6 +39,12 @@ test-unit: ## Run unit tests for all services
 	@cd ../services/synthetic-phi-service && go test -v -race -cover ./...
 	@echo "$(GREEN)✓ Unit tests complete$(NC)"
 
+# Aliases for compatibility with main Makefile
+unit: test-unit ## Alias for test-unit
+integration: test-integration ## Alias for test-integration
+e2e: test-e2e ## Alias for test-e2e
+all: test-all ## Alias for test-all
+
 test-integration: ## Run integration tests (Docker Compose)
 	@echo "$(GREEN)Running integration tests...$(NC)"
 	@cd integration && chmod +x run-integration-tests.sh && ./run-integration-tests.sh

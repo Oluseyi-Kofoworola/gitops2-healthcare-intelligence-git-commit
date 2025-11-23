@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -68,6 +69,6 @@ func ShutdownTracer(ctx context.Context, tp *sdktrace.TracerProvider) error {
 // Helper function to add common attributes to spans
 func AddSpanAttributes(span trace.Span, attrs map[string]string) {
 	for key, value := range attrs {
-		span.SetAttributes(semconv.Schema(key, value))
+		span.SetAttributes(attribute.String(key, value))
 	}
 }
