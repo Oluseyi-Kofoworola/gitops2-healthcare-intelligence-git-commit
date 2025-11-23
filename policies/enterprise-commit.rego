@@ -23,6 +23,13 @@ multi_domain_high_risk(c) if {
   contains(c.changed_files[j], "auth-service")
 }
 
+# Documentation-only commits don't require compliance metadata
+commit_ok(c) if {
+  valid_format(c.message)
+  not low_signal(c.message)
+  is_docs_only(c)
+}
+
 # Baseline commit rule: exclude multi-domain high risk so metadata rules can apply
 commit_ok(c) if {
   valid_format(c.message)
@@ -58,12 +65,35 @@ commit_ok(c) if {
 }
 
 valid_format(msg) if {
-  regex.match("^(feat|fix|perf|security|docs|refactor|chore|breaking)\\([a-z-]+\\): .+", msg)
+  regex.match("^(feat|fix|perf|security|docs|refactor|chore|breaking)\\([a-z0-9_-]+\\): .+", msg)
 }
 
 low_signal(msg) if { contains(lower(msg), "wip") }
 low_signal(msg) if { msg == "update" }
 low_signal(msg) if { contains(lower(msg), "temp") }
+
+# Check if commit only touches documentation files
+is_docs_only(c) if {
+  count(c.changed_files) > 0
+  every file in c.changed_files {
+    is_docs_file(file)
+  }
+}
+
+is_docs_file(file) if { startswith(file, "docs/") }
+is_docs_file(file) if { endswith(file, ".md") }
+is_docs_file(file) if { endswith(file, ".txt") }
+is_docs_file(file) if { contains(file, "/README") }
+is_docs_file(file) if { contains(file, "/CHANGELOG") }
+is_docs_file(file) if { contains(file, "/CONTRIBUTING") }
+is_docs_file(file) if { 
+  startswith(file, "config/")
+  endswith(file, ".example.yml")
+}
+is_docs_file(file) if { 
+  startswith(file, "config/")
+  endswith(file, ".example.yaml")
+}
 
 # --- Helper stubs (WHY: simplify demo; real logic would parse metadata) ---
 healthcare_compliance_required(c) if { regex.match(".*\\b(phi|medical|fda)\\b.*", lower(c.message)) }
