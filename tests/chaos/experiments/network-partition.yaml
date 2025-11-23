@@ -1,0 +1,73 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: payment-to-auth-partition
+  namespace: default
+  annotations:
+    chaos-mesh.org/purpose: "Simulate network split between payment gateway and auth service"
+    chaos-mesh.org/severity: "high"
+spec:
+  action: partition
+  mode: all
+  selector:
+    namespaces:
+      - default
+    labelSelectors:
+      'app': 'payment-gateway'
+  direction: to
+  target:
+    selector:
+      namespaces:
+        - default
+      labelSelectors:
+        'app': 'auth-service'
+    mode: all
+  duration: '60s'
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: phi-service-isolation
+  namespace: default
+  annotations:
+    chaos-mesh.org/purpose: "Test PHI service behavior when isolated from other services"
+spec:
+  action: partition
+  mode: all
+  selector:
+    namespaces:
+      - default
+    labelSelectors:
+      'app': 'phi-service'
+  direction: both
+  target:
+    selector:
+      namespaces:
+        - default
+      labelSelectors:
+        'app': 'auth-service'
+    mode: all
+  duration: '2m'
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: complete-network-partition
+  namespace: default
+  annotations:
+    chaos-mesh.org/purpose: "Simulate complete network partition across all services"
+    chaos-mesh.org/severity: "critical"
+    chaos-mesh.org/approval-required: "true"
+spec:
+  action: partition
+  mode: all
+  selector:
+    namespaces:
+      - default
+    labelSelectors:
+      'tier': 'backend'
+  direction: both
+  externalTargets:
+    - 8.8.8.8/32  # External DNS
+    - 1.1.1.1/32  # Cloudflare DNS
+  duration: '30s'

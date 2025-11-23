@@ -1,0 +1,75 @@
+# GitOps Health - Code Owners
+
+# This file defines code ownership for automated review requests
+# Format: path/pattern @username @team
+
+# === GLOBAL OWNERS ===
+* @Oluseyi-Kofoworola
+
+# === DOCUMENTATION ===
+/docs/ @Oluseyi-Kofoworola
+/README.md @Oluseyi-Kofoworola
+/CONTRIBUTING.md @Oluseyi-Kofoworola
+*.md @Oluseyi-Kofoworola
+
+# === CORE CLI ===
+/tools/gitops_health/ @Oluseyi-Kofoworola
+/cmd/ @Oluseyi-Kofoworola
+pyproject.toml @Oluseyi-Kofoworola
+
+# === CRITICAL SERVICES ===
+# Payment gateway - requires dual approval
+/services/payment-gateway/ @Oluseyi-Kofoworola
+/services/payment-gateway/**/*.go @Oluseyi-Kofoworola
+
+# Auth service - requires security review
+/services/auth-service/ @Oluseyi-Kofoworola
+
+# PHI service - requires compliance review
+/services/phi-service/ @Oluseyi-Kofoworola
+/services/synthetic-phi-service/ @Oluseyi-Kofoworola
+
+# Medical device - requires regulatory review
+/services/medical-device/ @Oluseyi-Kofoworola
+
+# === COMPLIANCE & SECURITY ===
+/policies/ @Oluseyi-Kofoworola
+/policies/healthcare/ @Oluseyi-Kofoworola
+SECURITY.md @Oluseyi-Kofoworola
+/scripts/security-*.sh @Oluseyi-Kofoworola
+
+# === INFRASTRUCTURE ===
+/infra/ @Oluseyi-Kofoworola
+/.github/workflows/ @Oluseyi-Kofoworola
+Dockerfile @Oluseyi-Kofoworola
+docker-compose*.yml @Oluseyi-Kofoworola
+
+# === TESTING ===
+/tests/ @Oluseyi-Kofoworola
+*_test.py @Oluseyi-Kofoworola
+*_test.go @Oluseyi-Kofoworola
+*_test.rego @Oluseyi-Kofoworola
+
+# === CONFIGURATION ===
+/config/ @Oluseyi-Kofoworola
+*.yaml @Oluseyi-Kofoworola
+*.yml @Oluseyi-Kofoworola
+.gitignore @Oluseyi-Kofoworola
+
+# === PACKAGE MANAGEMENT ===
+package.json @Oluseyi-Kofoworola
+package-lock.json @Oluseyi-Kofoworola
+go.mod @Oluseyi-Kofoworola
+go.sum @Oluseyi-Kofoworola
+requirements.txt @Oluseyi-Kofoworola
+
+# === LEGACY (No new changes accepted) ===
+/legacy/ @Oluseyi-Kofoworola
+# Legacy tools are read-only - no new changes
+
+# === TEAM-BASED OWNERSHIP (Future) ===
+# Uncomment and adjust when team grows:
+# /services/ @backend-team
+# /tools/gitops_health/ @cli-team
+# /policies/ @compliance-team
+# /infra/ @platform-team

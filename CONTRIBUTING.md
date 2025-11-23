@@ -10,7 +10,7 @@ This isn't just another DevOps tool—it's a healthcare regulatory intelligence 
 
 ### 1. **Fork & Clone**
 ```bash
-git clone https://github.com/ITcredibl/gitops2-healthcare-intelligence-git-commit
+git clone https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit.git
 cd gitops2-healthcare-intelligence-git-commit
 ./setup-git-aliases.sh  # Install GitOps 2.0 aliases
 ```

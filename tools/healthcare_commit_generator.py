@@ -3,6 +3,7 @@
 Healthcare Commit Template Generator
 Generates AI audit-ready commit messages for healthcare platforms
 Security: Input validation, safe YAML loading, encoding specification
+Enterprise: Token limit protection, secret sanitization
 """
 
 import argparse
@@ -21,6 +22,15 @@ except ImportError:
         "Error: PyYAML is required. Install with: pip install pyyaml", file=sys.stderr
     )
     sys.exit(1)
+
+# Import enterprise safety modules
+try:
+    from token_limit_guard import check_token_limit, TokenLimitExceededError, get_git_diff
+    from secret_sanitizer import SecretSanitizer
+    ENTERPRISE_SAFETY_ENABLED = True
+except ImportError:
+    logger.warning("Enterprise safety modules not found - running without protection")
+    ENTERPRISE_SAFETY_ENABLED = False
 
 # Configure secure logging
 logging.basicConfig(
@@ -66,7 +76,49 @@ class HealthcareCommitGenerator:
     def generate_commit_template(
         self, commit_type: str, scope: str, files: List[str], description: str
     ) -> str:
-        """Generate healthcare-compliant commit message template"""
+        """Generate healthcare-compliant commit message template with enterprise safety"""
+        
+        # ENTERPRISE SAFETY CHECK 1: Token Limit Protection
+        if ENTERPRISE_SAFETY_ENABLED:
+            diff_text = get_git_diff("HEAD")
+            if diff_text:
+                estimated, max_tokens, is_safe = check_token_limit(diff_text, self.default_model)
+                if not is_safe:
+                    logger.error(
+                        f"⚠️  LARGE CHANGESET: {estimated:,} tokens exceeds {max_tokens:,} limit"
+                    )
+                    raise TokenLimitExceededError(
+                        f"Diff too large for {self.default_model}.\n"
+                        f"Options:\n"
+                        f"  1. Split into smaller commits (<100 files)\n"
+                        f"  2. Use --summary mode for high-level commit\n"
+                        f"  3. Switch to GPT-4 Turbo (128K context)"
+                    )
+                logger.info(f"✅ Token usage safe: {estimated:,}/{max_tokens:,} ({estimated/max_tokens*100:.1f}%)")
+        
+        # ENTERPRISE SAFETY CHECK 2: Secret Sanitization
+        if ENTERPRISE_SAFETY_ENABLED:
+            sanitizer = SecretSanitizer()
+            for file_path in files:
+                if sanitizer.is_sensitive_file(file_path):
+                    logger.error(f"⛔ Sensitive file detected: {file_path}")
+                    raise ValueError(
+                        f"Cannot process sensitive file: {file_path}\n"
+                        f"Exclude .env, .key, secrets.* files from AI processing"
+                    )
+            
+            # Check diff for secrets/PHI before AI processing
+            if diff_text:
+                is_safe, matches = sanitizer.validate_for_ai_processing(diff_text)
+                if not is_safe:
+                    report = sanitizer.generate_safety_report(matches)
+                    logger.error("⛔ Secrets detected in diff")
+                    raise ValueError(
+                        f"Cannot generate AI commit - secrets detected:\n{report}\n"
+                        f"Remove secrets before proceeding."
+                    )
+                if matches:
+                    logger.warning(f"⚠️  {len(matches)} potential secrets detected (proceeding with caution)")
 
         compliance_domains = self._detect_compliance_domains(files)
         risk_level = self._assess_risk_level(commit_type, files)

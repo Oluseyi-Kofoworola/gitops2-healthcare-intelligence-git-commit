@@ -1,0 +1,385 @@
+name: Canary Deployment
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ============================================================================
+  # PRE-DEPLOYMENT: Risk Assessment & Compliance
+  # ============================================================================
+  
+  assess-risk:
+    name: Risk Assessment
+    runs-on: ubuntu-latest
+    outputs:
+      risk_score: ${{ steps.score.outputs.risk_score }}
+      risk_level: ${{ steps.score.outputs.risk_level }}
+      deployment_strategy: ${{ steps.score.outputs.deployment_strategy }}
+      should_deploy: ${{ steps.gate.outputs.should_deploy }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for risk analysis
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install GitOps Health CLI
+        run: |
+          pip install -e .
+          gitops-health --version
+      
+      - name: Calculate Risk Score
+        id: score
+        run: |
+          # Get risk score for HEAD commit
+          RESULT=$(gitops-health risk score --format json)
+          
+          # Extract values
+          RISK_SCORE=$(echo "$RESULT" | jq -r '.overall_score')
+          RISK_LEVEL=$(echo "$RESULT" | jq -r '.risk_level')
+          STRATEGY=$(echo "$RESULT" | jq -r '.deployment_strategy')
+          
+          # Set outputs
+          echo "risk_score=$RISK_SCORE" >> $GITHUB_OUTPUT
+          echo "risk_level=$RISK_LEVEL" >> $GITHUB_OUTPUT
+          echo "deployment_strategy=$STRATEGY" >> $GITHUB_OUTPUT
+          
+          # Save full report
+          echo "$RESULT" > risk-report.json
+          
+          # Display summary
+          echo "### 🎯 Risk Assessment" >> $GITHUB_STEP_SUMMARY
+          echo "- **Score**: $RISK_SCORE/100" >> $GITHUB_STEP_SUMMARY
+          echo "- **Level**: $RISK_LEVEL" >> $GITHUB_STEP_SUMMARY
+          echo "- **Strategy**: $STRATEGY" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Compliance Gate
+        id: gate
+        run: |
+          # Run compliance check
+          if gitops-health compliance check --files $(git diff --name-only HEAD~1 HEAD) --format json > compliance-report.json; then
+            echo "✅ Compliance check PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Compliance check FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+            cat compliance-report.json >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+      
+      - name: Upload Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: risk-compliance-reports
+          path: |
+            risk-report.json
+            compliance-report.json
+          retention-days: 90
+
+  # ============================================================================
+  # BUILD & TEST
+  # ============================================================================
+  
+  build:
+    name: Build Container
+    runs-on: ubuntu-latest
+    needs: assess-risk
+    if: needs.assess-risk.outputs.should_deploy == 'true'
+    
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=canary-
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+      
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================================================
+  # CANARY DEPLOYMENT: 10% → 50% → 100%
+  # ============================================================================
+  
+  deploy-canary-10:
+    name: Deploy Canary (10%)
+    runs-on: ubuntu-latest
+    needs: [assess-risk, build]
+    environment:
+      name: production-canary-10
+      url: https://canary.example.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Kubernetes (10%)
+        run: |
+          # Update canary deployment to 10% traffic
+          kubectl set image deployment/app-canary \
+            app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:canary-${{ github.sha }} \
+            -n production
+          
+          # Set traffic split: 10% canary, 90% stable
+          kubectl apply -f - <<EOF
+          apiVersion: networking.istio.io/v1beta1
+          kind: VirtualService
+          metadata:
+            name: app
+            namespace: production
+          spec:
+            hosts:
+              - app.example.com
+            http:
+              - match:
+                  - headers:
+                      canary:
+                        exact: "true"
+                route:
+                  - destination:
+                      host: app-canary
+                    weight: 100
+              - route:
+                  - destination:
+                      host: app-stable
+                    weight: 90
+                  - destination:
+                      host: app-canary
+                    weight: 10
+          EOF
+      
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/app-canary -n production --timeout=5m
+      
+      - name: Monitor metrics (5 min)
+        run: |
+          echo "### 📊 Canary 10% Monitoring" >> $GITHUB_STEP_SUMMARY
+          
+          # Monitor for 5 minutes
+          for i in {1..10}; do
+            # Check error rate
+            ERROR_RATE=$(kubectl exec -n monitoring deploy/prometheus -- \
+              promtool query instant 'rate(http_requests_total{status=~"5..",deployment="app-canary"}[1m])' | \
+              jq -r '.data.result[0].value[1]')
+            
+            echo "Iteration $i: Error rate = $ERROR_RATE" >> $GITHUB_STEP_SUMMARY
+            
+            # Fail if error rate > 1%
+            if (( $(echo "$ERROR_RATE > 0.01" | bc -l) )); then
+              echo "❌ High error rate detected!" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+            
+            sleep 30
+          done
+          
+          echo "✅ Canary 10% stable" >> $GITHUB_STEP_SUMMARY
+
+  deploy-canary-50:
+    name: Deploy Canary (50%)
+    runs-on: ubuntu-latest
+    needs: deploy-canary-10
+    environment:
+      name: production-canary-50
+      url: https://canary.example.com
+    
+    steps:
+      - name: Increase traffic to 50%
+        run: |
+          kubectl apply -f - <<EOF
+          apiVersion: networking.istio.io/v1beta1
+          kind: VirtualService
+          metadata:
+            name: app
+            namespace: production
+          spec:
+            hosts:
+              - app.example.com
+            http:
+              - route:
+                  - destination:
+                      host: app-stable
+                    weight: 50
+                  - destination:
+                      host: app-canary
+                    weight: 50
+          EOF
+      
+      - name: Monitor metrics (10 min)
+        run: |
+          echo "### 📊 Canary 50% Monitoring" >> $GITHUB_STEP_SUMMARY
+          
+          for i in {1..20}; do
+            ERROR_RATE=$(kubectl exec -n monitoring deploy/prometheus -- \
+              promtool query instant 'rate(http_requests_total{status=~"5..",deployment="app-canary"}[1m])' | \
+              jq -r '.data.result[0].value[1]')
+            
+            echo "Iteration $i: Error rate = $ERROR_RATE" >> $GITHUB_STEP_SUMMARY
+            
+            if (( $(echo "$ERROR_RATE > 0.01" | bc -l) )); then
+              echo "❌ High error rate detected!" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+            
+            sleep 30
+          done
+          
+          echo "✅ Canary 50% stable" >> $GITHUB_STEP_SUMMARY
+
+  deploy-canary-100:
+    name: Promote to 100%
+    runs-on: ubuntu-latest
+    needs: deploy-canary-50
+    environment:
+      name: production
+      url: https://app.example.com
+    
+    steps:
+      - name: Promote canary to stable
+        run: |
+          # Update stable deployment with canary image
+          kubectl set image deployment/app-stable \
+            app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:canary-${{ github.sha }} \
+            -n production
+          
+          # Route all traffic to stable
+          kubectl apply -f - <<EOF
+          apiVersion: networking.istio.io/v1beta1
+          kind: VirtualService
+          metadata:
+            name: app
+            namespace: production
+          spec:
+            hosts:
+              - app.example.com
+            http:
+              - route:
+                  - destination:
+                      host: app-stable
+                    weight: 100
+          EOF
+      
+      - name: Wait for stable rollout
+        run: |
+          kubectl rollout status deployment/app-stable -n production --timeout=10m
+      
+      - name: Tag as production
+        run: |
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:canary-${{ github.sha }} \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:production
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:production
+      
+      - name: Deployment summary
+        run: |
+          echo "### 🎉 Canary Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:canary-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Risk Score**: ${{ needs.assess-risk.outputs.risk_score }}/100" >> $GITHUB_STEP_SUMMARY
+          echo "- **Risk Level**: ${{ needs.assess-risk.outputs.risk_level }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Stages**: 10% → 50% → 100%" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # POST-DEPLOYMENT
+  # ============================================================================
+  
+  generate-audit-trail:
+    name: Generate Audit Trail
+    runs-on: ubuntu-latest
+    needs: deploy-canary-100
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install GitOps Health CLI
+        run: pip install -e .
+      
+      - name: Export audit trail
+        run: |
+          gitops-health audit export \
+            --since "1 day ago" \
+            --format json \
+            -o audit-trail-${{ github.sha }}.json
+      
+      - name: Upload audit trail
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-trail-${{ github.sha }}
+          path: audit-trail-${{ github.sha }}.json
+          retention-days: 2555  # 7 years for HIPAA compliance
+      
+      - name: Notify compliance team
+        if: needs.assess-risk.outputs.risk_level == 'HIGH' || needs.assess-risk.outputs.risk_level == 'CRITICAL'
+        run: |
+          # Send notification for high-risk deployments
+          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "text": "🚨 High-risk canary deployment completed",
+              "attachments": [{
+                "color": "warning",
+                "fields": [
+                  {"title": "Commit", "value": "${{ github.sha }}", "short": true},
+                  {"title": "Risk Score", "value": "${{ needs.assess-risk.outputs.risk_score }}/100", "short": true},
+                  {"title": "Environment", "value": "production", "short": true},
+                  {"title": "Audit Trail", "value": "Available in artifacts", "short": true}
+                ]
+              }]
+            }'

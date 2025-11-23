@@ -1,0 +1,57 @@
+# filepath: tests/integration/prometheus.yml
+# Prometheus Configuration for Integration Tests
+
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+  external_labels:
+    environment: 'integration-test'
+    cluster: 'docker-compose'
+
+scrape_configs:
+  # Auth Service
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-service:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # Payment Gateway
+  - job_name: 'payment-gateway'
+    static_configs:
+      - targets: ['payment-gateway:8081']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # PHI Service
+  - job_name: 'phi-service'
+    static_configs:
+      - targets: ['phi-service:8083']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # Medical Device Service
+  - job_name: 'medical-device'
+    static_configs:
+      - targets: ['medical-device:8084']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # Synthetic PHI Service
+  - job_name: 'synthetic-phi'
+    static_configs:
+      - targets: ['synthetic-phi:8085']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # OpenTelemetry Collector
+  - job_name: 'otel-collector'
+    static_configs:
+      - targets: ['otel-collector:8889']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

@@ -1,6 +1,7 @@
 """
 AI Agent Healthcare Compliance Framework
 Integrates AI agents for automated compliance, security, and audit workflows
+Enterprise Safety: Token limit protection, secret sanitization, hallucination prevention
 """
 
 import asyncio
@@ -19,6 +20,20 @@ try:
 except ImportError:
     print("Error: PyYAML is required. Install with: pip install pyyaml")
     raise
+
+# Import enterprise safety modules
+try:
+    from token_limit_guard import (
+        check_token_limit, 
+        TokenLimitExceededError,
+        chunk_diff_safely,
+        validate_ai_input_size
+    )
+    from secret_sanitizer import SecretSanitizer
+    ENTERPRISE_SAFETY_ENABLED = True
+except ImportError:
+    logging.warning("Enterprise safety modules not found - running without protection")
+    ENTERPRISE_SAFETY_ENABLED = False
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -70,7 +85,58 @@ class HealthcareAIFramework:
         return agents
     
     async def analyze_commit_compliance(self, commit_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze commit for compliance using AI agents"""
+        """
+        Analyze commit for compliance using AI agents
+        ENTERPRISE SAFETY: Token limits, secret sanitization, hallucination prevention
+        """
+        
+        # SAFETY CHECK 1: Secret Sanitization (BEFORE AI processing)
+        if ENTERPRISE_SAFETY_ENABLED:
+            sanitizer = SecretSanitizer()
+            
+            # Check commit message
+            message_safe, message_matches = sanitizer.validate_for_ai_processing(
+                commit_data.get("message", "")
+            )
+            if not message_safe:
+                logger.error("⛔ Secrets detected in commit message")
+                return {
+                    "timestamp": datetime.now().isoformat(),
+                    "commit_sha": commit_data.get("sha"),
+                    "compliance_status": "BLOCKED",
+                    "risk_score": 1.0,
+                    "blocking_reason": "Secrets/PHI detected in commit message",
+                    "security_report": sanitizer.generate_safety_report(message_matches)
+                }
+            
+            # Check files for sensitive paths
+            for file_path in commit_data.get("files", []):
+                if sanitizer.is_sensitive_file(file_path):
+                    logger.error(f"⛔ Sensitive file in changeset: {file_path}")
+                    return {
+                        "timestamp": datetime.now().isoformat(),
+                        "commit_sha": commit_data.get("sha"),
+                        "compliance_status": "BLOCKED",
+                        "risk_score": 1.0,
+                        "blocking_reason": f"Sensitive file detected: {file_path}",
+                        "recommendation": "Exclude .env, .key, secrets.* files from commits"
+                    }
+        
+        # SAFETY CHECK 2: Token Limit Protection
+        if ENTERPRISE_SAFETY_ENABLED:
+            full_commit_data = json.dumps(commit_data)
+            try:
+                validate_ai_input_size(full_commit_data, context="commit_data")
+            except TokenLimitExceededError as e:
+                logger.error(f"⚠️  Commit data exceeds token limits: {e}")
+                return {
+                    "timestamp": datetime.now().isoformat(),
+                    "commit_sha": commit_data.get("sha"),
+                    "compliance_status": "REQUIRES_CHUNKING",
+                    "risk_score": 0.0,
+                    "blocking_reason": "Commit too large for AI processing",
+                    "recommendation": "Break into smaller commits or use batch processing"
+                }
         
         results = {
             "timestamp": datetime.now().isoformat(),
@@ -78,7 +144,11 @@ class HealthcareAIFramework:
             "compliance_status": "PENDING",
             "agent_analyses": {},
             "required_actions": [],
-            "risk_score": 0.0
+            "risk_score": 0.0,
+            "safety_checks": {
+                "secret_sanitization": "PASSED" if ENTERPRISE_SAFETY_ENABLED else "DISABLED",
+                "token_limits": "PASSED" if ENTERPRISE_SAFETY_ENABLED else "DISABLED"
+            }
         }
         
         # Parallel analysis by different AI agents

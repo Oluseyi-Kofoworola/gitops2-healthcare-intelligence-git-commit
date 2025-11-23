@@ -1,0 +1,69 @@
+# filepath: tests/integration/otel-collector-config.yaml
+# OpenTelemetry Collector Configuration for Integration Tests
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+
+  attributes:
+    actions:
+      - key: environment
+        value: integration-test
+        action: insert
+      - key: test_run_id
+        from_attribute: test.run.id
+        action: upsert
+
+exporters:
+  # Export to console for debugging
+  logging:
+    loglevel: debug
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+  # Export to Jaeger for distributed tracing visualization
+  jaeger:
+    endpoint: jaeger:14250
+    tls:
+      insecure: true
+
+  # Export to Prometheus for metrics
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    namespace: integration_tests
+    const_labels:
+      environment: integration
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, attributes]
+      exporters: [logging]
+    
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, attributes]
+      exporters: [logging, prometheus]
+
+  extensions: []
+
+  telemetry:
+    logs:
+      level: debug
+    metrics:
+      level: detailed
+      address: 0.0.0.0:8888

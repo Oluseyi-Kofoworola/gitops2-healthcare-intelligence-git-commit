@@ -32,6 +32,29 @@ func (h PaymentHandler) Health(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Readiness returns readiness status for Kubernetes readiness probe
+func (h PaymentHandler) Readiness(w http.ResponseWriter, r *http.Request) {
+	h.setSecurityHeaders(w)
+	w.Header().Set("Content-Type", "application/json")
+	
+	// In production, check dependencies (database, external APIs, etc.)
+	ready := true
+	
+	if ready {
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"ready": true,
+			"service": "payment-gateway",
+		})
+	} else {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"ready": false,
+			"service": "payment-gateway",
+		})
+	}
+}
+
 // ProcessPayment is an HTTP handler expected by tests. It wraps Charge logic.
 func (h PaymentHandler) ProcessPayment(w http.ResponseWriter, r *http.Request) {
 	h.handleChargeCommon(w, r)

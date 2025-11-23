@@ -342,7 +342,7 @@ git healthcare --training-mode
 
 ### Getting Help
 
-1. **Repository Issues**: https://github.com/ITcredibl/gitops2-healthcare-intelligence/issues
+1. **Repository Issues**: https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit/issues
 2. **Copilot Documentation**: https://docs.github.com/en/copilot  
 3. **Healthcare Compliance**: Consult your privacy officer or regulatory team
 4. **Community Support**: Join the GitOps 2.0 Healthcare community

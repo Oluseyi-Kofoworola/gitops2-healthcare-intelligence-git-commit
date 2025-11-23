@@ -1,0 +1,465 @@
+openapi: 3.0.3
+info:
+  title: Payment Gateway API
+  description: |
+    Production-grade payment processing service for healthcare with SOX/PCI compliance.
+    
+    **Key Features:**
+    - SOX Sarbanes-Oxley compliance
+    - PCI-DSS secure payment processing
+    - HIPAA patient billing integration
+    - FDA 21 CFR Part 11 medical device payments
+    - OpenTelemetry distributed tracing
+    - Prometheus metrics
+    
+  version: 1.0.0
+  contact:
+    name: Platform Engineering
+    email: platform@example.com
+  license:
+    name: Internal Use Only
+
+servers:
+  - url: http://localhost:8082
+    description: Local development
+  - url: http://payment-gateway.healthcare.svc.cluster.local
+    description: Kubernetes cluster
+  - url: https://api.example.com/payments
+    description: Production
+
+tags:
+  - name: Payments
+    description: Payment processing operations
+  - name: Health
+    description: Health and readiness checks
+  - name: Monitoring
+    description: Metrics and observability
+  - name: Compliance
+    description: SOX/PCI/HIPAA compliance endpoints
+
+paths:
+  /process:
+    post:
+      tags:
+        - Payments
+      summary: Process payment transaction
+      description: |
+        Process a payment transaction with full compliance tracking.
+        Supports HIPAA patient billing and FDA device purchases.
+      operationId: processPayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+            examples:
+              standard_payment:
+                summary: Standard payment
+                value:
+                  amount: 150.00
+                  currency: USD
+                  payment_method: card
+                  card_token: tok_visa_4242
+              hipaa_payment:
+                summary: HIPAA patient billing
+                value:
+                  amount: 2500.00
+                  currency: USD
+                  payment_method: card
+                  card_token: tok_visa_4242
+                  patient_id: PAT123456
+                  metadata:
+                    procedure: MRI_SCAN
+                    provider: HOSP_001
+              fda_device_payment:
+                summary: FDA medical device purchase
+                value:
+                  amount: 50000.00
+                  currency: USD
+                  payment_method: card
+                  card_token: tok_visa_4242
+                  device_id: DEV789012
+                  metadata:
+                    device_type: pacemaker
+                    manufacturer: MedTech_Inc
+      responses:
+        '200':
+          description: Payment processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+              examples:
+                approved:
+                  value:
+                    transaction_id: TXN_20250423_001
+                    status: approved
+                    amount: 150.00
+                    currency: USD
+                    processing_time_ms: 45
+                    compliance:
+                      sox_audit_id: AUD_20250423_001
+                      hipaa_logged: true
+                      fda_validated: false
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '402':
+          description: Payment declined
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - ApiKey: []
+        - BearerAuth: []
+
+  /charge:
+    post:
+      tags:
+        - Payments
+      summary: Charge payment (simplified endpoint)
+      description: Simplified payment charging endpoint without full compliance tracking
+      operationId: chargePayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - payment_method
+                - card_token
+              properties:
+                amount:
+                  type: number
+                  format: double
+                  example: 99.99
+                payment_method:
+                  type: string
+                  example: card
+                card_token:
+                  type: string
+                  example: tok_visa_4242
+      responses:
+        '200':
+          description: Payment charged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          description: Invalid request
+        '402':
+          description: Payment declined
+        '500':
+          description: Internal server error
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Basic health check endpoint for liveness probes
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  service:
+                    type: string
+                    example: payment-gateway
+                  version:
+                    type: string
+                    example: 1.0.0
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /metrics:
+    get:
+      tags:
+        - Monitoring
+      summary: Prometheus metrics
+      description: Prometheus-formatted metrics endpoint
+      operationId: getMetrics
+      responses:
+        '200':
+          description: Metrics in Prometheus format
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # HELP payment_transactions_total Total payment transactions
+                  # TYPE payment_transactions_total counter
+                  payment_transactions_total{status="approved"} 1234
+                  payment_transactions_total{status="declined"} 56
+
+  /compliance/status:
+    get:
+      tags:
+        - Compliance
+      summary: Compliance status report
+      description: Detailed compliance status for SOX, PCI, HIPAA, and FDA frameworks
+      operationId: getComplianceStatus
+      responses:
+        '200':
+          description: Compliance status report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplianceReport'
+      security:
+        - ApiKey: []
+        - BearerAuth: []
+
+  /audit/trail:
+    get:
+      tags:
+        - Compliance
+      summary: Audit trail
+      description: Access audit trail for SOX compliance (7-year retention)
+      operationId: getAuditTrail
+      parameters:
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Audit trail entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditTrail'
+      security:
+        - ApiKey: []
+        - BearerAuth: []
+
+  /alerts:
+    get:
+      tags:
+        - Monitoring
+      summary: Active alerts
+      description: Current active alerts for compliance violations or performance issues
+      operationId: getAlerts
+      responses:
+        '200':
+          description: Active alerts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_alerts:
+                    type: integer
+                  active_alerts:
+                    type: array
+                    items:
+                      type: object
+
+components:
+  schemas:
+    PaymentRequest:
+      type: object
+      required:
+        - amount
+        - currency
+        - payment_method
+        - card_token
+      properties:
+        amount:
+          type: number
+          format: double
+          description: Payment amount
+          example: 150.00
+        currency:
+          type: string
+          description: ISO 4217 currency code
+          example: USD
+        payment_method:
+          type: string
+          enum: [card, bank_transfer, ach]
+          example: card
+        card_token:
+          type: string
+          description: Tokenized card data (PCI compliant)
+          example: tok_visa_4242
+        patient_id:
+          type: string
+          description: Patient ID for HIPAA tracking (optional)
+          example: PAT123456
+        device_id:
+          type: string
+          description: Medical device ID for FDA tracking (optional)
+          example: DEV789012
+        metadata:
+          type: object
+          description: Additional transaction metadata
+          additionalProperties:
+            type: string
+          example:
+            procedure: MRI_SCAN
+            provider: HOSP_001
+
+    PaymentResponse:
+      type: object
+      properties:
+        transaction_id:
+          type: string
+          description: Unique transaction identifier
+          example: TXN_20250423_001
+        status:
+          type: string
+          enum: [approved, declined, pending, error]
+          example: approved
+        amount:
+          type: number
+          format: double
+          example: 150.00
+        currency:
+          type: string
+          example: USD
+        processing_time_ms:
+          type: integer
+          description: Processing time in milliseconds
+          example: 45
+        compliance:
+          type: object
+          properties:
+            sox_audit_id:
+              type: string
+              example: AUD_20250423_001
+            hipaa_logged:
+              type: boolean
+              example: true
+            fda_validated:
+              type: boolean
+              example: false
+            pci_compliant:
+              type: boolean
+              example: true
+        error_message:
+          type: string
+          description: Error message if status is declined or error
+          example: Insufficient funds
+
+    ComplianceReport:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        compliance_frameworks:
+          type: object
+          properties:
+            HIPAA:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: compliant
+                phi_transactions:
+                  type: integer
+                audit_trails:
+                  type: integer
+                violations:
+                  type: integer
+            SOX:
+              type: object
+              properties:
+                status:
+                  type: string
+                financial_controls:
+                  type: string
+                control_testing:
+                  type: string
+            PCI:
+              type: object
+              properties:
+                status:
+                  type: string
+                card_data_encrypted:
+                  type: boolean
+            FDA:
+              type: object
+              properties:
+                status:
+                  type: string
+                device_transactions:
+                  type: integer
+
+    AuditTrail:
+      type: object
+      properties:
+        total_entries:
+          type: integer
+        retention_days:
+          type: integer
+        recent_entries:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              action:
+                type: string
+              user:
+                type: string
+              transaction_id:
+                type: string
+              details:
+                type: object
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -1,0 +1,419 @@
+openapi: 3.0.3
+info:
+  title: Authentication Service API
+  description: |
+    Production-grade JWT-based authentication and authorization service for healthcare applications.
+    
+    **Key Features:**
+    - JWT token generation with HS256 signing
+    - Token validation and introspection
+    - Scope-based authorization (payment:*, phi:*, admin)
+    - Role-based access control (RBAC)
+    - OpenTelemetry distributed tracing
+    - Prometheus metrics
+    - Security headers (OWASP best practices)
+    
+    **Security:**
+    - HTTPS only (enforced via HSTS)
+    - Content Security Policy
+    - XSS protection
+    - Clickjacking prevention
+    - Token expiration (configurable, default 1 hour)
+    
+    **Compliance:**
+    - HIPAA-compliant audit logging
+    - SOX-compliant access controls
+    - FDA-ready authentication patterns
+  version: 2.0.0
+  contact:
+    name: Platform Engineering Team
+    email: platform@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8083
+    description: Local development
+  - url: https://auth.staging.example.com
+    description: Staging environment
+  - url: https://auth.prod.example.com
+    description: Production environment
+
+tags:
+  - name: authentication
+    description: Token generation and validation
+  - name: health
+    description: Health and readiness checks
+  - name: observability
+    description: Metrics and monitoring
+
+paths:
+  /:
+    get:
+      summary: Service Information
+      description: Returns basic service information and version
+      tags:
+        - health
+      responses:
+        '200':
+          description: Service information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: "auth-service"
+                  version:
+                    type: string
+                    example: "2.0.0"
+                  status:
+                    type: string
+                    example: "ok"
+
+  /health:
+    get:
+      summary: Health Check
+      description: Returns service health status (always returns 200 if service is running)
+      tags:
+        - health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /readiness:
+    get:
+      summary: Readiness Check
+      description: Returns service readiness status (checks dependencies)
+      tags:
+        - health
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ready"
+        '503':
+          description: Service is not ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /token:
+    post:
+      summary: Generate JWT Token
+      description: |
+        Generates a JWT token for a user with specified scopes and role.
+        
+        **Token Claims:**
+        - `user_id`: User identifier
+        - `scopes`: Array of permission scopes
+        - `role`: User role (admin, developer, analyst, viewer)
+        - `exp`: Token expiration timestamp
+        - `iat`: Token issued at timestamp
+        - `iss`: Token issuer
+        
+        **Scopes:**
+        - `payment:read`, `payment:write`, `payment:admin` - Payment gateway access
+        - `phi:read`, `phi:write`, `phi:admin` - PHI data access
+        - `admin` - Administrative access
+        
+        **Roles:**
+        - `admin` - Full access to all resources
+        - `developer` - Read/write access to development resources
+        - `analyst` - Read-only access to analytics
+        - `viewer` - Read-only access to public resources
+      tags:
+        - authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+            examples:
+              admin_user:
+                summary: Admin user with full access
+                value:
+                  user_id: "admin@example.com"
+                  scopes: ["admin", "payment:admin", "phi:admin"]
+                  role: "admin"
+              developer_user:
+                summary: Developer with payment access
+                value:
+                  user_id: "dev@example.com"
+                  scopes: ["payment:read", "payment:write"]
+                  role: "developer"
+              analyst_user:
+                summary: Analyst with read-only PHI access
+                value:
+                  user_id: "analyst@example.com"
+                  scopes: ["phi:read"]
+                  role: "analyst"
+      responses:
+        '200':
+          description: Token generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Invalid request body"
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Method not allowed"
+
+  /introspect:
+    get:
+      summary: Validate JWT Token
+      description: |
+        Validates a JWT token and returns token claims if valid.
+        
+        **Validation Checks:**
+        - Token signature verification
+        - Token expiration check
+        - Token format validation
+        - Issuer verification
+        
+        **Security Events Tracked:**
+        - Valid token introspection
+        - Invalid token format
+        - Expired token
+        - Missing authorization header
+      tags:
+        - authentication
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token to validate
+          schema:
+            type: string
+            example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntrospectionResponse'
+        '400':
+          description: Invalid token format or missing authorization header
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missing_header:
+                  summary: Missing authorization header
+                  value:
+                    error: "Missing Authorization header"
+                invalid_format:
+                  summary: Invalid token format
+                  value:
+                    error: "Invalid token format"
+        '401':
+          description: Token is invalid or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_token:
+                  summary: Invalid token signature
+                  value:
+                    error: "Invalid token"
+                expired_token:
+                  summary: Token has expired
+                  value:
+                    error: "Token expired"
+
+  /metrics:
+    get:
+      summary: Prometheus Metrics
+      description: |
+        Returns Prometheus metrics for monitoring.
+        
+        **Metrics Exposed:**
+        - `auth_tokens_validated_total` - Total tokens validated (labeled by result)
+        - `auth_request_duration_seconds` - Request duration histogram (labeled by endpoint)
+        - `auth_active_requests` - Current active requests
+        - `auth_security_events_total` - Security events (labeled by event type)
+        - `go_*` - Standard Go runtime metrics
+        - `process_*` - Standard process metrics
+      tags:
+        - observability
+      responses:
+        '200':
+          description: Prometheus metrics in text format
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # HELP auth_tokens_validated_total Total number of tokens validated
+                  # TYPE auth_tokens_validated_total counter
+                  auth_tokens_validated_total{result="valid"} 1234
+                  auth_tokens_validated_total{result="invalid"} 56
+
+components:
+  schemas:
+    TokenRequest:
+      type: object
+      required:
+        - user_id
+        - scopes
+        - role
+      properties:
+        user_id:
+          type: string
+          description: Unique user identifier (email, username, or UUID)
+          example: "user@example.com"
+        scopes:
+          type: array
+          description: Array of permission scopes
+          items:
+            type: string
+            enum:
+              - admin
+              - payment:read
+              - payment:write
+              - payment:admin
+              - phi:read
+              - phi:write
+              - phi:admin
+          example: ["payment:read", "payment:write"]
+        role:
+          type: string
+          description: User role for RBAC
+          enum:
+            - admin
+            - developer
+            - analyst
+            - viewer
+          example: "developer"
+
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT token (HS256 signed)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidXNlckBleGFtcGxlLmNvbSIsInNjb3BlcyI6WyJwYXltZW50OnJlYWQiLCJwYXltZW50OndyaXRlIl0sInJvbGUiOiJkZXZlbG9wZXIiLCJleHAiOjE3MDA4NTYwMDAsImlhdCI6MTcwMDg1MjQwMCwiaXNzIjoiYXV0aC1zZXJ2aWNlIn0.abc123..."
+        expires_in:
+          type: integer
+          description: Token expiration time in seconds
+          example: 3600
+
+    IntrospectionResponse:
+      type: object
+      properties:
+        active:
+          type: boolean
+          description: Whether the token is active and valid
+          example: true
+        user_id:
+          type: string
+          description: User identifier from token claims
+          example: "user@example.com"
+        scopes:
+          type: array
+          description: Permission scopes from token claims
+          items:
+            type: string
+          example: ["payment:read", "payment:write"]
+        role:
+          type: string
+          description: User role from token claims
+          example: "developer"
+        exp:
+          type: integer
+          description: Token expiration timestamp (Unix time)
+          example: 1700856000
+        iat:
+          type: integer
+          description: Token issued at timestamp (Unix time)
+          example: 1700852400
+        iss:
+          type: string
+          description: Token issuer
+          example: "auth-service"
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Invalid request body"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication (use /token endpoint to generate)
+
+security:
+  - BearerAuth: []
+
+x-observability:
+  tracing:
+    provider: OpenTelemetry
+    exporter: OTLP/gRPC
+    endpoint: otel-collector:4317
+  metrics:
+    provider: Prometheus
+    port: 8083
+    path: /metrics
+  logging:
+    format: JSON
+    level: INFO
+    library: zerolog
+
+x-deployment:
+  replicas:
+    min: 3
+    max: 10
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  autoscaling:
+    enabled: true
+    target_cpu: 70
+    target_memory: 80
+  health_checks:
+    liveness: /health
+    readiness: /readiness
+    startup: /health

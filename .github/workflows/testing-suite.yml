@@ -1,0 +1,569 @@
+name: Testing Suite - Full CI/CD Pipeline
+# GitOps 2.0 Healthcare Intelligence Platform
+# Comprehensive testing automation covering all test types
+
+on:
+  push:
+    branches: [main, develop, 'feature/**']
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run nightly tests at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Test type to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - unit
+          - integration
+          - e2e
+          - contract
+          - load
+          - security
+          - chaos
+
+env:
+  GO_VERSION: '1.21'
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '20'
+
+jobs:
+  ##############################################################################
+  # Unit Tests
+  ##############################################################################
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' || 
+      github.event_name == 'pull_request' ||
+      github.event.inputs.test_type == 'all' ||
+      github.event.inputs.test_type == 'unit'
+    
+    strategy:
+      matrix:
+        service:
+          - auth-service
+          - payment-gateway
+          - phi-service
+          - medical-device-service
+          - notification-service
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      
+      - name: Install dependencies
+        run: |
+          cd services/${{ matrix.service }}
+          go mod download
+      
+      - name: Run unit tests
+        run: |
+          cd services/${{ matrix.service }}
+          go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./services/${{ matrix.service }}/coverage.out
+          flags: ${{ matrix.service }}
+          name: ${{ matrix.service }}-coverage
+      
+      - name: Generate coverage report
+        run: |
+          cd services/${{ matrix.service }}
+          go tool cover -html=coverage.out -o coverage.html
+      
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-${{ matrix.service }}
+          path: services/${{ matrix.service }}/coverage.html
+
+  ##############################################################################
+  # Integration Tests
+  ##############################################################################
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' || 
+      github.event_name == 'pull_request' ||
+      github.event.inputs.test_type == 'all' ||
+      github.event.inputs.test_type == 'integration'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Start services with Docker Compose
+        run: |
+          cd tests/integration
+          docker-compose up -d
+          sleep 30  # Wait for services to be ready
+      
+      - name: Check service health
+        run: |
+          for i in {1..30}; do
+            if curl -f http://localhost:8081/health; then
+              echo "Services are ready"
+              break
+            fi
+            echo "Waiting for services... ($i/30)"
+            sleep 2
+          done
+      
+      - name: Run integration tests
+        run: |
+          cd tests/integration
+          go test -v -timeout 15m ./...
+      
+      - name: Collect service logs
+        if: failure()
+        run: |
+          cd tests/integration
+          docker-compose logs > integration-logs.txt
+      
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: integration-logs
+          path: tests/integration/integration-logs.txt
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          cd tests/integration
+          docker-compose down -v
+
+  ##############################################################################
+  # Contract Tests
+  ##############################################################################
+  contract-tests:
+    name: Contract Tests
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' || 
+      github.event_name == 'pull_request' ||
+      github.event.inputs.test_type == 'all' ||
+      github.event.inputs.test_type == 'contract'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      
+      - name: Install Pact dependencies
+        run: |
+          cd tests/contract
+          go mod download
+      
+      - name: Run contract tests
+        run: |
+          cd tests/contract
+          go test -v ./...
+      
+      - name: Publish Pact contracts
+        if: success() && github.ref == 'refs/heads/main'
+        run: |
+          echo "Publishing Pact contracts to Pact Broker..."
+          # Add Pact Broker publishing logic here
+      
+      - name: Upload Pact contracts
+        uses: actions/upload-artifact@v3
+        with:
+          name: pact-contracts
+          path: tests/contract/pacts/
+
+  ##############################################################################
+  # E2E Tests
+  ##############################################################################
+  e2e-tests:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' && github.ref == 'refs/heads/main' ||
+      github.event.inputs.test_type == 'all' ||
+      github.event.inputs.test_type == 'e2e'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      
+      - name: Setup Kubernetes (Kind)
+        uses: helm/kind-action@v1.8.0
+        with:
+          cluster_name: gitops2-test
+          node_image: kindest/node:v1.28.0
+      
+      - name: Deploy to Kubernetes
+        run: |
+          cd k8s
+          kubectl apply -f namespaces/
+          kubectl apply -f services/
+          kubectl apply -f deployments/
+          kubectl wait --for=condition=ready pod -l app=auth-service -n healthcare --timeout=300s
+      
+      - name: Run E2E tests
+        run: |
+          cd tests/e2e
+          go test -v -timeout 30m ./...
+      
+      - name: Collect Kubernetes logs
+        if: failure()
+        run: |
+          kubectl logs -n healthcare -l app=auth-service > e2e-auth-logs.txt
+          kubectl logs -n healthcare -l app=payment-gateway > e2e-payment-logs.txt
+          kubectl describe pods -n healthcare > e2e-pod-status.txt
+      
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-logs
+          path: e2e-*.txt
+
+  ##############################################################################
+  # Load/Performance Tests
+  ##############################################################################
+  load-tests:
+    name: Load/Performance Tests
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.test_type == 'all' ||
+      github.event.inputs.test_type == 'load'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install Locust
+        run: |
+          pip install locust
+      
+      - name: Start services
+        run: |
+          cd tests/integration
+          docker-compose up -d
+          sleep 30
+      
+      - name: Run load tests
+        run: |
+          cd tests/load
+          locust -f locustfile.py \
+            --headless \
+            --users 100 \
+            --spawn-rate 10 \
+            --run-time 5m \
+            --host http://localhost:8081 \
+            --html load-report.html \
+            --csv load-results
+      
+      - name: Upload load test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: load-test-results
+          path: |
+            tests/load/load-report.html
+            tests/load/load-results*.csv
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          cd tests/integration
+          docker-compose down -v
+
+  ##############################################################################
+  # Security Tests
+  ##############################################################################
+  security-tests:
+    name: Security Tests
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' || 
+      github.event_name == 'pull_request' ||
+      github.event_name == 'schedule' ||
+      github.event.inputs.test_type == 'all' ||
+      github.event.inputs.test_type == 'security'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      
+      - name: Run govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          cd services
+          for service in auth-service payment-gateway phi-service medical-device-service notification-service; do
+            echo "Scanning ${service}..."
+            cd ${service}
+            govulncheck ./... || true
+            cd ..
+          done
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+      
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+      
+      - name: Start services for security testing
+        run: |
+          cd tests/integration
+          docker-compose up -d
+          sleep 30
+      
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.7.0
+        with:
+          target: 'http://localhost:8080'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
+      
+      - name: Run security test suite
+        run: |
+          cd tests/security
+          chmod +x run-security-tests.sh
+          ./run-security-tests.sh --jwt --phi --api
+      
+      - name: Upload security reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: tests/security/reports/
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          cd tests/integration
+          docker-compose down -v
+
+  ##############################################################################
+  # Chaos Engineering Tests
+  ##############################################################################
+  chaos-tests:
+    name: Chaos Engineering Tests
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.test_type == 'chaos'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Kubernetes (Kind)
+        uses: helm/kind-action@v1.8.0
+        with:
+          cluster_name: gitops2-chaos
+          node_image: kindest/node:v1.28.0
+      
+      - name: Install Chaos Mesh
+        run: |
+          curl -sSL https://mirrors.chaos-mesh.org/v2.6.0/install.sh | bash
+          kubectl wait --for=condition=ready pod -n chaos-mesh --all --timeout=300s
+      
+      - name: Deploy applications
+        run: |
+          cd k8s
+          kubectl apply -f namespaces/
+          kubectl apply -f services/
+          kubectl apply -f deployments/
+          kubectl wait --for=condition=ready pod -n healthcare --all --timeout=300s
+      
+      - name: Run chaos experiments
+        run: |
+          cd tests/chaos
+          chmod +x run-chaos-tests.sh
+          ./run-chaos-tests.sh --all
+      
+      - name: Collect chaos experiment results
+        run: |
+          kubectl get podchaos -A -o yaml > chaos-results.yaml
+          kubectl logs -n chaos-mesh -l app=chaos-dashboard > chaos-logs.txt
+      
+      - name: Upload chaos results
+        uses: actions/upload-artifact@v3
+        with:
+          name: chaos-test-results
+          path: |
+            chaos-results.yaml
+            chaos-logs.txt
+
+  ##############################################################################
+  # Test Report Generation
+  ##############################################################################
+  generate-reports:
+    name: Generate Test Reports
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, contract-tests]
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: test-artifacts
+      
+      - name: Generate consolidated report
+        run: |
+          mkdir -p reports
+          echo "# GitOps 2.0 Healthcare - Test Report" > reports/TEST_REPORT.md
+          echo "**Generated**: $(date)" >> reports/TEST_REPORT.md
+          echo "" >> reports/TEST_REPORT.md
+          echo "## Test Results Summary" >> reports/TEST_REPORT.md
+          echo "" >> reports/TEST_REPORT.md
+          
+          # Add results from each test suite
+          echo "### Unit Tests" >> reports/TEST_REPORT.md
+          find test-artifacts -name "coverage-*.html" -exec echo "- {}" \; >> reports/TEST_REPORT.md
+          
+          echo "### Integration Tests" >> reports/TEST_REPORT.md
+          echo "Status: ${{ needs.integration-tests.result }}" >> reports/TEST_REPORT.md
+          
+          echo "### Contract Tests" >> reports/TEST_REPORT.md
+          echo "Status: ${{ needs.contract-tests.result }}" >> reports/TEST_REPORT.md
+      
+      - name: Upload consolidated report
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-report
+          path: reports/
+
+  ##############################################################################
+  # Notification
+  ##############################################################################
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, contract-tests, e2e-tests, security-tests]
+    if: always() && (github.event_name == 'push' || github.event_name == 'schedule')
+    
+    steps:
+      - name: Determine overall status
+        id: status
+        run: |
+          if [[ "${{ needs.unit-tests.result }}" == "success" ]] && \
+             [[ "${{ needs.integration-tests.result }}" == "success" ]] && \
+             [[ "${{ needs.contract-tests.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "color=good" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "color=danger" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST $SLACK_WEBHOOK_URL \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "text": "GitOps 2.0 Healthcare - Test Suite: ${{ steps.status.outputs.status }}",
+              "attachments": [{
+                "color": "${{ steps.status.outputs.color }}",
+                "fields": [
+                  {
+                    "title": "Branch",
+                    "value": "${{ github.ref_name }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Commit",
+                    "value": "${{ github.sha }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Unit Tests",
+                    "value": "${{ needs.unit-tests.result }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Integration Tests",
+                    "value": "${{ needs.integration-tests.result }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Security Tests",
+                    "value": "${{ needs.security-tests.result }}",
+                    "short": true
+                  }
+                ]
+              }]
+            }'
+      
+      - name: Create GitHub deployment status
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ steps.status.outputs.status }}' === 'success' ? 'success' : 'failure';
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: context.payload.deployment.id,
+              state: status,
+              description: 'Test suite completed',
+              environment_url: 'https://gitops2-healthcare.example.com'
+            });

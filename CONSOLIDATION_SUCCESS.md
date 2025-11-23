@@ -84,10 +84,10 @@
 - **Status**: ✅ Pushed successfully
 - **Commit**: `a11c24b`
 
-### Repository 2: ITcredibl
+### Repository 2: ITcredibl (Mirror)
 - **URL**: https://github.com/ITcredibl/gitops2-healthcare-intelligence-git-commit
 - **Branch**: `main`
-- **Status**: ✅ Pushed successfully
+- **Status**: ✅ Pushed successfully (enterprise mirror)
 - **Commit**: `a11c24b`
 
 ---
@@ -235,8 +235,8 @@ Successfully consolidated 12 redundant status files into 2 focused journals and 
 ## 📞 References
 
 ### Repository URLs
-- **Origin**: https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit
-- **ITcredibl**: https://github.com/ITcredibl/gitops2-healthcare-intelligence-git-commit
+- **Primary Public Repository**: https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit
+- **Enterprise Mirror**: https://github.com/ITcredibl/gitops2-healthcare-intelligence-git-commit
 
 ### Key Documentation
 - [Engineering Journal](./ENGINEERING_JOURNAL.md)

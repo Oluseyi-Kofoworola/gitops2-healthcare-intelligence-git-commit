@@ -28,6 +28,7 @@ All documentation is organized into focused hubs to eliminate sprawl:
 
 | Category | Documents |
 |----------|-----------|
+| **Enterprise** | [Enterprise Readiness](./docs/ENTERPRISE_READINESS.md) · [Completion Report](./ENTERPRISE_READINESS_COMPLETE.md) |
 | **Executive** | [Summary](./executive/EXECUTIVE_SUMMARY.md) · [One-Pager](./executive/ONE_PAGER.md) · [Presentation](./executive/PRESENTATION_OUTLINE.md) |
 | **Compliance** | [Global Compliance](./docs/GLOBAL_COMPLIANCE.md) · [Telemetry](./docs/PIPELINE_TELEMETRY_LOGS.md) · [Forensics](./docs/INCIDENT_FORENSICS_DEMO.md) |
 | **AI Integration** | [Copilot Workflow](/.copilot/COPILOT_WORKFLOW_DEMO.md) · [VS Code Setup](/.copilot/README-VSCODE-INTEGRATION.md) |
@@ -66,8 +67,8 @@ This repository closes all gaps between vision and implementation, delivering:
 ### Run the Healthcare Demo
 \`\`\`bash
 # Clone the repository
-git clone https://github.com/ITcredibl/gitops2-healthcare-intelligence.git
-cd gitops2-healthcare-intelligence
+git clone https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit.git
+cd gitops2-healthcare-intelligence-git-commit
 
 # Run the complete 10-minute demo
 ./healthcare-demo.sh

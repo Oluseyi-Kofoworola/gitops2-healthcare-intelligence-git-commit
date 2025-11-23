@@ -96,10 +96,10 @@ compliance-reporting:
 - **Status**: ✅ Pushed successfully
 - **Commit**: `756f397`
 
-### Repository 2: ITcredibl
+### Repository 2: ITcredibl (Mirror)
 - **URL**: https://github.com/ITcredibl/gitops2-healthcare-intelligence-git-commit
 - **Branch**: `main`
-- **Status**: ✅ Pushed successfully
+- **Status**: ✅ Pushed successfully (enterprise mirror)
 - **Commit**: `756f397`
 
 ---
@@ -222,8 +222,8 @@ Add under "Healthcare Compliance Pipelines":
 ## 📞 References
 
 ### Repository URLs
-- **Origin**: https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit
-- **ITcredibl**: https://github.com/ITcredibl/gitops2-healthcare-intelligence-git-commit
+- **Primary Public Repository**: https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit
+- **Enterprise Mirror**: https://github.com/ITcredibl/gitops2-healthcare-intelligence-git-commit
 
 ### GitHub Documentation
 - [CodeQL Action v4 Migration](https://github.blog/changelog/2025-10-28-upcoming-deprecation-of-codeql-action-v3/)

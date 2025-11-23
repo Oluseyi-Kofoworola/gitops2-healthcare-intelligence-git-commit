@@ -1,0 +1,549 @@
+openapi: 3.0.3
+info:
+  title: PHI Service API
+  version: 1.0.0
+  description: |
+    Production-grade Protected Health Information (PHI) encryption and anonymization service.
+    
+    This service provides HIPAA-compliant encryption, decryption, hashing, and anonymization 
+    capabilities for Protected Health Information with enterprise-grade observability.
+    
+    ## Features
+    - AES-256-GCM encryption for PHI data
+    - PBKDF2 key derivation with 100,000 iterations
+    - SHA-256 hashing for anonymization
+    - Salt-based irreversible anonymization
+    - OpenTelemetry distributed tracing
+    - Prometheus metrics export
+    - Structured JSON logging
+    
+    ## Security
+    - All PHI data encrypted at rest and in transit
+    - Cryptographic operations audited
+    - No PHI data in logs
+    - HIPAA compliance controls
+    
+  contact:
+    name: Platform Engineering Team
+    email: platform@example.com
+  license:
+    name: Proprietary
+    
+servers:
+  - url: http://localhost:8083
+    description: Local development server
+  - url: https://phi-service.healthcare.svc.cluster.local
+    description: Kubernetes cluster service
+  - url: https://api.healthcare.example.com/phi
+    description: Production API gateway
+
+tags:
+  - name: health
+    description: Health and readiness checks
+  - name: encryption
+    description: PHI encryption operations
+  - name: decryption
+    description: PHI decryption operations
+  - name: hashing
+    description: Cryptographic hashing operations
+  - name: anonymization
+    description: PHI anonymization operations
+  - name: metrics
+    description: Prometheus metrics endpoint
+
+paths:
+  /health:
+    get:
+      tags:
+        - health
+      summary: Health check (liveness probe)
+      description: Returns the health status of the service. Used by Kubernetes liveness probes.
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: healthy
+                service: phi-service
+        '503':
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: service unavailable
+                
+  /readiness:
+    get:
+      tags:
+        - health
+      summary: Readiness check
+      description: Returns the readiness status of the service. Used by Kubernetes readiness probes.
+      operationId: getReadiness
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+              example:
+                status: ready
+                timestamp: "2024-01-15T10:30:00Z"
+        '503':
+          description: Service is not ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: service not ready
+                
+  /api/v1/encrypt:
+    post:
+      tags:
+        - encryption
+      summary: Encrypt PHI data
+      description: |
+        Encrypts Protected Health Information using AES-256-GCM encryption.
+        
+        The encryption process:
+        1. Validates input data is not empty
+        2. Generates a random salt (16 bytes)
+        3. Derives encryption key using PBKDF2 (100,000 iterations)
+        4. Encrypts data with AES-256-GCM
+        5. Returns base64-encoded ciphertext
+        
+        **Security**: All encryption operations are traced and metered.
+      operationId: encryptData
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EncryptRequest'
+            example:
+              data: "Patient SSN: 123-45-6789"
+      responses:
+        '200':
+          description: Data encrypted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EncryptResponse'
+              example:
+                encrypted_data: "SGVsbG8gV29ybGQhCg=="
+          headers:
+            X-Request-ID:
+              description: Unique request identifier
+              schema:
+                type: string
+                format: uuid
+            X-Trace-ID:
+              description: OpenTelemetry trace ID
+              schema:
+                type: string
+        '400':
+          description: Invalid request - data field missing or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "data field is required and cannot be empty"
+        '500':
+          description: Encryption failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "encryption failed"
+                
+  /api/v1/decrypt:
+    post:
+      tags:
+        - decryption
+      summary: Decrypt PHI data
+      description: |
+        Decrypts previously encrypted Protected Health Information.
+        
+        The decryption process:
+        1. Validates encrypted_data field is present
+        2. Base64 decodes the ciphertext
+        3. Extracts salt and nonce from ciphertext
+        4. Derives decryption key using PBKDF2
+        5. Decrypts using AES-256-GCM
+        6. Returns original plaintext
+        
+        **Security**: Failed decryption attempts are logged and metered.
+      operationId: decryptData
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecryptRequest'
+            example:
+              encrypted_data: "SGVsbG8gV29ybGQhCg=="
+      responses:
+        '200':
+          description: Data decrypted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecryptResponse'
+              example:
+                data: "Patient SSN: 123-45-6789"
+          headers:
+            X-Request-ID:
+              description: Unique request identifier
+              schema:
+                type: string
+                format: uuid
+            X-Trace-ID:
+              description: OpenTelemetry trace ID
+              schema:
+                type: string
+        '400':
+          description: Invalid request - encrypted_data field missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "encrypted_data field is required"
+        '500':
+          description: Decryption failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "decryption failed: invalid ciphertext"
+                
+  /api/v1/hash:
+    post:
+      tags:
+        - hashing
+      summary: Hash data using SHA-256
+      description: |
+        Generates a SHA-256 cryptographic hash of the provided data.
+        
+        Optional salt can be provided for salted hashing. If no salt is provided,
+        the data is hashed directly using SHA-256.
+        
+        **Use Cases**:
+        - Consistent anonymization with known salt
+        - Data deduplication
+        - Hash-based identifiers
+        
+        **Note**: For one-way anonymization, use the `/anonymize` endpoint instead.
+      operationId: hashData
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HashRequest'
+            examples:
+              without_salt:
+                summary: Hash without salt
+                value:
+                  data: "patient@example.com"
+              with_salt:
+                summary: Hash with custom salt
+                value:
+                  data: "patient@example.com"
+                  salt: "custom-salt-value"
+      responses:
+        '200':
+          description: Data hashed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HashResponse'
+              example:
+                hash: "5d41402abc4b2a76b9719d911017c592ae986e4836f43896bdd3f7a6e0f1f85d"
+          headers:
+            X-Request-ID:
+              description: Unique request identifier
+              schema:
+                type: string
+                format: uuid
+        '400':
+          description: Invalid request - data field missing or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "data field is required and cannot be empty"
+                
+  /api/v1/anonymize:
+    post:
+      tags:
+        - anonymization
+      summary: Anonymize data with random salt
+      description: |
+        Performs irreversible anonymization of PHI data using SHA-256 with a random salt.
+        
+        The anonymization process:
+        1. Generates a random 16-byte salt
+        2. Combines data with salt
+        3. Computes SHA-256 hash
+        4. Returns hash and salt (base64-encoded)
+        
+        **Important**: Store the salt if you need to verify the same data later.
+        Without the salt, the original data cannot be recovered or verified.
+        
+        **Use Cases**:
+        - De-identification for analytics
+        - Privacy-preserving data sharing
+        - HIPAA-compliant data minimization
+      operationId: anonymizeData
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnonymizeRequest'
+            example:
+              data: "john.doe@hospital.com"
+      responses:
+        '200':
+          description: Data anonymized successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnonymizeResponse'
+              example:
+                anonymized_hash: "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"
+                salt: "cmFuZG9tLXNhbHQtdmFsdWU="
+          headers:
+            X-Request-ID:
+              description: Unique request identifier
+              schema:
+                type: string
+                format: uuid
+        '400':
+          description: Invalid request - data field missing or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "data field is required and cannot be empty"
+        '500':
+          description: Anonymization failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "failed to generate salt"
+                
+  /metrics:
+    get:
+      tags:
+        - metrics
+      summary: Prometheus metrics endpoint
+      description: |
+        Returns Prometheus-formatted metrics for monitoring and observability.
+        
+        **Available Metrics**:
+        - `phi_service_http_request_duration_seconds` - HTTP request latency histogram
+        - `phi_service_http_requests_total` - Total HTTP requests counter
+        - `phi_service_http_active_requests` - Active HTTP requests gauge
+        - `phi_service_encryption_operations_total` - Encryption operations counter
+        - `phi_service_encryption_duration_seconds` - Encryption operation latency
+        - `phi_service_data_size_bytes` - Data size histogram
+        
+        All metrics include labels for method, path, status, and operation type.
+      operationId: getMetrics
+      responses:
+        '200':
+          description: Prometheus metrics in text format
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: |
+                # HELP phi_service_http_requests_total Total HTTP requests
+                # TYPE phi_service_http_requests_total counter
+                phi_service_http_requests_total{method="POST",path="/api/v1/encrypt",status="200"} 42
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - service
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+          description: Health status of the service
+          example: healthy
+        service:
+          type: string
+          description: Service name
+          example: phi-service
+          
+    ReadinessResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [ready, not ready]
+          description: Readiness status
+          example: ready
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp
+          example: "2024-01-15T10:30:00Z"
+          
+    EncryptRequest:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: string
+          description: Plaintext PHI data to encrypt
+          minLength: 1
+          example: "Patient SSN: 123-45-6789"
+          
+    EncryptResponse:
+      type: object
+      required:
+        - encrypted_data
+      properties:
+        encrypted_data:
+          type: string
+          format: byte
+          description: Base64-encoded encrypted data (salt + nonce + ciphertext)
+          example: "SGVsbG8gV29ybGQhCg=="
+          
+    DecryptRequest:
+      type: object
+      required:
+        - encrypted_data
+      properties:
+        encrypted_data:
+          type: string
+          format: byte
+          description: Base64-encoded encrypted data from encrypt endpoint
+          minLength: 1
+          example: "SGVsbG8gV29ybGQhCg=="
+          
+    DecryptResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: string
+          description: Decrypted plaintext data
+          example: "Patient SSN: 123-45-6789"
+          
+    HashRequest:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: string
+          description: Data to hash
+          minLength: 1
+          example: "patient@example.com"
+        salt:
+          type: string
+          description: Optional salt for salted hashing
+          example: "custom-salt-value"
+          
+    HashResponse:
+      type: object
+      required:
+        - hash
+      properties:
+        hash:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+          description: SHA-256 hash (64 hex characters)
+          example: "5d41402abc4b2a76b9719d911017c592ae986e4836f43896bdd3f7a6e0f1f85d"
+          
+    AnonymizeRequest:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: string
+          description: PHI data to anonymize
+          minLength: 1
+          example: "john.doe@hospital.com"
+          
+    AnonymizeResponse:
+      type: object
+      required:
+        - anonymized_hash
+        - salt
+      properties:
+        anonymized_hash:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+          description: SHA-256 hash of data + salt (64 hex characters)
+          example: "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"
+        salt:
+          type: string
+          format: byte
+          description: Base64-encoded random salt (16 bytes)
+          example: "cmFuZG9tLXNhbHQtdmFsdWU="
+          
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+          example: "data field is required and cannot be empty"
+        details:
+          type: string
+          description: Additional error details (optional)
+          example: "invalid base64 encoding"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token from auth-service. Include in Authorization header.
+        
+        Example: `Authorization: Bearer <token>`
+
+security:
+  - BearerAuth: []
+
+x-documentation:
+  encryption-algorithm: AES-256-GCM
+  key-derivation: PBKDF2 with SHA-256, 100,000 iterations
+  hash-algorithm: SHA-256
+  compliance: HIPAA, GDPR
+  observability:
+    - OpenTelemetry distributed tracing
+    - Prometheus metrics export
+    - Structured JSON logging (zerolog)

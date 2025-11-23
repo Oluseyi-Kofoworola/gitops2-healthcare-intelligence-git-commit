@@ -1,0 +1,478 @@
+---
+# Kubernetes Deployment for Payment Gateway Service
+# WHY: Production-grade payment processing with SOX/PCI compliance
+# INCLUDES: Deployment, Service, HPA, PDB, NetworkPolicy, ServiceAccount
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: healthcare
+  labels:
+    compliance: "hipaa,sox,pci"
+    environment: production
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: payment-gateway
+  namespace: healthcare
+  labels:
+    app: payment-gateway
+    compliance: sox-compliant
+automountServiceAccountToken: true
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-gateway
+  namespace: healthcare
+  labels:
+    app: payment-gateway
+    tier: financial
+    compliance: sox
+    security-scan: required
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    compliance.framework: "SOX,PCI-DSS,HIPAA"
+spec:
+  replicas: 3
+  revisionHistoryLimit: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0  # Zero-downtime for financial transactions
+  selector:
+    matchLabels:
+      app: payment-gateway
+  template:
+    metadata:
+      labels:
+        app: payment-gateway
+        tier: financial
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8082"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: payment-gateway
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      
+      # Anti-affinity for high availability
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - payment-gateway
+              topologyKey: kubernetes.io/hostname
+      
+      containers:
+      - name: payment-gateway
+        image: payment-gateway:latest
+        imagePullPolicy: IfNotPresent
+        
+        ports:
+        - name: http
+          containerPort: 8082
+          protocol: TCP
+        
+        env:
+        - name: PORT
+          value: "8082"
+        - name: SERVICE_NAME
+          value: "payment-gateway"
+        - name: MAX_PROCESSING_MILLIS
+          value: "100"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector.observability.svc.cluster.local:4317"
+        - name: OTEL_SERVICE_NAME
+          value: "payment-gateway"
+        - name: SOX_DUAL_APPROVAL_THRESHOLD
+          value: "10000"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        
+        # Resource limits for financial service
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 2
+        
+        # Security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+        
+        # Volume mounts for tmp
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /.cache
+      
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}
+      
+      # Termination grace period for graceful shutdown
+      terminationGracePeriodSeconds: 30
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-gateway
+  namespace: healthcare
+  labels:
+    app: payment-gateway
+    tier: financial
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    prometheus.io/scrape: "true"
+spec:
+  type: ClusterIP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # 3 hours for long-running transactions
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  - name: metrics
+    port: 8082
+    targetPort: http
+    protocol: TCP
+  selector:
+    app: payment-gateway
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: payment-gateway
+  namespace: healthcare
+  labels:
+    app: payment-gateway
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: payment-gateway
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "1000"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+      - type: Pods
+        value: 3
+        periodSeconds: 30
+      selectPolicy: Max
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: payment-gateway
+  namespace: healthcare
+  labels:
+    app: payment-gateway
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: payment-gateway
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: payment-gateway
+  namespace: healthcare
+  labels:
+    app: payment-gateway
+spec:
+  podSelector:
+    matchLabels:
+      app: payment-gateway
+  policyTypes:
+  - Ingress
+  - Egress
+  
+  ingress:
+  # Allow from ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8082
+  
+  # Allow from monitoring (Prometheus)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: observability
+      podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - protocol: TCP
+      port: 8082
+  
+  # Allow from other healthcare services
+  - from:
+    - podSelector:
+        matchLabels:
+          tier: healthcare
+    ports:
+    - protocol: TCP
+      port: 8082
+  
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+  
+  # Allow to OpenTelemetry Collector
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: observability
+      podSelector:
+        matchLabels:
+          app: otel-collector
+    ports:
+    - protocol: TCP
+      port: 4317
+  
+  # Allow HTTPS for external payment APIs
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payment-gateway-config
+  namespace: healthcare
+  labels:
+    app: payment-gateway
+data:
+  config.yaml: |
+    service:
+      name: payment-gateway
+      port: 8082
+      
+    compliance:
+      frameworks:
+        - SOX
+        - PCI-DSS
+        - HIPAA
+      dual_approval_threshold: 10000
+      audit_retention_days: 2555
+      
+    observability:
+      tracing:
+        enabled: true
+        endpoint: http://otel-collector.observability.svc.cluster.local:4317
+      metrics:
+        enabled: true
+        port: 8082
+        path: /metrics
+      logging:
+        level: info
+        format: json
+        
+    performance:
+      max_processing_ms: 100
+      timeout_seconds: 30
+      max_retries: 3
+      
+    security:
+      encryption:
+        at_rest: AES-256-GCM
+        in_transit: TLS-1.3
+      rate_limiting:
+        enabled: true
+        requests_per_minute: 1000
+
+---
+# PrometheusRule for alerts
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: payment-gateway-alerts
+  namespace: healthcare
+  labels:
+    app: payment-gateway
+    prometheus: kube-prometheus
+spec:
+  groups:
+  - name: payment-gateway
+    interval: 30s
+    rules:
+    - alert: PaymentGatewayHighErrorRate
+      expr: |
+        (
+          sum(rate(payment_errors_total[5m]))
+          /
+          sum(rate(payment_transactions_total[5m]))
+        ) > 0.01
+      for: 5m
+      labels:
+        severity: critical
+        compliance: sox
+      annotations:
+        summary: "High error rate in payment gateway"
+        description: "Payment error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+    
+    - alert: PaymentGatewaySlowProcessing
+      expr: |
+        histogram_quantile(0.95, 
+          rate(payment_processing_duration_seconds_bucket[5m])
+        ) > 0.2
+      for: 10m
+      labels:
+        severity: warning
+        compliance: sox
+      annotations:
+        summary: "Slow payment processing"
+        description: "P95 processing time is {{ $value }}s"
+    
+    - alert: PaymentGatewayDown
+      expr: up{job="payment-gateway"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        compliance: sox
+      annotations:
+        summary: "Payment gateway is down"
+        description: "Payment gateway has been down for 1 minute"
+    
+    - alert: PaymentGatewaySOXViolation
+      expr: payment_sox_violations_total > 0
+      for: 1m
+      labels:
+        severity: critical
+        compliance: sox
+      annotations:
+        summary: "SOX compliance violation detected"
+        description: "{{ $value }} SOX violations in the last minute"
+    
+    - alert: PaymentGatewayHighMemory
+      expr: |
+        container_memory_usage_bytes{pod=~"payment-gateway-.*"}
+        /
+        container_spec_memory_limit_bytes{pod=~"payment-gateway-.*"}
+        > 0.9
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High memory usage in payment gateway"
+        description: "Memory usage is {{ $value | humanizePercentage }}"

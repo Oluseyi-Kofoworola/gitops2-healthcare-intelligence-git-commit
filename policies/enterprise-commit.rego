@@ -1,6 +1,7 @@
 package enterprise.git
 
 import future.keywords
+import data.healthcare.compliance_codes  # WHY: Import AI hallucination prevention
 
 # Simple, demo-level commit policy.
 # In a real system, this input would be a structured representation of commits,
@@ -178,4 +179,22 @@ deny[reason] if {
   gdpr_domain(c)
   not has_gdpr_data_class_metadata(c)
   reason := sprintf("commit %s missing GDPR-Data-Class metadata line", [c.sha])
+}
+
+# === ENTERPRISE: AI Hallucination Prevention ===
+# WHY: Detect and reject AI-generated fake compliance codes
+# WHAT: Validate all compliance codes against authoritative whitelists
+
+deny[reason] if {
+  some c in input.commits
+  codes := compliance_codes.extract_compliance_codes(c.message)
+  count(codes) > 0
+  
+  some code in codes
+  not compliance_codes.is_valid_compliance_code(code)
+  
+  reason := sprintf(
+    "commit %s contains invalid compliance code '%s' (possible AI hallucination - verify against official regulations)",
+    [c.sha, code]
+  )
 }
