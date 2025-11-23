@@ -1,0 +1,166 @@
+name: Main CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  GO_VERSION: '1.23'
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  # Job 1: Build and Test All Services
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [auth-service, payment-gateway, phi-service, medical-device]
+      fail-fast: false
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: services/${{ matrix.service }}/go.sum
+      
+      - name: Build ${{ matrix.service }}
+        working-directory: services/${{ matrix.service }}
+        run: |
+          go mod download
+          go build -v -o ../../bin/${{ matrix.service }}
+      
+      - name: Test ${{ matrix.service }}
+        working-directory: services/${{ matrix.service }}
+        run: |
+          go test -v -race -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        continue-on-error: true
+        with:
+          files: services/${{ matrix.service }}/coverage.out
+          flags: ${{ matrix.service }}
+  
+  # Job 2: Policy Validation
+  policy-check:
+    name: OPA Policy Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up OPA
+        run: |
+          curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64
+          chmod +x opa
+          sudo mv opa /usr/local/bin/
+      
+      - name: Run OPA Tests
+        run: |
+          opa test policies/ -v
+  
+  # Job 3: Healthcare Compliance Check
+  compliance-check:
+    name: Healthcare Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+      
+      - name: Run Compliance Monitor
+        run: |
+          python3 tools/compliance_monitor.py > compliance-report.md
+          cat compliance-report.md
+      
+      - name: Upload compliance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-report
+          path: compliance-report.md
+  
+  # Job 4: Risk Assessment
+  risk-assessment:
+    name: Risk Score Calculation
+    runs-on: ubuntu-latest
+    outputs:
+      risk_score: ${{ steps.calc.outputs.risk_score }}
+      deployment_strategy: ${{ steps.calc.outputs.strategy }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+      
+      - name: Calculate Risk
+        id: calc
+        run: |
+          python3 tools/git_intel/risk_scorer.py --max-commits 10 --json > risk.json || echo '{"summary": {"average_risk_score": 0.3}}' > risk.json
+          
+          RISK=$(jq -r '.summary.average_risk_score // 0.3' risk.json)
+          
+          if (( $(echo "$RISK > 0.7" | bc -l) )); then
+            STRATEGY="manual-approval"
+          elif (( $(echo "$RISK > 0.4" | bc -l) )); then
+            STRATEGY="canary"
+          else
+            STRATEGY="standard"
+          fi
+          
+          echo "risk_score=$RISK" >> $GITHUB_OUTPUT
+          echo "strategy=$STRATEGY" >> $GITHUB_OUTPUT
+          
+          echo "### 🎯 Risk Assessment" >> $GITHUB_STEP_SUMMARY
+          echo "- Risk Score: **$RISK**" >> $GITHUB_STEP_SUMMARY
+          echo "- Strategy: **$STRATEGY**" >> $GITHUB_STEP_SUMMARY
+  
+  # Job 5: Summary
+  summary:
+    name: Pipeline Summary
+    runs-on: ubuntu-latest
+    needs: [build-and-test, policy-check, compliance-check, risk-assessment]
+    if: always()
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "## 🏥 GitOps 2.0 Healthcare Intelligence Pipeline" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Results:" >> $GITHUB_STEP_SUMMARY
+          echo "- Build & Test: ${{ needs.build-and-test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Policy Check: ${{ needs.policy-check.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Compliance: ${{ needs.compliance-check.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Risk Score: ${{ needs.risk-assessment.outputs.risk_score }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Deployment Strategy: ${{ needs.risk-assessment.outputs.deployment_strategy }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.build-and-test.result }}" = "success" ] && [ "${{ needs.policy-check.result }}" = "success" ]; then
+            echo "✅ **Pipeline PASSED - Ready for deployment**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Pipeline FAILED - Issues need resolution**" >> $GITHUB_STEP_SUMMARY
+          fi

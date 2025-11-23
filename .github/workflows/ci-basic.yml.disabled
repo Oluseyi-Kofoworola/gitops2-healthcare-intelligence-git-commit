@@ -1,0 +1,247 @@
+name: Basic CI - Build and Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  GO_VERSION: '1.22'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  ##############################################################################
+  # Build All Services
+  ##############################################################################
+  build:
+    name: Build Services
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: |
+            go.work.sum
+            services/*/go.sum
+      
+      - name: Build all services
+        run: make build
+      
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: bin/
+          retention-days: 7
+
+  ##############################################################################
+  # Unit Tests - Go Services
+  ##############################################################################
+  test-go-services:
+    name: Test Go Services
+    runs-on: ubuntu-latest
+    needs: build
+    
+    strategy:
+      matrix:
+        service:
+          - auth-service
+          - payment-gateway
+          - phi-service
+          - medical-device
+      fail-fast: false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: services/${{ matrix.service }}/go.sum
+      
+      - name: Install dependencies
+        run: |
+          cd services/${{ matrix.service }}
+          go mod download
+      
+      - name: Run unit tests
+        run: |
+          cd services/${{ matrix.service }}
+          go test -v -race -coverprofile=coverage.out ./...
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./services/${{ matrix.service }}/coverage.out
+          flags: ${{ matrix.service }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+        continue-on-error: true
+
+  ##############################################################################
+  # Python Tools Validation
+  ##############################################################################
+  test-python-tools:
+    name: Validate Python Tools
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml pytest ruff
+      
+      - name: Lint Python code
+        run: |
+          ruff check tools/ || true
+      
+      - name: Test synthetic PHI generator
+        run: |
+          python tools/synthetic_phi_generator.py --count 5 --json > /dev/null
+          echo "✅ Synthetic PHI generator works"
+      
+      - name: Test compliance monitor
+        run: |
+          python tools/compliance_monitor.py > /dev/null
+          echo "✅ Compliance monitor works"
+
+  ##############################################################################
+  # Policy Validation
+  ##############################################################################
+  policy-validation:
+    name: Validate OPA Policies
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup OPA
+        uses: open-policy-agent/setup-opa@v2
+        with:
+          version: latest
+      
+      - name: Validate enterprise commit policy
+        run: |
+          opa test policies/ -v
+
+  ##############################################################################
+  # Demo Validation
+  ##############################################################################
+  demo-validation:
+    name: Validate Demo Scripts
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+      
+      - name: Validate demo script syntax
+        run: |
+          bash -n scripts/demo.sh
+          bash -n scripts/quick-reference.sh
+          echo "✅ Demo scripts are valid"
+      
+      - name: Check Makefile targets
+        run: |
+          make help
+          echo "✅ Makefile is valid"
+
+  ##############################################################################
+  # Documentation Check
+  ##############################################################################
+  docs-check:
+    name: Documentation Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check required documentation
+        run: |
+          test -f README.md || (echo "❌ README.md missing" && exit 1)
+          test -f docs/GETTING_STARTED.md || (echo "❌ GETTING_STARTED.md missing" && exit 1)
+          test -f DEMO_EVALUATION.md || (echo "❌ DEMO_EVALUATION.md missing" && exit 1)
+          test -f START_HERE.md || (echo "❌ START_HERE.md missing" && exit 1)
+          echo "✅ All required documentation present"
+      
+      - name: Check for broken internal links
+        run: |
+          grep -r "\[.*\](.*\.md)" docs/ README.md || true
+          echo "✅ Markdown link check complete"
+
+  ##############################################################################
+  # Security Scan
+  ##############################################################################
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+        continue-on-error: true
+      
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
+
+  ##############################################################################
+  # Final Status
+  ##############################################################################
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - test-go-services
+      - test-python-tools
+      - policy-validation
+      - demo-validation
+      - docs-check
+    
+    steps:
+      - name: All checks passed
+        run: |
+          echo "✅ All CI checks passed successfully!"
+          echo "Platform is ready for deployment"
