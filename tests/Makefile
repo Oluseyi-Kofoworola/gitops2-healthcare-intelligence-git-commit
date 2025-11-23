@@ -25,9 +25,14 @@ install-deps: ## Install test dependencies
 	@cd e2e && go mod download
 	@cd contract && go mod download
 	@echo "Installing Python dependencies..."
-	@pip3 install locust pytest
+	@if [ ! -d "../.venv" ]; then \
+		echo "Creating virtual environment..."; \
+		python3 -m venv ../.venv; \
+	fi
+	@echo "Installing Python packages in virtual environment..."
+	@../.venv/bin/pip install --quiet locust pytest 2>/dev/null || echo "$(YELLOW)Note: Python packages can be installed with: source .venv/bin/activate && pip install locust pytest$(NC)"
 	@echo "Installing Pact CLI..."
-	@command -v pact-broker || npm install -g @pact-foundation/pact || brew install pact-foundation/pact-ruby/pact || true
+	@command -v pact-broker >/dev/null 2>&1 || npm install -g @pact-foundation/pact 2>/dev/null || brew install pact-foundation/pact-ruby/pact 2>/dev/null || echo "$(YELLOW)Note: Install Pact manually if needed$(NC)"
 	@echo "$(GREEN)✓ Dependencies installed$(NC)"
 
 test-unit: ## Run unit tests for all services
