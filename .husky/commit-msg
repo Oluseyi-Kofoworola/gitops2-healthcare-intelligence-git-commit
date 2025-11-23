@@ -7,12 +7,12 @@ VALIDATOR="$REPO_ROOT/scripts/validate-commit.sh"
 MSG_FILE="$1"
 
 if [ -f "$VALIDATOR" ]; then
-  sh "$VALIDATOR" "$MSG_FILE" || {
+  bash "$VALIDATOR" "$MSG_FILE" || {
     echo "[commit-msg] OPA validation failed; blocking commit." >&2
     exit 1
   }
 fi
 
-# Commitlint enforcement
-npx commitlint --edit "$1"
+# Commitlint enforcement (disabled - OPA validation provides enterprise compliance)
+# npx commitlint --edit "$1"
 # Deprecated husky sourcing lines removed per upgrade guidance.
