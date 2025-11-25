@@ -44,7 +44,7 @@ jobs:
           go tool cover -func=coverage.out
       
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         continue-on-error: true
         with:
           files: services/${{ matrix.service }}/coverage.out
