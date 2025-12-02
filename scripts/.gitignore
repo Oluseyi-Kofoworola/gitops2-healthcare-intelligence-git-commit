@@ -1,0 +1,32 @@
+# Build artifacts
+bin/
+dist/
+*.log
+*.out
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Go
+vendor/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Sensitive
+.env
+*.key
+*.pem
+
+# Coverage
+coverage/
+*.html

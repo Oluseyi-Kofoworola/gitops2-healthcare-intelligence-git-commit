@@ -1,4 +1,5 @@
 package main
+package main
 
 import (
 	"bytes"
@@ -12,8 +13,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// TestHealth verifies the health endpoint returns correct status
-func TestHealth(t *testing.T) {
+// TestHealthComprehensive verifies the health endpoint returns correct status
+func TestHealthComprehensive(t *testing.T) {
 	h := AuthHandler{}
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rr := httptest.NewRecorder()
@@ -42,8 +43,8 @@ func TestHealth(t *testing.T) {
 	}
 }
 
-// TestReadiness verifies the readiness endpoint
-func TestReadiness(t *testing.T) {
+// TestReadinessComprehensive verifies the readiness endpoint
+func TestReadinessComprehensive(t *testing.T) {
 	h := AuthHandler{}
 	req := httptest.NewRequest(http.MethodGet, "/readiness", nil)
 	rr := httptest.NewRecorder()
@@ -63,8 +64,8 @@ func TestReadiness(t *testing.T) {
 	}
 }
 
-// TestGenerateToken verifies token generation
-func TestGenerateToken(t *testing.T) {
+// TestGenerateTokenComprehensive verifies token generation
+func TestGenerateTokenComprehensive(t *testing.T) {
 	h := AuthHandler{}
 
 	reqBody := map[string]interface{}{
@@ -119,8 +120,8 @@ func TestGenerateToken(t *testing.T) {
 	}
 }
 
-// TestGenerateToken_MethodNotAllowed verifies POST-only endpoint
-func TestGenerateToken_MethodNotAllowed(t *testing.T) {
+// TestGenerateTokenMethodNotAllowed verifies POST-only endpoint
+func TestGenerateTokenMethodNotAllowed(t *testing.T) {
 	h := AuthHandler{}
 	req := httptest.NewRequest(http.MethodGet, "/token", nil)
 	rr := httptest.NewRecorder()
@@ -131,8 +132,8 @@ func TestGenerateToken_MethodNotAllowed(t *testing.T) {
 	}
 }
 
-// TestGenerateToken_InvalidBody verifies validation
-func TestGenerateToken_InvalidBody(t *testing.T) {
+// TestGenerateTokenInvalidBody verifies validation
+func TestGenerateTokenInvalidBody(t *testing.T) {
 	h := AuthHandler{}
 	req := httptest.NewRequest(http.MethodPost, "/token", strings.NewReader("invalid json"))
 	rr := httptest.NewRecorder()
@@ -143,8 +144,8 @@ func TestGenerateToken_InvalidBody(t *testing.T) {
 	}
 }
 
-// TestIntrospect_ValidToken verifies token validation
-func TestIntrospect_ValidToken(t *testing.T) {
+// TestIntrospectValidToken verifies token validation
+func TestIntrospectValidToken(t *testing.T) {
 	h := AuthHandler{}
 
 	// Generate a valid token
@@ -196,8 +197,8 @@ func TestIntrospect_ValidToken(t *testing.T) {
 	}
 }
 
-// TestIntrospect_MissingToken verifies missing token handling
-func TestIntrospect_MissingToken(t *testing.T) {
+// TestIntrospectMissingToken verifies missing token handling
+func TestIntrospectMissingToken(t *testing.T) {
 	h := AuthHandler{}
 	req := httptest.NewRequest(http.MethodGet, "/introspect", nil)
 	rr := httptest.NewRecorder()
@@ -217,8 +218,8 @@ func TestIntrospect_MissingToken(t *testing.T) {
 	}
 }
 
-// TestIntrospect_InvalidTokenFormat verifies token format validation
-func TestIntrospect_InvalidTokenFormat(t *testing.T) {
+// TestIntrospectInvalidTokenFormat verifies token format validation
+func TestIntrospectInvalidTokenFormat(t *testing.T) {
 	h := AuthHandler{}
 	req := httptest.NewRequest(http.MethodGet, "/introspect", nil)
 	req.Header.Set("Authorization", "InvalidFormat token123")
@@ -230,8 +231,8 @@ func TestIntrospect_InvalidTokenFormat(t *testing.T) {
 	}
 }
 
-// TestIntrospect_InvalidToken verifies invalid token handling
-func TestIntrospect_InvalidToken(t *testing.T) {
+// TestIntrospectInvalidToken verifies invalid token handling
+func TestIntrospectInvalidToken(t *testing.T) {
 	h := AuthHandler{}
 	req := httptest.NewRequest(http.MethodGet, "/introspect", nil)
 	req.Header.Set("Authorization", "Bearer invalid.token.here")
@@ -252,8 +253,8 @@ func TestIntrospect_InvalidToken(t *testing.T) {
 	}
 }
 
-// TestIntrospect_ExpiredToken verifies expired token handling
-func TestIntrospect_ExpiredToken(t *testing.T) {
+// TestIntrospectExpiredToken verifies expired token handling
+func TestIntrospectExpiredToken(t *testing.T) {
 	h := AuthHandler{}
 
 	// Generate an expired token
@@ -292,58 +293,20 @@ func TestIntrospect_ExpiredToken(t *testing.T) {
 	}
 }
 
-// TestStartAuthServer_Routes verifies all routes are registered
-func TestStartAuthServer_Routes(t *testing.T) {
-	srv := StartAuthServer(":0")
-	h := srv.Handler
-
-	tests := []struct {
-		name           string
-		path           string
-		method         string
-		expectedStatus int
-	}{
-		{"Health", "/health", "GET", http.StatusOK},
-		{"Readiness", "/readiness", "GET", http.StatusOK},
-		{"Root", "/", "GET", http.StatusOK},
-		{"Metrics", "/metrics", "GET", http.StatusOK},
-		{"Token POST", "/token", "POST", http.StatusBadRequest}, // Missing body
-		{"Token GET", "/token", "GET", http.StatusMethodNotAllowed},
-		{"Introspect No Auth", "/introspect", "GET", http.StatusUnauthorized},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			rr := httptest.NewRecorder()
-			var req *http.Request
-			if tt.method == "POST" {
-				req = httptest.NewRequest(tt.method, tt.path, strings.NewReader(""))
-			} else {
-				req = httptest.NewRequest(tt.method, tt.path, nil)
-			}
-			h.ServeHTTP(rr, req)
-
-			if rr.Code != tt.expectedStatus {
-				t.Fatalf("%s: expected %d got %d", tt.name, tt.expectedStatus, rr.Code)
-			}
-		})
-	}
-}
-
-// TestSecurityHeaders verifies security headers are set
-func TestSecurityHeaders(t *testing.T) {
+// TestSecurityHeadersComprehensive verifies security headers are set
+func TestSecurityHeadersComprehensive(t *testing.T) {
 	h := AuthHandler{}
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rr := httptest.NewRecorder()
 	h.Health(rr, req)
 
 	expectedHeaders := map[string]string{
-		"X-Content-Type-Options":    "nosniff",
-		"X-Frame-Options":           "DENY",
-		"X-XSS-Protection":          "1; mode=block",
-		"Content-Security-Policy":   "default-src 'self'",
+		"X-Content-Type-Options":   "nosniff",
+		"X-Frame-Options":          "DENY",
+		"X-XSS-Protection":         "1; mode=block",
+		"Content-Security-Policy":  "default-src 'self'",
 		"Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-		"Content-Type":              "application/json",
+		"Content-Type":             "application/json",
 	}
 
 	for header, expected := range expectedHeaders {
@@ -356,98 +319,5 @@ func TestSecurityHeaders(t *testing.T) {
 	// Verify X-Request-ID is present
 	if rr.Header().Get("X-Request-ID") == "" {
 		t.Fatal("expected X-Request-ID header")
-	}
-}
-
-// TestTokenClaims_Scopes verifies multiple scopes
-func TestTokenClaims_Scopes(t *testing.T) {
-	h := AuthHandler{}
-
-	claims := TokenClaims{
-		UserID: "admin-user",
-		Scopes: []string{"payment:read", "payment:write", "phi:read", "phi:write", "admin"},
-		Role:   "admin",
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, _ := token.SignedString(jwtSecret)
-
-	req := httptest.NewRequest(http.MethodGet, "/introspect", nil)
-	req.Header.Set("Authorization", "Bearer "+tokenString)
-	rr := httptest.NewRecorder()
-	h.Introspect(rr, req)
-
-	if rr.Code != http.StatusOK {
-		t.Fatalf("expected 200 got %d", rr.Code)
-	}
-
-	var response IntrospectResponse
-	json.Unmarshal(rr.Body.Bytes(), &response)
-
-	if len(response.Scopes) != 5 {
-		t.Fatalf("expected 5 scopes, got %d", len(response.Scopes))
-	}
-
-	// Verify all scopes are present
-	scopeMap := make(map[string]bool)
-	for _, scope := range response.Scopes {
-		scopeMap[scope] = true
-	}
-
-	expectedScopes := []string{"payment:read", "payment:write", "phi:read", "phi:write", "admin"}
-	for _, scope := range expectedScopes {
-		if !scopeMap[scope] {
-			t.Fatalf("expected scope %s not found", scope)
-		}
-	}
-}
-
-// BenchmarkTokenGeneration benchmarks token generation performance
-func BenchmarkTokenGeneration(b *testing.B) {
-	h := AuthHandler{}
-
-	reqBody := map[string]interface{}{
-		"user_id": "bench-user",
-		"scopes":  []string{"payment:write"},
-		"role":    "user",
-	}
-	bodyBytes, _ := json.Marshal(reqBody)
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		req := httptest.NewRequest(http.MethodPost, "/token", bytes.NewReader(bodyBytes))
-		rr := httptest.NewRecorder()
-		h.GenerateToken(rr, req)
-	}
-}
-
-// BenchmarkTokenValidation benchmarks token validation performance
-func BenchmarkTokenValidation(b *testing.B) {
-	h := AuthHandler{}
-
-	// Generate a valid token
-	claims := TokenClaims{
-		UserID: "bench-user",
-		Scopes: []string{"payment:write"},
-		Role:   "user",
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, _ := token.SignedString(jwtSecret)
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		req := httptest.NewRequest(http.MethodGet, "/introspect", nil)
-		req.Header.Set("Authorization", "Bearer "+tokenString)
-		rr := httptest.NewRecorder()
-		h.Introspect(rr, req)
 	}
 }

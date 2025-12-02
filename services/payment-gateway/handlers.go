@@ -36,20 +36,20 @@ func (h PaymentHandler) Health(w http.ResponseWriter, r *http.Request) {
 func (h PaymentHandler) Readiness(w http.ResponseWriter, r *http.Request) {
 	h.setSecurityHeaders(w)
 	w.Header().Set("Content-Type", "application/json")
-	
+
 	// In production, check dependencies (database, external APIs, etc.)
 	ready := true
-	
+
 	if ready {
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(map[string]interface{}{
-			"ready": true,
+			"ready":   true,
 			"service": "payment-gateway",
 		})
 	} else {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		_ = json.NewEncoder(w).Encode(map[string]interface{}{
-			"ready": false,
+			"ready":   false,
 			"service": "payment-gateway",
 		})
 	}
