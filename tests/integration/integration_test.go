@@ -17,11 +17,11 @@ import (
 
 // Service endpoints
 const (
-	AuthServiceURL    = "http://localhost:8080"
-	PaymentGatewayURL = "http://localhost:8081"
-	PHIServiceURL     = "http://localhost:8083"
-	MedicalDeviceURL  = "http://localhost:8084"
-	SyntheticPHIURL   = "http://localhost:8085"
+	AuthServiceURL     = "http://localhost:8080"
+	PaymentGatewayURL  = "http://localhost:8081"
+	PHIServiceURL      = "http://localhost:8083"
+	MedicalDeviceURL   = "http://localhost:8084"
+	SyntheticPHIURL    = "http://localhost:8085"
 )
 
 // Test fixtures
@@ -79,14 +79,14 @@ type PHIDecryptResponse struct {
 }
 
 type MedicalDevice struct {
-	DeviceID     string            `json:"device_id"`
-	DeviceType   string            `json:"device_type"`
-	Manufacturer string            `json:"manufacturer"`
-	Model        string            `json:"model"`
-	SerialNumber string            `json:"serial_number"`
-	Location     string            `json:"location"`
-	Status       string            `json:"status"`
-	Metadata     map[string]string `json:"metadata,omitempty"`
+	DeviceID       string            `json:"device_id"`
+	DeviceType     string            `json:"device_type"`
+	Manufacturer   string            `json:"manufacturer"`
+	Model          string            `json:"model"`
+	SerialNumber   string            `json:"serial_number"`
+	Location       string            `json:"location"`
+	Status         string            `json:"status"`
+	Metadata       map[string]string `json:"metadata,omitempty"`
 }
 
 type DeviceMetrics struct {
@@ -116,11 +116,11 @@ func waitForServices(t *testing.T, timeout time.Duration) {
 	defer cancel()
 
 	services := map[string]string{
-		"Auth Service":    AuthServiceURL + "/health",
-		"Payment Gateway": PaymentGatewayURL + "/health",
-		"PHI Service":     PHIServiceURL + "/health",
-		"Medical Device":  MedicalDeviceURL + "/health",
-		"Synthetic PHI":   SyntheticPHIURL + "/health",
+		"Auth Service":      AuthServiceURL + "/health",
+		"Payment Gateway":   PaymentGatewayURL + "/health",
+		"PHI Service":       PHIServiceURL + "/health",
+		"Medical Device":    MedicalDeviceURL + "/health",
+		"Synthetic PHI":     SyntheticPHIURL + "/health",
 	}
 
 	for name, url := range services {
@@ -201,11 +201,11 @@ func TestHealthChecks(t *testing.T) {
 	waitForServices(t, 60*time.Second)
 
 	services := map[string]string{
-		"auth-service":    AuthServiceURL + "/health",
-		"payment-gateway": PaymentGatewayURL + "/health",
-		"phi-service":     PHIServiceURL + "/health",
-		"medical-device":  MedicalDeviceURL + "/health",
-		"synthetic-phi":   SyntheticPHIURL + "/health",
+		"auth-service":      AuthServiceURL + "/health",
+		"payment-gateway":   PaymentGatewayURL + "/health",
+		"phi-service":       PHIServiceURL + "/health",
+		"medical-device":    MedicalDeviceURL + "/health",
+		"synthetic-phi":     SyntheticPHIURL + "/health",
 	}
 
 	for name, url := range services {

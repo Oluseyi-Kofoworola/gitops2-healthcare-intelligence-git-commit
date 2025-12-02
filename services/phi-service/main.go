@@ -59,14 +59,14 @@ func main() {
 	r := chi.NewRouter()
 
 	// Middleware stack
-	r.Use(middleware.Recoverer)                 // Panic recovery
-	r.Use(middleware.RealIP)                    // Get real client IP
-	r.Use(middleware.RequestID)                 // Generate request ID
-	r.Use(LoggingMiddleware)                    // Structured logging
-	r.Use(TracingMiddleware)                    // OpenTelemetry tracing
-	r.Use(PrometheusMiddleware)                 // Prometheus metrics
-	r.Use(CORSMiddleware)                       // CORS support
-	r.Use(middleware.Compress(5))               // Gzip compression
+	r.Use(middleware.Recoverer)       // Panic recovery
+	r.Use(middleware.RealIP)          // Get real client IP
+	r.Use(middleware.RequestID)       // Generate request ID
+	r.Use(LoggingMiddleware)          // Structured logging
+	r.Use(TracingMiddleware)          // OpenTelemetry tracing
+	r.Use(PrometheusMiddleware)       // Prometheus metrics
+	r.Use(CORSMiddleware)             // CORS support
+	r.Use(middleware.Compress(5))     // Gzip compression
 	r.Use(middleware.Timeout(30 * time.Second)) // Request timeout
 
 	// Health & readiness endpoints
@@ -160,7 +160,7 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{
-		"status":  "healthy",
+		"status": "healthy",
 		"service": "phi-service",
 	})
 }
@@ -180,7 +180,7 @@ func ReadyHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{
-		"status":  "ready",
+		"status": "ready",
 		"service": "phi-service",
 	})
 }

@@ -54,8 +54,8 @@ var (
 )
 
 var (
-	logger    zerolog.Logger
-	tracer    trace.Tracer
+	logger zerolog.Logger
+	tracer trace.Tracer
 	jwtSecret = []byte("demo-secret-change-in-production")
 )
 
@@ -382,11 +382,11 @@ func StartAuthServer(addr string) *http.Server {
 			"description": "Production-grade authentication and authorization service",
 			"version":     "1.0.0",
 			"endpoints": map[string]string{
-				"/health":     "Service health status",
-				"/readiness":  "Service readiness status",
-				"/introspect": "Token validation (GET with Authorization header)",
-				"/token":      "Token generation (POST with user_id, scopes, role)",
-				"/metrics":    "Prometheus metrics",
+				"/health":      "Service health status",
+				"/readiness":   "Service readiness status",
+				"/introspect":  "Token validation (GET with Authorization header)",
+				"/token":       "Token generation (POST with user_id, scopes, role)",
+				"/metrics":     "Prometheus metrics",
 			},
 			"security": map[string]interface{}{
 				"jwt_enabled":  true,

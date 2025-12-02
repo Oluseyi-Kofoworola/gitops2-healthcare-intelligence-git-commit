@@ -1,0 +1,63 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: phi-service-delay
+  namespace: default
+  annotations:
+    chaos-mesh.org/purpose: "Inject network latency to test timeout handling"
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - default
+    labelSelectors:
+      'app': 'phi-service'
+  delay:
+    latency: '2s'
+    correlation: '100'
+    jitter: '500ms'
+  duration: '5m'
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: auth-service-variable-delay
+  namespace: default
+  annotations:
+    chaos-mesh.org/purpose: "Simulate variable network conditions"
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - default
+    labelSelectors:
+      'app': 'auth-service'
+  delay:
+    latency: '500ms'
+    correlation: '50'
+    jitter: '200ms'
+  duration: '3m'
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: payment-gateway-high-latency
+  namespace: default
+  annotations:
+    chaos-mesh.org/purpose: "Test payment processing under high latency"
+    chaos-mesh.org/severity: "medium"
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - default
+    labelSelectors:
+      'app': 'payment-gateway'
+  delay:
+    latency: '5s'
+    correlation: '100'
+    jitter: '1s'
+  duration: '2m'

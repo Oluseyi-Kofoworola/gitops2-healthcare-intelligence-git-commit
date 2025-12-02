@@ -3,8 +3,10 @@ package e2e
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"testing"
@@ -16,13 +18,13 @@ import (
 
 // E2E test configuration from environment
 var (
-	baseURL         = getEnv("BASE_URL", "http://localhost")
-	authServicePort = getEnv("AUTH_PORT", "8080")
-	paymentPort     = getEnv("PAYMENT_PORT", "8081")
-	phiPort         = getEnv("PHI_PORT", "8083")
-	devicePort      = getEnv("DEVICE_PORT", "8084")
-	syntheticPort   = getEnv("SYNTHETIC_PORT", "8085")
-	testTimeout     = 300 * time.Second
+	baseURL           = getEnv("BASE_URL", "http://localhost")
+	authServicePort   = getEnv("AUTH_PORT", "8080")
+	paymentPort       = getEnv("PAYMENT_PORT", "8081")
+	phiPort           = getEnv("PHI_PORT", "8083")
+	devicePort        = getEnv("DEVICE_PORT", "8084")
+	syntheticPort     = getEnv("SYNTHETIC_PORT", "8085")
+	testTimeout       = 300 * time.Second
 )
 
 func getEnv(key, defaultValue string) string {
@@ -386,9 +388,9 @@ func TestE2E_HIPAAAuditTrailWorkflow(t *testing.T) {
 			"transaction_id": fmt.Sprintf("HIPAA-TXN-%d", time.Now().Unix()),
 			"payment_method": "insurance",
 			"compliance_tags": map[string]string{
-				"hipaa":               "true",
-				"phi_encrypted":       ctx.EncryptionKeyID,
-				"audit_level":         "high",
+				"hipaa":             "true",
+				"phi_encrypted":     ctx.EncryptionKeyID,
+				"audit_level":       "high",
 				"breach_notification": "enabled",
 			},
 		}
