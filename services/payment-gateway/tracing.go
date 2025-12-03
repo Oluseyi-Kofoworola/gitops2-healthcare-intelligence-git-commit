@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"os"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -79,12 +78,4 @@ func AddSpanAttributes(ctx context.Context, attrs ...attribute.KeyValue) {
 	if span != nil {
 		span.SetAttributes(attrs...)
 	}
-}
-
-// getEnv gets environment variable with fallback
-func getEnv(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return fallback
 }

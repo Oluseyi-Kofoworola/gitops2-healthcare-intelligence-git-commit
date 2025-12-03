@@ -91,3 +91,15 @@ func RecordPaymentDuration(duration time.Duration, success bool) {
 	}
 	paymentProcessingDuration.WithLabelValues(status).Observe(duration.Seconds())
 }
+
+// RecordTransaction records a payment transaction with duration and compliance type
+func RecordTransaction(req PaymentRequest, duration time.Duration, success bool) {
+	// Determine compliance type based on request
+	complianceType := "standard"
+	if req.PatientID != "" {
+		complianceType = "hipaa"
+	}
+	
+	RecordPaymentTransaction(success, complianceType)
+	RecordPaymentDuration(duration, success)
+}

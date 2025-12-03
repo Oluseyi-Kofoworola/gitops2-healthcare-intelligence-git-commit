@@ -91,25 +91,24 @@ func main() {
 
 	// Load configuration
 	port := getEnv("PORT", "8084")
-	otlpEndpoint := getEnv("OTLP_ENDPOINT", "localhost:4317")
 
 	// Initialize device registry
 	registry = NewDeviceRegistry()
 	log.Info().Msg("Device registry initialized")
 
-	// Initialize OpenTelemetry tracing
+	// Initialize OpenTelemetry tracing (disabled for lightweight deployment)
 	ctx := context.Background()
-	tp, err := InitTracerProvider(ctx, "medical-device-service", otlpEndpoint)
-	if err != nil {
+	if err := InitTracerProvider("medical-device-service"); err != nil {
 		log.Warn().Err(err).Msg("Failed to initialize tracer provider, continuing without tracing")
 	} else {
 		defer func() {
-			if err := ShutdownTracer(ctx, tp); err != nil {
+			if err := ShutdownTracer(ctx); err != nil {
 				log.Error().Err(err).Msg("Failed to shutdown tracer provider")
 			}
 		}()
-		log.Info().Str("endpoint", otlpEndpoint).Msg("OpenTelemetry tracing initialized")
+		log.Info().Msg("OpenTelemetry tracing initialized (stub mode)")
 	}
+	_ = ctx // Mark as used
 
 	// Setup HTTP router
 	r := chi.NewRouter()
@@ -309,7 +308,7 @@ func RegisterDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(device)
+	json.NewEncoder(w).Encode(&device)
 }
 
 // ListDevicesHandler lists all registered devices
@@ -352,7 +351,7 @@ func GetDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	span.SetAttributes(attribute.String("device.id", deviceID))
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(device)
+	json.NewEncoder(w).Encode(&device)
 }
 
 // UpdateDeviceHandler updates device information
@@ -384,7 +383,7 @@ func UpdateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	log.Info().Str("device_id", deviceID).Msg("Device updated")
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updates)
+	json.NewEncoder(w).Encode(&updates)
 }
 
 // DeregisterDeviceHandler removes a device from registry

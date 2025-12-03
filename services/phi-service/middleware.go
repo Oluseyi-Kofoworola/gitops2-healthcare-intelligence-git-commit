@@ -96,8 +96,8 @@ func PrometheusMiddleware(next http.Handler) http.Handler {
 
 		// Record metrics
 		duration := time.Since(start).Seconds()
-		status := http.StatusText(ww.Status())
-		RecordHTTPRequest(r.Method, r.URL.Path, status, duration)
+		statusCode := ww.Status()
+		RecordHTTPRequest(r.Method, r.URL.Path, statusCode, duration)
 	})
 }
 

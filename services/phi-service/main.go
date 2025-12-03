@@ -31,7 +31,6 @@ func main() {
 	// Load configuration from environment
 	port := getEnv("PORT", "8083")
 	masterKey := getEnv("MASTER_KEY", "default-master-key-change-in-production")
-	otlpEndpoint := getEnv("OTLP_ENDPOINT", "localhost:4317")
 
 	// Initialize encryption service
 	var err error
@@ -41,18 +40,17 @@ func main() {
 	}
 	log.Info().Msg("Encryption service initialized")
 
-	// Initialize OpenTelemetry tracing
-	ctx := context.Background()
-	tp, err := InitTracerProvider(ctx, "phi-service", otlpEndpoint)
-	if err != nil {
+	// Initialize OpenTelemetry tracing (stub for lightweight deployment)
+	if err := InitTracerProvider("phi-service"); err != nil {
 		log.Warn().Err(err).Msg("Failed to initialize tracer provider, continuing without tracing")
 	} else {
+		ctx := context.Background()
 		defer func() {
-			if err := ShutdownTracer(ctx, tp); err != nil {
+			if err := ShutdownTracer(ctx); err != nil {
 				log.Error().Err(err).Msg("Failed to shutdown tracer provider")
 			}
 		}()
-		log.Info().Str("endpoint", otlpEndpoint).Msg("OpenTelemetry tracing initialized")
+		log.Info().Msg("OpenTelemetry tracing initialized (stub mode)")
 	}
 
 	// Setup HTTP router
@@ -297,6 +295,7 @@ func DecryptHandler(w http.ResponseWriter, r *http.Request) {
 // HashHandler handles hash requests
 func HashHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	span := trace.SpanFromContext(ctx)
 	start := time.Now()
 
 	var req HashRequest
@@ -307,7 +306,14 @@ func HashHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Hash data
-	hash := encryptionService.Hash([]byte(req.Data))
+	hash, err := encryptionService.Hash([]byte(req.Data))
+	if err != nil {
+		log.Error().Err(err).Msg("Hashing failed")
+		http.Error(w, "Hashing failed", http.StatusInternalServerError)
+		RecordEncryptionOp("hash", "error", time.Since(start).Seconds(), len(req.Data))
+		span.RecordError(err)
+		return
+	}
 
 	// Record metrics
 	duration := time.Since(start).Seconds()
@@ -348,7 +354,14 @@ func AnonymizeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Hash with salt
-	hash := encryptionService.HashWithSalt([]byte(req.Data), salt)
+	hash, err := encryptionService.HashWithSalt([]byte(req.Data), salt)
+	if err != nil {
+		log.Error().Err(err).Msg("Hashing with salt failed")
+		http.Error(w, "Anonymization failed", http.StatusInternalServerError)
+		RecordEncryptionOp("anonymize", "error", time.Since(start).Seconds(), len(req.Data))
+		span.RecordError(err)
+		return
+	}
 
 	// Record metrics
 	duration := time.Since(start).Seconds()
