@@ -14,13 +14,13 @@ func NewServer(cfg Config) *http.Server {
 	router := chi.NewRouter()
 
 	// Add middleware stack
-	router.Use(middleware.Recoverer)           // Recover from panics
-	router.Use(middleware.RealIP)              // Get real client IP
-	router.Use(middleware.RequestID)           // Add request ID
-	router.Use(LoggingMiddleware)              // Structured logging
-	router.Use(TracingMiddleware)              // OpenTelemetry tracing
-	router.Use(PrometheusMiddleware)           // Prometheus metrics
-	router.Use(middleware.Compress(5))          // Gzip compression
+	router.Use(middleware.Recoverer)                 // Recover from panics
+	router.Use(middleware.RealIP)                    // Get real client IP
+	router.Use(middleware.RequestID)                 // Add request ID
+	router.Use(LoggingMiddleware)                    // Structured logging
+	router.Use(TracingMiddleware)                    // OpenTelemetry tracing
+	router.Use(PrometheusMiddleware)                 // Prometheus metrics
+	router.Use(middleware.Compress(5))               // Gzip compression
 	router.Use(middleware.Timeout(30 * time.Second)) // Request timeout
 
 	// Payment handler

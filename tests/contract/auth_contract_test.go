@@ -53,7 +53,7 @@ func TestAuthServiceContract(t *testing.T) {
 			client := &http.Client{}
 			req, _ := http.NewRequest("POST", fmt.Sprintf("http://localhost:%d/api/v1/login", pact.Server.Port), nil)
 			req.Header.Set("Content-Type", "application/json")
-			
+
 			resp, err := client.Do(req)
 			if err != nil {
 				return err
@@ -98,7 +98,7 @@ func TestAuthServiceContract(t *testing.T) {
 			client := &http.Client{}
 			req, _ := http.NewRequest("POST", fmt.Sprintf("http://localhost:%d/api/v1/login", pact.Server.Port), nil)
 			req.Header.Set("Content-Type", "application/json")
-			
+
 			resp, err := client.Do(req)
 			if err != nil {
 				return err
@@ -142,7 +142,7 @@ func TestAuthServiceContract(t *testing.T) {
 			req, _ := http.NewRequest("POST", fmt.Sprintf("http://localhost:%d/api/v1/validate", pact.Server.Port), nil)
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
-			
+
 			resp, err := client.Do(req)
 			if err != nil {
 				return err

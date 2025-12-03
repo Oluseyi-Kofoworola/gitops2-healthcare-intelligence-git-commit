@@ -1,0 +1,79 @@
+# =============================================================================
+# Docker Ignore File for auth-service
+# Excludes unnecessary files from Docker build context
+# =============================================================================
+
+# Version Control
+.git
+.gitignore
+.gitattributes
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Go Build Artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+auth-service
+main
+
+# Test and Coverage Files
+*.test
+*.out
+coverage.txt
+coverage.html
+*.prof
+
+# Documentation (included in image via specific COPY if needed)
+README.md
+*.md
+docs/
+examples/
+
+# Kubernetes and Deployment Files
+k8s-deployment.yaml
+*.yaml
+*.yml
+!go.mod
+!go.sum
+
+# CI/CD Files
+.github/
+.gitlab-ci.yml
+Jenkinsfile
+azure-pipelines.yml
+
+# Environment Files (never include secrets!)
+.env
+.env.local
+.env.*.local
+*.env
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+
+# Logs
+*.log
+logs/
+
+# Vendor Directory (go mod download handles dependencies)
+vendor/
+
+# Node Modules (if any frontend tools)
+node_modules/
+
+# Backup Files
+*.backup
+*.bak
+*_old.go
+main_test_old.go

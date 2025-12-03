@@ -1,0 +1,9 @@
+go 1.22
+
+use (
+	./cmd/gitops-health
+	./services/auth-service
+	./services/medical-device
+	./services/payment-gateway
+	./services/phi-service
+)

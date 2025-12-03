@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,7 +17,7 @@ import (
 func init() {
 	// Disable logging during tests
 	zerolog.SetGlobalLevel(zerolog.Disabled)
-	
+
 	// Initialize encryption service for tests
 	var err error
 	encryptionService, err = NewEncryptionService("test-key-32-bytes-long-change!!")
@@ -35,7 +37,7 @@ func TestHealthEndpoint(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response map[string]string
 	err := json.NewDecoder(w.Body).Decode(&response)
 	require.NoError(t, err)
@@ -47,7 +49,7 @@ func TestHealthEndpoint(t *testing.T) {
 func TestReadinessEndpoint(t *testing.T) {
 	// Initialize encryption service for readiness check
 	encryptionService, _ = NewEncryptionService("test-key-32-bytes-long-change!!")
-	
+
 	r := chi.NewRouter()
 	r.Get("/ready", ReadyHandler)
 
@@ -57,7 +59,7 @@ func TestReadinessEndpoint(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(w.Body).Decode(&response)
 	require.NoError(t, err)
@@ -305,7 +307,7 @@ func TestEncryptionService(t *testing.T) {
 
 	t.Run("Encrypt and Decrypt", func(t *testing.T) {
 		originalData := []byte("Sensitive PHI data: Patient ID 12345")
-		
+
 		encrypted, err := service.Encrypt(originalData)
 		require.NoError(t, err)
 		assert.NotEmpty(t, encrypted)
@@ -324,7 +326,7 @@ func TestEncryptionService(t *testing.T) {
 		data := []byte("test-data")
 		hash1 := service.Hash(data)
 		hash2 := service.Hash(data)
-		
+
 		assert.Equal(t, hash1, hash2, "Same data should produce same hash")
 		assert.Len(t, hash1, 64, "SHA256 hash should be 64 hex characters")
 	})
@@ -332,10 +334,10 @@ func TestEncryptionService(t *testing.T) {
 	t.Run("Hash with salt", func(t *testing.T) {
 		data := []byte("test-data")
 		salt := []byte("random-salt")
-		
+
 		hash1 := service.HashWithSalt(data, salt)
 		hash2 := service.HashWithSalt(data, salt)
-		
+
 		assert.Equal(t, hash1, hash2, "Same data and salt should produce same hash")
 		assert.Len(t, hash1, 64, "SHA256 hash should be 64 hex characters")
 	})
@@ -344,10 +346,10 @@ func TestEncryptionService(t *testing.T) {
 		data := []byte("test-data")
 		salt1 := []byte("salt1")
 		salt2 := []byte("salt2")
-		
+
 		hash1 := service.HashWithSalt(data, salt1)
 		hash2 := service.HashWithSalt(data, salt2)
-		
+
 		assert.NotEqual(t, hash1, hash2, "Different salts should produce different hashes")
 	})
 }

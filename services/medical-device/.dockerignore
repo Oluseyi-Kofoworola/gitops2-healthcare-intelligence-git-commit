@@ -1,0 +1,54 @@
+# filepath: /Users/oluseyikofoworola/Downloads/gitops2-enterprise-git-intel-demo/services/medical-device/.dockerignore
+# Development files
+*.md
+README.md
+COMPLETION_REPORT.md
+
+# Documentation
+openapi.yaml
+docs/
+*.pdf
+
+# Test files
+*_test.go
+testdata/
+coverage.out
+coverage.html
+
+# Kubernetes manifests
+k8s-deployment.yaml
+*.yaml
+*.yml
+
+# Git
+.git/
+.gitignore
+.github/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+bin/
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.log
+
+# Dependencies (will be downloaded in build)
+vendor/

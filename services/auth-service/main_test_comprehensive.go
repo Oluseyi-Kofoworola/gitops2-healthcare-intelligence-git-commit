@@ -300,12 +300,12 @@ func TestSecurityHeadersComprehensive(t *testing.T) {
 	h.Health(rr, req)
 
 	expectedHeaders := map[string]string{
-		"X-Content-Type-Options":   "nosniff",
-		"X-Frame-Options":          "DENY",
-		"X-XSS-Protection":         "1; mode=block",
-		"Content-Security-Policy":  "default-src 'self'",
+		"X-Content-Type-Options":    "nosniff",
+		"X-Frame-Options":           "DENY",
+		"X-XSS-Protection":          "1; mode=block",
+		"Content-Security-Policy":   "default-src 'self'",
 		"Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-		"Content-Type":             "application/json",
+		"Content-Type":              "application/json",
 	}
 
 	for header, expected := range expectedHeaders {

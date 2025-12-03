@@ -1,78 +1,29 @@
 # GitOps 2.0: Healthcare Git Intelligence Platform
 
-[![Build Status](https://img.shields.io/badge/Build-Passing-success)](../../actions)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Compliance](https://img.shields.io/badge/Compliance-HIPAA%20|%20FDA%20|%20SOX-green)](#compliance-frameworks)
-[![AI Model](https://img.shields.io/badge/AI-GitHub%20Copilot-purple)](#ai-copilot-integration)
-[![Version](https://img.shields.io/badge/Version-2.0.0-orange)](CHANGELOG.md)
+[![Compliance](https://img.shields.io/badge/Compliance-HIPAA%20%7C%20FDA%20%7C%20SOX-green)](#compliance-frameworks)
+[![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://go.dev/)
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python)](https://python.org/)
 
-**Transform healthcare engineering from compliance burden to competitive advantage through AI-native automation.**
+**Production-ready AI-powered compliance automation for healthcare software development.**
 
-> **$800K/year savings** | **76% cost reduction** | **99.9% automation success** | **100% audit readiness**
-
----
-
-## 🎯 What Is This?
-
-The **GitOps 2.0 Healthcare Intelligence Platform** is the world's first production-ready reference implementation that demonstrates how to transform Git from a passive version control system into an **AI-native engineering intelligence platform** for healthcare enterprises.
-
-This repository closes all gaps between vision and implementation, delivering:
-- ✅ **AI-powered compliance automation** for HIPAA, FDA, and SOX
-    - **Try it live:** Run `make demo` or `python3 tools/healthcare_commit_generator.py --interactive` to see AI generate a compliant commit message, validate HIPAA/SOX/FDA metadata, and create an audit trail. The output will show a real commit message, compliance status, and risk score.
-
-- ✅ **Risk-adaptive CI/CD pipelines** with intelligent deployment strategies
-    - **Try it live:** Make a code change, then run `make validate` or `python3 tools/ai_compliance_framework.py check --commit HEAD` and `python3 tools/git_intel/risk_scorer.py score --commit HEAD`. The system will assign a risk score and adapt the deployment strategy (auto-deploy, canary, or manual approval) based on risk. The output will show the risk score and deployment decision.
-
-- ✅ **Policy-as-Code enforcement** with real-time violation detection
-    - **Try it live:** Intentionally break a compliance rule (e.g., remove encryption from PHI code), then run `make validate` or `python3 tools/ai_compliance_framework.py check --commit HEAD`. The OPA policy engine will block the change and show a real-time policy violation message with actionable feedback.
-
-- ✅ **AI forensics and incident response** with automated root cause analysis
-    - **Try it live:** Simulate a regression with `./scripts/simulate-regression.sh`, then run `python3 tools/intelligent_bisect.py --metric latency --threshold 200 --start HEAD~20 --end HEAD`. The system will analyze commit history, identify the root cause, and recommend rollback. The output will show the offending commit, risk metadata, and incident report.
-
-- ✅ **GitHub Copilot integration** for 30-second compliant commits
-    - **Try it live:** Use Copilot in your editor to generate a commit message for a compliance-related change. The suggested message will follow Conventional Commits, include compliance metadata, and be ready to use. You can also run `python3 tools/healthcare_commit_generator.py --interactive` for a guided experience.
-
-**Each of these features can be demonstrated live, with clear, actionable results and outputs. See the [Demo Scenarios](#-demo-scenarios) and [The Three Flagship Flows](#the-three-flagship-flows) below for step-by-step instructions and expected results.**
+Automate HIPAA, FDA 21 CFR Part 11, and SOX compliance with AI commit generation, policy-as-code enforcement, and intelligent incident response.
 
 ---
 
 ## 🚀 Quick Start
 
 ```bash
-# Clone repository
+# Clone and setup
 git clone https://github.com/your-org/gitops2-healthcare-intelligence.git
 cd gitops2-healthcare-intelligence
+./setup.sh
 
-# One-command setup (recommended)
-make setup
+# Run interactive demo
+./demo.sh
 
-# Or manual setup:
-pip install -e .
-go mod download
-npm install
-
-# Configure
-export OPENAI_API_KEY="your-key-here"
-cp config/gitops-health.example.yml config/gitops-health.yml
-
-# Run quick demo (5 minutes)
-make demo
-```
-
-**Next Steps**: See [Getting Started Guide](docs/GETTING_STARTED.md) for complete setup.
-
-### Common Commands
-
-```bash
-make help              # Show all available commands
-make setup             # Initial setup (dependencies + build)
-make build             # Build all Go services
-make test              # Run all tests
-make demo              # Run quick demo (5 min)
-make demo-healthcare   # Run healthcare demo (15 min)
-make lint              # Run linters
-make validate          # Validate policies and config
-make clean             # Clean build artifacts
+# Build all services
+make build
 ```
 
 ---
@@ -82,17 +33,17 @@ make clean             # Clean build artifacts
 ### For Developers
 - **30 seconds** to generate HIPAA/SOX-compliant commits (vs 15 min manual)
 - **Zero** missed compliance metadata with AI validation
-- **Automatic** audit trail generation with every commit
+- **Automatic** audit trail generation
 
 ### For Compliance Teams
 - **100%** audit coverage with automated evidence collection
 - **Real-time** policy enforcement at commit time
-- **7-year** compliant evidence retention (SOX/HIPAA requirement)
+- **7-year** compliant retention (SOX/HIPAA requirement)
 
 ### For Engineering Leaders
 - **85%** reduction in compliance review time
-- **Risk-based** deployment strategies (canary, blue-green, manual approval)
-- **Faster MTTR** with intelligent git forensics (2-4 hours → minutes)
+- **Risk-based** deployment strategies
+- **Faster MTTR** with intelligent git forensics
 
 ---
 

@@ -34,7 +34,7 @@ print_success "Prerequisites check passed"
 
 # Install Python dependencies
 print_info "Installing Python dependencies..."
-pip3 install -r requirements.txt >/dev/null 2>&1 || pip3 install openai pyyaml requests
+pip3 install -r requirements.txt >/dev/null 2>&1 || pip3 install openai pyyaml requests 2>/dev/null || print_info "⚠ Python packages not installed (optional)"
 
 print_success "Python dependencies installed"
 
