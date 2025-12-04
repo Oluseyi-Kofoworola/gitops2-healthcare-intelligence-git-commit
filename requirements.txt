@@ -1,0 +1,17 @@
+# GitOps 2.0 Healthcare Intelligence - Python Dependencies
+# Updated: December 2025 - Latest secure versions
+
+# AI/ML Dependencies
+openai>=1.59.0  # OpenAI API client - latest stable version
+
+# Configuration & Data Processing
+pyyaml>=6.0.2   # YAML parser - fixes CVE-2020-14343
+requests>=2.32.3  # HTTP library - fixes multiple CVEs
+
+# Security & Compliance
+cryptography>=44.0.0  # Cryptographic recipes - latest security fixes
+
+# Testing & Development
+pytest>=8.3.4  # Testing framework
+pytest-cov>=6.0.0  # Coverage plugin
+black>=24.12.0  # Code formatter
