@@ -252,30 +252,34 @@ git add services/phi-service/
 
 ## 📚 Documentation
 
-### Getting Started
-- **[Getting Started Guide](docs/GETTING_STARTED.md)** - Complete setup (15 min)
-- **[Quick Start](START_HERE.md)** - Fastest path to running demos (5 min)
-
-### Detailed Guides
-- **[Complete Walkthrough](docs/SCENARIO_END_TO_END.md)** - Full end-to-end scenario
-- **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)** - Production deployment
+### Essential Guides
+- **[Getting Started](docs/GETTING_STARTED.md)** - Complete setup and first steps (15 min)
+- **[Quick Start](START_HERE.md)** - Run demos immediately (5 min)
+- **[End-to-End Scenario](docs/SCENARIO_END_TO_END.md)** - Complete developer workflow
+- **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)** - Production deployment strategies
 - **[Compliance Guide](docs/COMPLIANCE_GUIDE.md)** - HIPAA/FDA/SOX reference
-- **[AI Tools Reference](docs/AI_TOOLS_REFERENCE.md)** - AI features documentation
-- **[Engineering Guide](docs/ENGINEERING_GUIDE.md)** - Architecture deep-dive
+- **[Engineering Guide](docs/ENGINEERING_GUIDE.md)** - Architecture and design patterns
 
-### API & Service Docs
-- **[Auth Service](services/auth-service/README.md)** - JWT authentication
-- **[Payment Gateway](services/payment-gateway/README.md)** - SOX payments
+### Tool Documentation
+- **[AI Tools Guide](docs/AI_TOOLS_GUIDE.md)** - AI-powered automation features
+- **[AI Tools Reference](docs/AI_TOOLS_REFERENCE.md)** - Complete API reference
+- **[Healthcare Commit Generator](tools/healthcare_commit_generator.py)** - CLI reference (run with `--help`)
+- **[Secret Sanitizer](tools/secret_sanitizer.py)** - PHI/PII detection
+- **[Token Limit Guard](tools/token_limit_guard.py)** - LLM context management
+
+### Service Documentation
+- **[Auth Service](services/auth-service/README.md)** - JWT authentication & RBAC
+- **[Payment Gateway](services/payment-gateway/README.md)** - SOX-compliant payments
 - **[PHI Service](services/phi-service/README.md)** - HIPAA encryption
-- **[Medical Device](services/medical-device/README.md)** - FDA compliance
-- **[Synthetic PHI](services/synthetic-phi-service/README.md)** - Test data
+- **[Medical Device](services/medical-device/README.md)** - FDA 21 CFR Part 11
+- **[Synthetic PHI Generator](services/synthetic-phi-service/README.md)** - Test data generation
 
-### Testing
-- **[Test Suite Overview](tests/README.md)** - All testing documentation
-- **[Integration Tests](tests/integration/)** - Docker Compose tests
-- **[E2E Tests](tests/e2e/)** - Kubernetes tests
-- **[Chaos Tests](tests/chaos/)** - Resilience validation
-- **[Security Tests](tests/security/)** - Security scanning
+### Testing & Operations
+- **[Test Suite Overview](tests/README.md)** - 150+ tests across 8 layers
+- **[OPA Policy Guide](policies/healthcare/README.md)** - Policy-as-code reference
+- **[Enterprise Readiness](docs/ENTERPRISE_READINESS.md)** - Production considerations
+- **[Global Compliance](docs/GLOBAL_COMPLIANCE.md)** - International regulations
+- **[Incident Forensics](docs/INCIDENT_FORENSICS_DEMO.md)** - Debugging guide
 
 ---
 
@@ -377,6 +381,46 @@ git push origin feat/your-feature
 
 ---
 
+## 📊 Project Structure
+
+```
+gitops2-healthcare-intelligence/
+├── tools/                        # Production AI tools
+│   ├── healthcare_commit_generator.py   # AI commit message generation
+│   ├── secret_sanitizer.py              # PHI/PII/secret detection
+│   ├── token_limit_guard.py             # LLM context management
+│   ├── ai_compliance_framework.py       # Compliance validation
+│   └── intelligent_bisect.py            # Automated forensics
+├── services/                     # 5 microservices
+│   ├── auth-service/            # JWT authentication
+│   ├── payment-gateway/         # SOX-compliant payments
+│   ├── phi-service/             # HIPAA encryption
+│   ├── medical-device/          # FDA 21 CFR Part 11
+│   └── synthetic-phi-service/   # Test data generation
+├── policies/healthcare/          # OPA policy-as-code
+│   ├── commit_metadata_required.rego
+│   ├── valid_compliance_codes.rego
+│   └── README.md                # Policy documentation
+├── tests/                        # 150+ tests (8 layers)
+│   ├── unit/                    # Unit tests (95%+ coverage)
+│   ├── integration/             # Docker Compose tests
+│   ├── e2e/                     # Kubernetes tests
+│   ├── security/                # OWASP ZAP scans
+│   └── chaos/                   # Chaos engineering
+├── config/                       # Production configuration
+│   └── production.yaml          # Centralized config
+├── scripts/                      # Automation scripts
+│   └── install-pre-commit-hook.sh
+├── docs/                         # Documentation
+│   ├── GETTING_STARTED.md
+│   ├── DEPLOYMENT_GUIDE.md
+│   ├── COMPLIANCE_GUIDE.md
+│   └── ENGINEERING_GUIDE.md
+└── README.md                     # This file
+```
+
+---
+
 ## 📊 Project Stats
 
 | Metric | Value |
@@ -426,18 +470,18 @@ See [SECURITY.md](SECURITY.md) for:
 
 ## 📞 Support & Community
 
-### Resources
-- **Documentation**: [docs/](docs/)
-- **Issues**: [GitHub Issues](https://github.com/your-org/gitops2-healthcare-intelligence/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/gitops2-healthcare-intelligence/discussions)
+### Documentation & Resources
+- **[Documentation](docs/)** - Complete guides and references
+- **[GitHub Issues](https://github.com/your-org/gitops2-healthcare-intelligence/issues)** - Bug reports and feature requests
+- **[GitHub Discussions](https://github.com/your-org/gitops2-healthcare-intelligence/discussions)** - Community Q&A
 
-### Roadmap
+### Roadmap & Future Development
 See [ROADMAP.md](ROADMAP.md) for planned features:
-- Multi-cloud support
-- Additional compliance frameworks (GDPR, HITRUST)
-- Enhanced AI models
-- Self-hosted AI option
+- Multi-cloud support (AWS, Azure, GCP)
+- Additional compliance frameworks (GDPR, HITRUST, ISO 27001)
+- Enhanced AI models and self-hosted options
 - Advanced analytics dashboard
+- Multi-language support
 
 ---
 
@@ -474,30 +518,42 @@ This software is provided for **demonstration and educational purposes**.
 
 ## PHI Encryption Service Demo
 
-See `USAGE_DEMO.md` in `services/phi-service/` for a quickstart on all demo stages, including:
-- Live PHI encryption/decryption
-- Defensive error handling
-- Policy-as-code, compliance, audit, and forensics automation
-- AI-powered commit metadata and audit trail
-- Copilot integration and extensibility
+See the **[PHI Service README](services/phi-service/README.md)** for complete documentation including:
+- Live PHI encryption/decryption examples
+- Defensive error handling patterns
+- Policy-as-code integration
+- Compliance validation workflows
+- AI-powered commit metadata
+- Audit trail generation
 
-### Quickstart
+### Quick Demo
 
-```sh
+```bash
+# Run PHI service
 go run services/phi-service/encryption.go
-```
 
-For compliance, audit, and forensics, see the instructions printed by the demo, or run:
-```sh
-python3 tools/healthcare_commit_generator.py --type feat --scope phi --description "improve PHI encryption" --files services/phi-service/encryption.go
+# Generate compliant commit
+python3 tools/healthcare_commit_generator.py \
+  --type feat \
+  --scope phi \
+  --description "improve PHI encryption" \
+  --files services/phi-service/encryption.go
+
+# Validate compliance
 python3 tools/ai_compliance_framework.py analyze-commit HEAD
+
+# Check risk score
 python3 tools/git_intel/risk_scorer.py --max-commits 1
+
+# Run intelligent forensics
 python3 tools/intelligent_bisect.py --file services/phi-service/encryption.go
 ```
 
-For more, see DEMO_EVALUATION.md and inline comments in `encryption.go`.
+For complete workflows, see [End-to-End Scenario](docs/SCENARIO_END_TO_END.md).
 
-**Last Updated**: November 23, 2025  
+---
+
+**Last Updated**: December 5, 2025  
 **Version**: 2.0  
 **Status**: Production-Ready Reference Implementation
 

@@ -1,0 +1,39 @@
+# GitOps 2.0 Healthcare Intelligence Configuration
+
+ai_agents:
+  default_model: "gpt-4"
+  compliance_assistant:
+    enabled: true
+    models: ["gpt-4"]
+    responsibilities: ["HIPAA", "FDA", "SOX"]
+
+critical_paths:
+  services/phi-service/:
+    compliance_domains: ["HIPAA", "FDA"]
+    risk_level: "HIGH"
+  services/payment-gateway/:
+    compliance_domains: ["SOX", "PCI-DSS"]
+    risk_level: "MEDIUM"
+  services/medical-device/:
+    compliance_domains: ["FDA", "HIPAA"]
+    risk_level: "CRITICAL"
+  services/auth-service/:
+    compliance_domains: ["HIPAA", "SOX"]
+    risk_level: "HIGH"
+
+compliance_requirements:
+  HIPAA:
+    mandatory_fields:
+      - "PHI Protection Verification"
+      - "Access Control Review"
+      - "Encryption Status"
+  FDA:
+    mandatory_fields:
+      - "Clinical Safety Assessment"
+      - "Risk Analysis"
+      - "Change Control Documentation"
+  SOX:
+    mandatory_fields:
+      - "Financial Control Impact"
+      - "Audit Trail Complete"
+      - "Separation of Duties"

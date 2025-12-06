@@ -1,0 +1,342 @@
+# =============================================================================
+# GitOps 2.0 Healthcare Intelligence - Production Configuration
+# =============================================================================
+# 
+# This configuration file externalizes all settings for production deployment.
+# Override values using environment variables: GITOPS_*
+#
+# Version: 2.0.0
+# Last Updated: 2025-12-05
+# =============================================================================
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: INFO
+  
+  # Format: json (production) or text (development)
+  format: json
+  
+  # Destination: stdout, file, syslog
+  destination: stdout
+  
+  # File path (if destination=file)
+  file_path: /var/log/gitops/healthcare-commit-generator.log
+  
+  # Rotation settings (if destination=file)
+  max_bytes: 10485760  # 10MB
+  backup_count: 5
+
+# =============================================================================
+# AI MODEL CONFIGURATION
+# =============================================================================
+ai:
+  # Default AI model for commit generation
+  default_model: gpt-4-turbo
+  
+  # Fallback models if primary fails
+  fallback_models:
+    - gpt-4
+    - gpt-3.5-turbo
+  
+  # Retry configuration
+  max_retries: 3
+  retry_delay_seconds: 2
+  exponential_backoff: true
+  
+  # Timeout settings
+  timeout_seconds: 30
+  
+  # Rate limiting
+  rate_limit:
+    requests_per_minute: 60
+    tokens_per_minute: 150000
+  
+  # Cost management
+  cost_tracking:
+    enabled: true
+    alert_threshold_dollars: 100  # Alert if daily cost exceeds this
+    max_daily_budget_dollars: 500
+
+# =============================================================================
+# ENTERPRISE SAFETY CONFIGURATION
+# =============================================================================
+safety:
+  # Enable/disable safety modules
+  enable_secret_detection: true
+  enable_token_limits: true
+  enable_phi_detection: true
+  
+  # Behavior on detection
+  block_on_detection: true  # false = warn only, don't block
+  
+  # Custom secret patterns (regex)
+  custom_patterns:
+    - name: "internal_api_key"
+      pattern: "INT-[A-Z0-9]{32}"
+      severity: CRITICAL
+      description: "Internal API key format"
+    
+    - name: "encrypted_patient_id"
+      pattern: "ENC-PID-[A-F0-9]{64}"
+      severity: HIGH
+      description: "Encrypted patient identifier"
+  
+  # Whitelists for false positive reduction
+  whitelists:
+    # Test email addresses (not considered PHI)
+    test_emails:
+      - "test@example.com"
+      - "user@localhost"
+      - "admin@test.local"
+    
+    # Test IP addresses (not considered PHI)
+    test_ips:
+      - "192.168.0.0/16"
+      - "10.0.0.0/8"
+      - "127.0.0.0/8"
+    
+    # Test SSNs (for demo purposes)
+    test_ssns:
+      - "000-00-0000"
+      - "123-45-6789"
+    
+    # Safe file patterns (never contain secrets)
+    safe_files:
+      - "*.md"
+      - "*.txt"
+      - "LICENSE"
+      - "*.lock"
+
+# =============================================================================
+# COMMIT GENERATION SETTINGS
+# =============================================================================
+commit_generation:
+  # Maximum number of files per commit
+  max_files: 100
+  
+  # Maximum description length (characters)
+  max_description_length: 200
+  
+  # Require compliance metadata
+  require_compliance_metadata: true
+  
+  # Auto-detect compliance frameworks from file paths
+  auto_detect_frameworks: true
+  
+  # Supported commit types
+  allowed_commit_types:
+    - feat
+    - fix
+    - security
+    - perf
+    - breaking
+    - chore
+    - docs
+    - test
+    - refactor
+  
+  # Output format options
+  output:
+    default_format: text  # text or json
+    include_token_usage: true
+    include_safety_warnings: true
+
+# =============================================================================
+# COMPLIANCE FRAMEWORK CONFIGURATION
+# =============================================================================
+compliance:
+  # Enabled regulatory frameworks
+  enabled_frameworks:
+    - HIPAA
+    - FDA
+    - SOX
+    - GDPR
+    - PCI-DSS
+  
+  # Required approvals by risk level
+  mandatory_reviews:
+    CRITICAL: 2  # Number of required approvals
+    HIGH: 2
+    MEDIUM: 1
+    LOW: 0
+  
+  # Framework-specific settings
+  frameworks:
+    HIPAA:
+      enabled: true
+      phi_detection_strict: true
+      require_baa_confirmation: false
+    
+    FDA:
+      enabled: true
+      require_510k_reference: false
+      track_device_changes: true
+    
+    SOX:
+      enabled: true
+      require_financial_approval: true
+      enforce_segregation_of_duties: true
+    
+    GDPR:
+      enabled: true
+      require_dpia: false  # Data Protection Impact Assessment
+      track_personal_data: true
+    
+    PCI-DSS:
+      enabled: true
+      enforce_encryption: true
+      require_quarterly_review: false
+
+# =============================================================================
+# MONITORING & OBSERVABILITY
+# =============================================================================
+monitoring:
+  # Enable Prometheus metrics
+  enable_metrics: true
+  metrics_port: 9090
+  
+  # Health check endpoint
+  health_check_port: 8080
+  health_check_path: /health
+  
+  # Metrics to track
+  tracked_metrics:
+    - commit_generation_duration
+    - token_usage_total
+    - safety_checks_passed
+    - safety_checks_failed
+    - compliance_domains_detected
+    - risk_level_distribution
+  
+  # Alerting thresholds
+  alerts:
+    high_token_usage_threshold: 0.8  # Alert at 80% of limit
+    secret_detection_rate_threshold: 0.05  # Alert if >5% of commits have secrets
+    error_rate_threshold: 0.01  # Alert if >1% of commits fail
+
+# =============================================================================
+# PRE-COMMIT HOOK CONFIGURATION
+# =============================================================================
+pre_commit:
+  # Enable pre-commit hooks
+  enabled: true
+  
+  # Checks to run
+  checks:
+    - secret_detection
+    - token_limits
+    - opa_policies
+    - file_count_validation
+  
+  # Behavior
+  block_on_failure: true
+  show_warnings: true
+  
+  # Performance
+  timeout_seconds: 60
+  parallel_execution: true
+
+# =============================================================================
+# INTEGRATION SETTINGS
+# =============================================================================
+integrations:
+  # Git integration
+  git:
+    default_branch: main
+    require_signed_commits: false
+    enforce_conventional_commits: true
+  
+  # CI/CD integration
+  cicd:
+    platform: github-actions  # github-actions, jenkins, gitlab-ci
+    enable_status_checks: true
+    required_checks:
+      - secret-scan
+      - opa-validation
+      - compliance-check
+  
+  # Notification channels
+  notifications:
+    enabled: true
+    channels:
+      slack:
+        enabled: false
+        webhook_url: ""
+      email:
+        enabled: false
+        smtp_server: ""
+        from_address: ""
+      teams:
+        enabled: false
+        webhook_url: ""
+
+# =============================================================================
+# SECURITY SETTINGS
+# =============================================================================
+security:
+  # API key management
+  api_keys:
+    rotate_every_days: 90
+    use_vault: false  # HashiCorp Vault integration
+    vault_path: ""
+  
+  # Access control
+  access_control:
+    require_authentication: false
+    allowed_users: []
+    allowed_groups: []
+  
+  # Audit logging
+  audit:
+    enabled: true
+    log_all_operations: true
+    include_file_contents: false
+    retention_days: 365
+
+# =============================================================================
+# PERFORMANCE TUNING
+# =============================================================================
+performance:
+  # Caching
+  cache:
+    enabled: true
+    ttl_seconds: 3600
+    max_size_mb: 100
+  
+  # Parallel processing
+  parallel:
+    enabled: true
+    max_workers: 4
+  
+  # Resource limits
+  limits:
+    max_memory_mb: 512
+    max_cpu_percent: 50
+
+# =============================================================================
+# FEATURE FLAGS
+# =============================================================================
+features:
+  # Experimental features
+  experimental:
+    ai_code_review: false
+    intelligent_bisect: false
+    auto_remediation: false
+  
+  # Beta features
+  beta:
+    json_output: true
+    multi_language_support: false
+    custom_templates: false
+
+# =============================================================================
+# ENVIRONMENT-SPECIFIC OVERRIDES
+# =============================================================================
+# Use environment variables to override any setting above:
+# Example: GITOPS_LOGGING_LEVEL=DEBUG
+# Example: GITOPS_AI_DEFAULT_MODEL=gpt-4-turbo
+# Example: GITOPS_SAFETY_BLOCK_ON_DETECTION=false
+# =============================================================================
