@@ -1,23 +1,56 @@
 # PHI Service
 
-Production-grade Protected Health Information (PHI) encryption and anonymization service with comprehensive observability, HIPAA-compliant data handling, and enterprise security controls.
+Production-grade Protected Health Information (PHI) encryption and anonymization service with HIPAA compliance.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TD
+    A[Client] --> B[HTTP Middleware]
+    B --> C[OpenTelemetry]
+    B --> D[Prometheus Metrics]
+    B --> E{API Endpoint}
+    
+    E -->|/encrypt| F[AES-256-GCM<br/>Encryption]
+    E -->|/decrypt| G[AES-256-GCM<br/>Decryption]
+    E -->|/hash| H[SHA-256<br/>Hashing]
+    E -->|/anonymize| I[Salt-Based<br/>Anonymization]
+    
+    F --> J[PBKDF2<br/>Key Derivation]
+    G --> J
+    
+    C --> K[Jaeger/OTLP]
+    D --> L[Prometheus]
+    
+    style F fill:#d4edda
+    style G fill:#d4edda
+    style H fill:#d4edda
+    style I fill:#d4edda
+    style J fill:#fff3cd
+    style C fill:#e1f5ff
+    style D fill:#e1f5ff
+```
+
+---
 
 ## 🎯 Overview
 
-The PHI Service provides secure encryption, decryption, hashing, and anonymization capabilities for Protected Health Information in compliance with HIPAA regulations. Built with enterprise-grade observability, distributed tracing, and comprehensive security controls.
+Secure encryption, decryption, hashing, and anonymization for PHI in compliance with HIPAA regulations.
 
 ### Key Features
 
-- **AES-256-GCM Encryption**: Industry-standard encryption for PHI data
-- **PBKDF2 Key Derivation**: Secure key derivation with 100,000 iterations
+- **AES-256-GCM Encryption**: Industry-standard PHI encryption
+- **PBKDF2 Key Derivation**: Secure key derivation (100,000 iterations)
 - **SHA-256 Hashing**: Cryptographic hashing for anonymization
-- **Salt-Based Anonymization**: Random salt generation for irreversible anonymization
-- **OpenTelemetry Tracing**: Full distributed tracing support
-- **Prometheus Metrics**: Comprehensive observability metrics
-- **Structured Logging**: JSON-formatted logs with zerolog
-- **Health Checks**: Kubernetes-ready liveness and readiness probes
-- **Graceful Shutdown**: Clean shutdown with connection draining
-- **HIPAA Compliance**: Security controls aligned with HIPAA requirements
+- **Salt-Based Anonymization**: Irreversible anonymization
+- **OpenTelemetry Tracing**: Full distributed tracing
+- **Prometheus Metrics**: Comprehensive observability
+- **Structured Logging**: JSON-formatted logs (zerolog)
+- **Health Checks**: Kubernetes liveness/readiness probes
+- **Graceful Shutdown**: Clean connection draining
+- **HIPAA Compliance**: Aligned with HIPAA Security Rule
 
 ## 🚀 Quick Start
 

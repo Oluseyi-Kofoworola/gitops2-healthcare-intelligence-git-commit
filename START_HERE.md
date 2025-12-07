@@ -1,8 +1,29 @@
 # START HERE: 30-Minute Walkthrough
 
-Welcome! This guide will walk you through the **three flagship flows** of this GitOps healthcare intelligence demo in 30-60 minutes.
+Welcome! This guide walks you through **three flagship flows** in 30-60 minutes.
 
 **Prerequisites**: Python 3.10+, Go 1.22+, Git, OPA CLI
+
+---
+
+## System Overview
+
+```mermaid
+flowchart LR
+    A[Developer] --> B[Flow 1: AI Commit]
+    B --> C[Flow 2: Policy Gate]
+    C --> D[Flow 3: Forensics]
+    D --> E[Production]
+    
+    B -.-> F[15min → 30sec]
+    C -.-> G[Auto Compliance]
+    D -.-> H[2-4hr → 27min]
+    
+    style B fill:#e1f5ff
+    style C fill:#fff3cd
+    style D fill:#ffe1e1
+    style E fill:#d4edda
+```
 
 ---
 
@@ -31,6 +52,23 @@ gitops-health --version
 ## The Three Flagship Flows
 
 ### Flow 1: AI-Assisted Healthcare Commit (10 min)
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant AI as AI Tool
+    participant Git as Git
+    participant JSON as Metadata
+    
+    Dev->>AI: Generate commit
+    AI->>AI: Validate compliance
+    AI->>JSON: Write metadata
+    AI->>Dev: Return message
+    Dev->>Git: git commit
+    Git->>JSON: Store audit trail
+    
+    Note over AI,JSON: 15 min → 30 sec
+```
 
 **What**: Generate compliant commit messages with AI assistance  
 **Why**: Saves 15 minutes per commit, ensures required metadata
@@ -79,6 +117,27 @@ cat .gitops/commit_metadata.json | jq '.'
 
 ### Flow 2: Policy + Risk Gate (10 min)
 
+```mermaid
+flowchart TD
+    A[Commit] --> B{Compliance Check}
+    B -->|Pass| C{Risk Score}
+    B -->|Fail| D[Block Commit]
+    C -->|Low 0-3| E[Direct Deploy]
+    C -->|Medium 4-7| F[Canary Deploy]
+    C -->|High 8-10| G[Manual Approval]
+    
+    E --> H[Production]
+    F --> H
+    G --> H
+    
+    style B fill:#fff3cd
+    style D fill:#ffe1e1
+    style E fill:#d4edda
+    style F fill:#fff3cd
+    style G fill:#ffe1e1
+    style H fill:#d4edda
+```
+
 **What**: Automated compliance checking and risk-adaptive deployment  
 **Why**: Blocks non-compliant commits, adapts deployment strategy to risk
 
@@ -125,6 +184,22 @@ git checkout services/phi-service/internal/handlers/patient.go
 ---
 
 ### Flow 3: Intelligent Forensics (10 min)
+
+```mermaid
+flowchart LR
+    A[20 Commits] --> B[Binary Search]
+    B --> C{Test Commit 10}
+    C -->|Pass| D{Test Commit 15}
+    C -->|Fail| E{Test Commit 5}
+    D -->|Fail| F[Found: Commit 15]
+    F --> G[Incident Report]
+    G --> H[Rollback Plan]
+    
+    style A fill:#e1f5ff
+    style F fill:#ffe1e1
+    style G fill:#fff3cd
+    style H fill:#d4edda
+```
 
 **What**: AI-powered bisect finds performance regressions automatically  
 **Why**: Reduces MTTR from 2-4 hours to 27 minutes
@@ -175,6 +250,23 @@ cat reports/incident-*.json | jq '.'
 
 ## What You've Learned
 
+```mermaid
+graph LR
+    A[AI-Assisted<br/>Commits] --> B[Policy<br/>Gates]
+    B --> C[Intelligent<br/>Forensics]
+    
+    A -.-> D[96.7%<br/>Time Saved]
+    B -.-> E[Auto<br/>Compliance]
+    C -.-> F[88.5%<br/>MTTR Reduced]
+    
+    style A fill:#e1f5ff
+    style B fill:#fff3cd
+    style C fill:#ffe1e1
+    style D fill:#d4edda
+    style E fill:#d4edda
+    style F fill:#d4edda
+```
+
 You've experienced all three flagship flows:
 
 1. **✅ AI-Assisted Commits**: 15 min → 30 sec (96.7% time savings)
@@ -191,9 +283,10 @@ You've experienced all three flagship flows:
 - **Services**: `services/phi-service/` - Healthcare patterns
 
 ### Read Documentation
-- [ENGINEERING_GUIDE.md](docs/ENGINEERING_GUIDE.md) - Technical architecture
-- [COMPLIANCE_GUIDE.md](docs/COMPLIANCE_GUIDE.md) - Customize policies
-- [END_TO_END_SCENARIO.md](docs/END_TO_END_SCENARIO.md) - Complete example
+- [docs/README.md](docs/README.md) - System architecture
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Production deployment
+- [COMPLIANCE.md](COMPLIANCE.md) - HIPAA/FDA/SOX frameworks
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Development workflow
 
 ### Run Tests
 ```bash

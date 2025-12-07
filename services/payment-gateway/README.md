@@ -1,21 +1,54 @@
 # Payment Gateway Service
 
-**Production-grade payment processing for healthcare with SOX/PCI compliance**
+Production-grade payment processing with SOX/PCI compliance for healthcare.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TD
+    A[Client] --> B{Auth Middleware}
+    B -->|Valid| C[Payment Processor]
+    B -->|Invalid| D[401 Unauthorized]
+    
+    C --> E{SOX Validator}
+    E -->|Pass| F[Process Payment]
+    E -->|Fail| G[Reject - Audit Log]
+    
+    F --> H[Payment Gateway]
+    F --> I[Audit Trail]
+    
+    H --> J[Bank/Processor]
+    I --> K[Compliance DB]
+    
+    C --> L[OpenTelemetry]
+    C --> M[Prometheus]
+    
+    style C fill:#d4edda
+    style E fill:#fff3cd
+    style G fill:#ffe1e1
+    style I fill:#e1f5ff
+    style L fill:#e1f5ff
+    style M fill:#e1f5ff
+```
+
+---
 
 ## Overview
 
-The Payment Gateway Service is a critical financial service in the GitOps 2.0 Enterprise platform, handling payment transactions with strict compliance requirements for SOX (Sarbanes-Oxley), PCI-DSS, HIPAA, and FDA regulations.
+Critical financial service handling payment transactions with SOX, PCI-DSS, HIPAA, FDA compliance.
 
 ### Key Features
 
-- ✅ **SOX Compliance** - Automated financial controls with audit trails
+- ✅ **SOX Compliance** - Automated financial controls + audit trails
 - ✅ **PCI-DSS Compliant** - Secure payment card processing
 - ✅ **HIPAA Integration** - Patient billing with PHI protection
 - ✅ **FDA 21 CFR Part 11** - Medical device payment validation
-- ✅ **OpenTelemetry Tracing** - Distributed tracing for all transactions
-- ✅ **Prometheus Metrics** - Real-time monitoring and alerting
+- ✅ **OpenTelemetry Tracing** - Transaction tracing
+- ✅ **Prometheus Metrics** - Real-time monitoring
 - ✅ **Structured Logging** - JSON logs with correlation IDs
-- ✅ **Health Checks** - Kubernetes-ready liveness/readiness probes
+- ✅ **Health Checks** - Kubernetes liveness/readiness probes
 
 ## Quick Start
 

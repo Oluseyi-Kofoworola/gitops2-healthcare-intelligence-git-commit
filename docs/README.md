@@ -1,138 +1,116 @@
-# Documentation Index
+# Documentation
 
-**Complete documentation for GitOps 2.0 Healthcare Intelligence Platform**
-
----
-
-## 🚀 Getting Started
-
-Start here if you're new to the platform:
-
-### Quick Start (5 minutes)
-- **[START_HERE.md](../START_HERE.md)** - Fastest path to running your first demo
-- Run: `./scripts/demo.sh --quick`
-
-### Complete Setup (15 minutes)
-- **[GETTING_STARTED.md](GETTING_STARTED.md)** - Full installation and configuration guide
-- Covers: Prerequisites, installation, service setup, validation, first workflow
+Essential guides for using the Healthcare GitOps Intelligence Platform.
 
 ---
 
-## 📖 Core Documentation
+## Architecture Overview
 
-### End-to-End Workflows
-- **[SCENARIO_END_TO_END.md](SCENARIO_END_TO_END.md)** - Complete walkthrough of all three flagship flows
-  - Flow 1: AI-assisted healthcare commits
-  - Flow 2: Policy-as-code + risk gates  
-  - Flow 3: Intelligent forensics (bonus)
-  - Includes: Business metrics, compliance evidence, incident simulation
-
-### Deployment
-- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Production deployment guide
-  - Local development (Docker Compose)
-  - Kubernetes deployment (Kind, Minikube, EKS, AKS, GKE)
-  - Service mesh (Istio)
-  - Certificate management (cert-manager)
-  - ArgoCD GitOps setup
-  - Monitoring and alerting
-
-### Compliance & Security
-- **[COMPLIANCE_GUIDE.md](COMPLIANCE_GUIDE.md)** - Healthcare compliance reference
-  - HIPAA requirements and implementation
-  - FDA 21 CFR Part 11 validation
-  - SOX financial controls
-  - Policy customization
-  - Evidence collection
-
-### AI Tools
-- **[AI_TOOLS_REFERENCE.md](AI_TOOLS_REFERENCE.md)** - AI features documentation
-  - Healthcare commit generator
-  - Compliance validation framework
-  - Risk scoring engine
-  - Intelligent bisect for incident response
-  - Configuration and customization
-
-### CI/CD Automation
-- **[CI_CD_AUTOMATION_GUIDE.md](CI_CD_AUTOMATION_GUIDE.md)** - GitHub Actions integration
-  - Workflow setup and configuration
-  - Risk-adaptive deployment strategies
-  - Compliance gates in CI/CD
-  - Automated testing pipelines
-
-### Architecture
-- **[ENGINEERING_GUIDE.md](ENGINEERING_GUIDE.md)** - Technical deep-dive
-  - System architecture
-  - Design patterns
-  - Service interactions
-  - Technology stack
-  - Best practices
-
----
-
-## 🔧 Technical References
-
-### Services
-Each service has detailed README documentation:
-
-- **[Auth Service](../services/auth-service/README.md)** - JWT authentication with RBAC
-- **[Payment Gateway](../services/payment-gateway/README.md)** - SOX-compliant payment processing
-- **[PHI Service](../services/phi-service/README.md)** - HIPAA-compliant encryption
-- **[Medical Device](../services/medical-device/README.md)** - FDA 21 CFR Part 11 compliance
-- **[Synthetic PHI](../services/synthetic-phi-service/README.md)** - HIPAA-compliant test data generation
-
-### Testing
-- **[Test Suite Overview](../tests/README.md)** - Complete testing documentation
-  - Unit tests (95%+ coverage)
-  - Integration tests (Docker Compose)
-  - E2E tests (Kubernetes)
-  - Contract tests (Pact)
-  - Load tests (Locust)
-  - Chaos engineering (Chaos Mesh)
-  - Security testing (OWASP ZAP)
+```mermaid
+graph TB
+    subgraph "Developer Tools"
+        A[AI Commit Generator]
+        B[Secret Sanitizer]
+        C[Token Guard]
+    end
+    
+    subgraph "Policy Engine"
+        D[OPA Policies]
+        E[Risk Scorer]
+        F[Compliance Validator]
+    end
+    
+    subgraph "Microservices"
+        G[Auth Service<br/>JWT + RBAC]
+        H[Payment Gateway<br/>SOX]
+        I[PHI Service<br/>HIPAA]
+        J[Medical Device<br/>FDA]
+        K[Synthetic PHI<br/>Test Data]
+    end
+    
+    subgraph "Observability"
+        L[OpenTelemetry]
+        M[Prometheus]
+        N[Grafana]
+    end
+    
+    A --> D
+    B --> D
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    F --> H
+    F --> I
+    F --> J
+    G --> L
+    H --> L
+    I --> L
+    J --> L
+    K --> L
+    L --> M
+    M --> N
+    
+    style A fill:#e1f5ff
+    style B fill:#e1f5ff
+    style C fill:#e1f5ff
+    style D fill:#fff3cd
+    style E fill:#fff3cd
+    style F fill:#fff3cd
+    style G fill:#d4edda
+    style H fill:#d4edda
+    style I fill:#d4edda
+    style J fill:#d4edda
+    style K fill:#d4edda
+```
 
 ---
 
-## 🎯 Quick Navigation by Role
+## Quick Start
 
-### For Developers
-1. [GETTING_STARTED.md](GETTING_STARTED.md) - Setup your environment
-2. [SCENARIO_END_TO_END.md](SCENARIO_END_TO_END.md) - Learn the workflows
-3. [AI_TOOLS_REFERENCE.md](AI_TOOLS_REFERENCE.md) - Use AI features
-4. Service READMEs - Understand microservices
-5. [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribute code
+```bash
+# 5-minute demo
+./demo.sh
 
-### For DevOps/Platform Engineers
-1. [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Deploy to production
-2. [CI_CD_AUTOMATION_GUIDE.md](CI_CD_AUTOMATION_GUIDE.md) - Setup CI/CD
-3. [ENGINEERING_GUIDE.md](ENGINEERING_GUIDE.md) - Architecture details
-4. [Test Suite](../tests/README.md) - Testing infrastructure
-
-### For Compliance Officers
-1. [COMPLIANCE_GUIDE.md](COMPLIANCE_GUIDE.md) - Framework mappings
-2. [SCENARIO_END_TO_END.md](SCENARIO_END_TO_END.md) - Evidence collection
-3. [AI_TOOLS_REFERENCE.md](AI_TOOLS_REFERENCE.md) - Validation automation
-4. [Security Testing](../tests/security/) - Security controls
+# See START_HERE.md for detailed walkthrough
+```
 
 ---
 
-## 📝 Examples & Templates
+## Essential Docs
 
-See **[examples/](examples/)** for:
-- Compliance analysis JSON examples
-- Risk score calculations
-- Incident report templates
-- CI/CD log samples
+All documentation is now consolidated in root directory:
 
----
-
-## ❓ Need Help?
-
-- **Issues**: [GitHub Issues](https://github.com/your-org/gitops2-healthcare-intelligence/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/gitops2-healthcare-intelligence/discussions)
-- **Security**: See [SECURITY.md](../SECURITY.md) for vulnerability reporting
+- **[README.md](../README.md)** - Platform overview, quick start
+- **[DEPLOYMENT.md](../DEPLOYMENT.md)** - Production deployment (K8s, cloud)
+- **[COMPLIANCE.md](../COMPLIANCE.md)** - HIPAA/FDA/SOX reference
+- **[CONTRIBUTING.md](../CONTRIBUTING.md)** - Development workflow
+- **[START_HERE.md](../START_HERE.md)** - Interactive demo
+- **[CODE_REVIEW.md](../CODE_REVIEW.md)** - Engineering standards
 
 ---
 
-**Last Updated**: November 23, 2025  
-**Version**: 2.0  
-**License**: MIT
+## By Role
+
+### Developers
+1. [README.md](../README.md) - Overview
+2. [START_HERE.md](../START_HERE.md) - First demo
+3. [tools/README.md](../tools/README.md) - AI tools CLI
+4. [CONTRIBUTING.md](../CONTRIBUTING.md) - PR workflow
+
+### DevOps
+1. [DEPLOYMENT.md](../DEPLOYMENT.md) - K8s deployment
+2. [services/*/README.md](../services/) - Service docs
+3. [tests/README.md](../tests/README.md) - Testing
+
+### Compliance
+1. [COMPLIANCE.md](../COMPLIANCE.md) - Frameworks
+2. [policies/healthcare/README.md](../policies/healthcare/README.md) - OPA policies
+
+---
+
+## Support
+
+- **Issues**: https://github.com/YOUR_ORG/gitops2-healthcare-intelligence/issues
+- **Security**: security@your-org.com
+

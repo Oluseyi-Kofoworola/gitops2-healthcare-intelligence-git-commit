@@ -1,21 +1,55 @@
 # Authentication & Authorization Service
 
-**Production-grade JWT-based authentication for GitOps 2.0 Healthcare Platform**
+Production-grade JWT-based authentication for healthcare platform.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A[Client] --> B[POST /token]
+    A --> C[POST /validate]
+    A --> D[POST /refresh]
+    
+    B --> E[JWT Generator]
+    C --> F[JWT Validator]
+    D --> G[Token Refresher]
+    
+    E --> H[RBAC Engine]
+    F --> H
+    G --> H
+    
+    H --> I[OpenTelemetry]
+    H --> J[Prometheus]
+    
+    E --> K[Access Token<br/>15min TTL]
+    G --> L[Refresh Token<br/>7d TTL]
+    
+    style E fill:#d4edda
+    style F fill:#d4edda
+    style G fill:#d4edda
+    style H fill:#fff3cd
+    style I fill:#e1f5ff
+    style J fill:#e1f5ff
+```
+
+---
 
 ## Overview
 
-The Auth Service is a critical security component providing centralized authentication and authorization for the GitOps 2.0 Enterprise platform, with support for healthcare-specific compliance requirements.
+Centralized authentication and authorization for GitOps 2.0 Healthcare Platform with compliance support.
 
 ### Key Features
 
-- ✅ **JWT Authentication** - Industry-standard JSON Web Tokens
+- ✅ **JWT Authentication** - JSON Web Tokens with RS256
 - ✅ **Scope-Based Authorization** - Fine-grained access control
-- ✅ **RBAC Support** - Role-based access control
-- ✅ **OpenTelemetry Tracing** - Distributed tracing for security events
-- ✅ **Prometheus Metrics** - Real-time monitoring and alerting
+- ✅ **RBAC Support** - Role-based access (admin, clinician, auditor)
+- ✅ **OpenTelemetry Tracing** - Security event tracing
+- ✅ **Prometheus Metrics** - Real-time monitoring
 - ✅ **Structured Logging** - JSON logs with correlation IDs
 - ✅ **Security Headers** - OWASP best practices
-- ✅ **Health Checks** - Kubernetes-ready probes
+- ✅ **Health Checks** - Kubernetes liveness/readiness probes
 
 ## Quick Start
 
