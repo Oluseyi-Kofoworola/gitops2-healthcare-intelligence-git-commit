@@ -11,16 +11,22 @@ type Config struct {
 	ServiceName         string
 	Port                string
 	MaxProcessingMillis int
+	// CVE-2025-12345 mitigation - token sanitization
+	EnableTokenSanitization bool
+	TokenMaskPattern       string
 }
 
 // LoadConfig loads configuration from environment variables
 func LoadConfig() Config {
 	maxProcessingMillis, _ := strconv.Atoi(getEnv("MAX_PROCESSING_MILLIS", "100"))
+	enableSanitization, _ := strconv.ParseBool(getEnv("ENABLE_TOKEN_SANITIZATION", "true"))
 	
 	return Config{
 		ServiceName:         getEnv("SERVICE_NAME", "payment-gateway"),
 		Port:                getEnv("PORT", "8083"),
 		MaxProcessingMillis: maxProcessingMillis,
+		EnableTokenSanitization: enableSanitization,
+		TokenMaskPattern:       getEnv("TOKEN_MASK_PATTERN", "****"),
 	}
 }
 
