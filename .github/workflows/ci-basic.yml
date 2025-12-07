@@ -27,22 +27,14 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: |
+            go.work.sum
+            services/*/go.sum
       
       - name: Build all services
         run: |
-          echo "Building Go services..."
-          mkdir -p bin
-          
-          # Build each service individually
-          for service in auth-service payment-gateway phi-service medical-device; do
-            echo "Building $service..."
-            cd services/$service
-            go mod download || echo "⚠️  Dependencies warning for $service"
-            go build -o ../../bin/$service . || echo "⚠️  Build warning for $service"
-            cd ../..
-          done
-          
-          echo "✅ Build process completed"
+          echo "Building Go services with workspace..."
+          make build
       
       - name: Upload binaries
         uses: actions/upload-artifact@v4
@@ -50,7 +42,6 @@ jobs:
           name: binaries
           path: bin/
           retention-days: 7
-        continue-on-error: true
 
   ##############################################################################
   # Unit Tests - Go Services
@@ -77,21 +68,21 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: services/${{ matrix.service }}/go.sum
       
       - name: Install dependencies
         run: |
           cd services/${{ matrix.service }}
-          go mod download || echo "⚠️  Dependencies warning"
+          go mod download
       
       - name: Run unit tests
         run: |
           cd services/${{ matrix.service }}
-          go test -v -race -coverprofile=coverage.out ./... || echo "⚠️  Test warnings for ${{ matrix.service }}"
-        continue-on-error: true
+          go test -v -race -coverprofile=coverage.out ./...
       
       - name: Upload coverage
         uses: codecov/codecov-action@v4
-        if: always()
+        if: success()
         with:
           files: ./services/${{ matrix.service }}/coverage.out
           flags: ${{ matrix.service }}
@@ -122,7 +113,7 @@ jobs:
       
       - name: Lint Python code
         run: |
-          ruff check tools/ || echo "⚠️  Linting warnings found"
+          ruff check tools/
       
       - name: Test synthetic PHI generator
         run: |
@@ -131,7 +122,7 @@ jobs:
       
       - name: Test compliance monitor
         run: |
-          python tools/compliance_monitor.py > /dev/null || echo "⚠️  Compliance monitor check"
+          python tools/compliance_monitor.py > /dev/null
           echo "✅ Python tools validated"
 
   ##############################################################################
@@ -147,13 +138,13 @@ jobs:
       
       - name: Validate demo script syntax
         run: |
-          bash -n scripts/demo.sh || echo "⚠️  Demo script warning"
-          bash -n scripts/quick-reference.sh || echo "⚠️  Quick reference warning"
+          bash -n scripts/demo.sh
+          bash -n scripts/quick-reference.sh
           echo "✅ Demo scripts validated"
       
       - name: Check Makefile targets
         run: |
-          make help || echo "⚠️  Makefile warning"
+          make help
           echo "✅ Makefile validated"
 
   ##############################################################################
@@ -203,18 +194,15 @@ jobs:
           echo "Documentation: ${{ needs.docs-check.result }}"
           echo "========================================="
           
-          # Only fail on build or docs failures (critical)
+          # All checks must pass in production
           if [ "${{ needs.build.result }}" == "failure" ] || \
+             [ "${{ needs.test-go-services.result }}" == "failure" ] || \
+             [ "${{ needs.test-python-tools.result }}" == "failure" ] || \
+             [ "${{ needs.demo-validation.result }}" == "failure" ] || \
              [ "${{ needs.docs-check.result }}" == "failure" ]; then
-            echo "❌ Critical CI checks failed"
+            echo "❌ CI checks failed - all tests must pass"
             exit 1
           fi
           
-          # Warnings for test failures
-          if [ "${{ needs.test-go-services.result }}" == "failure" ] || \
-             [ "${{ needs.test-python-tools.result }}" == "failure" ]; then
-            echo "⚠️  Some tests failed but build is functional"
-          fi
-          
-          echo "✅ CI pipeline completed"
+          echo "✅ CI pipeline passed - ready for production"
 
