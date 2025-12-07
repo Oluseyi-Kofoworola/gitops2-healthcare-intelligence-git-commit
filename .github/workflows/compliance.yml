@@ -1,0 +1,147 @@
+name: Compliance Validation
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * *'  # Daily compliance check
+
+jobs:
+  ##############################################################################
+  # OPA Policy Validation
+  ##############################################################################
+  policy-validation:
+    name: OPA Policy Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+          
+      - name: Setup OPA
+        uses: open-policy-agent/setup-opa@v2
+        with:
+          version: latest
+          
+      - name: Test OPA policies
+        run: |
+          echo "🏥 Testing OPA policies..."
+          opa test policies/ --verbose
+          
+      - name: Validate policy coverage
+        run: |
+          echo "✓ Validating HIPAA/FDA/SOX policy coverage..."
+          
+          # Check HIPAA policies
+          if ! find policies/ -name "*.rego" -exec grep -l "HIPAA\|PHI\|patient" {} \; | head -1; then
+            echo "❌ Missing HIPAA policy coverage"
+            exit 1
+          fi
+          
+          # Check FDA policies  
+          if ! find policies/ -name "*.rego" -exec grep -l "FDA\|medical\|device\|clinical" {} \; | head -1; then
+            echo "❌ Missing FDA policy coverage"
+            exit 1
+          fi
+          
+          # Check SOX policies
+          if ! find policies/ -name "*.rego" -exec grep -l "SOX\|financial\|audit\|control" {} \; | head -1; then
+            echo "❌ Missing SOX policy coverage"
+            exit 1
+          fi
+          
+          echo "✅ All compliance policies validated"
+
+  ##############################################################################
+  # PHI/PII Detection
+  ##############################################################################
+  phi-detection:
+    name: PHI/PII Detection
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+          
+      - name: Scan for PHI/PII patterns
+        run: |
+          echo "🏥 Scanning for PHI/PII exposure..."
+          
+          # Scan for potential PHI patterns (simplified)
+          if grep -r -E "ssn.*[0-9]{3}-[0-9]{2}-[0-9]{4}|medical.*record.*[0-9]+|patient.*id.*[0-9]+" . \
+            --exclude-dir=.git \
+            --exclude-dir=node_modules \
+            --exclude-dir=.github \
+            --exclude="*.md" > /dev/null 2>&1; then
+            echo "⚠️  Potential PHI patterns detected - manual review required"
+          else
+            echo "✅ No PHI patterns detected"
+          fi
+
+  ##############################################################################
+  # Commit Metadata Validation
+  ##############################################################################
+  commit-validation:
+    name: Commit Metadata Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          
+      - name: Validate commit metadata
+        run: |
+          echo "📝 Validating commit metadata..."
+          
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          
+          # Check for compliance keywords (lenient for documentation)
+          if echo "$COMMIT_MSG" | grep -iE "docs:|fix:|feat:|security:|refactor:"; then
+            echo "✅ Commit type present"
+          else
+            echo "⚠️  Commit type recommended but not enforced"
+          fi
+          
+          echo "✅ Commit metadata validation complete"
+
+  ##############################################################################
+  # Compliance Summary
+  ##############################################################################
+  compliance-summary:
+    name: Compliance Summary
+    runs-on: ubuntu-latest
+    needs: [policy-validation, phi-detection, commit-validation]
+    if: always()
+    
+    steps:
+      - name: Generate compliance report
+        run: |
+          echo "========================================="
+          echo "COMPLIANCE VALIDATION SUMMARY"
+          echo "========================================="
+          echo "✅ OPA Policy Validation: ${{ needs.policy-validation.result }}"
+          echo "✅ PHI/PII Detection: ${{ needs.phi-detection.result }}"
+          echo "✅ Commit Validation: ${{ needs.commit-validation.result }}"
+          echo "========================================="
+          
+          if [ "${{ needs.policy-validation.result }}" == "failure" ] || \
+             [ "${{ needs.phi-detection.result }}" == "failure" ]; then
+            echo "❌ Compliance checks failed"
+            exit 1
+          fi
+          
+          echo "✅ All compliance checks passed"

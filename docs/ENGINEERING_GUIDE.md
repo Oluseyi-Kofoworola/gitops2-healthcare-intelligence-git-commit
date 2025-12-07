@@ -21,67 +21,56 @@
 
 ### High-Level System Design
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Developer Workspace                          │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │ GitHub       │  │ Pre-commit   │  │ commitlint   │         │
-│  │ Copilot      │──▶│ Hooks        │──▶│ +husky       │         │
-│  └──────────────┘  └──────────────┘  └──────────────┘         │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      Git Commit Event                           │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │ Commit Metadata: Author, Message, Diff, Timestamp, PHI   │  │
-│  └──────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   AI Intelligence Layer                         │
-│  ┌────────────────┐  ┌────────────────┐  ┌─────────────────┐  │
-│  │ Risk Scorer    │  │ Compliance     │  │ PHI Detector    │  │
-│  │ (Python/ML)    │  │ Analyzer (OPA) │  │ (Go Service)    │  │
-│  └────────────────┘  └────────────────┘  └─────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Policy Enforcement                           │
-│  ┌────────────────┐  ┌────────────────┐  ┌─────────────────┐  │
-│  │ OPA Gatekeeper │  │ Admission      │  │ Custom          │  │
-│  │ Policies       │  │ Controllers    │  │ Validators      │  │
-│  └────────────────┘  └────────────────┘  └─────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    CI/CD Orchestration                          │
-│  ┌────────────────┐  ┌────────────────┐  ┌─────────────────┐  │
-│  │ GitHub Actions │  │ Canary         │  │ Blue/Green      │  │
-│  │ Workflows      │──▶│ Deployment     │  │ Deployment      │  │
-│  └────────────────┘  └────────────────┘  └─────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                 Production Infrastructure                       │
-│  ┌────────────────┐  ┌────────────────┐  ┌─────────────────┐  │
-│  │ Kubernetes     │  │ Istio Service  │  │ Azure Monitor   │  │
-│  │ Cluster (AKS)  │  │ Mesh           │  │ + Log Analytics │  │
-│  └────────────────┘  └────────────────┘  └─────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                  Observability & Audit                          │
-│  ┌────────────────┐  ┌────────────────┐  ┌─────────────────┐  │
-│  │ OpenTelemetry  │  │ Audit Trail    │  │ Compliance      │  │
-│  │ Traces         │  │ (Immutable)    │  │ Dashboards      │  │
-│  └────────────────┘  └────────────────┘  └─────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Developer["Developer Workspace"]
+        A[GitHub Copilot] --> B[Pre-commit Hooks]
+        B --> C[commitlint + husky]
+    end
+    
+    subgraph GitEvent["Git Commit Event"]
+        D[Commit Metadata:<br/>Author, Message, Diff,<br/>Timestamp, PHI]
+    end
+    
+    subgraph AI["AI Intelligence Layer"]
+        E1[Risk Scorer<br/>Python/ML]
+        E2[Compliance Analyzer<br/>OPA]
+        E3[PHI Detector<br/>Go Service]
+    end
+    
+    subgraph Policy["Policy Enforcement"]
+        F1[OPA Gatekeeper<br/>Policies]
+        F2[Admission<br/>Controllers]
+        F3[Custom<br/>Validators]
+    end
+    
+    subgraph CICD["CI/CD Orchestration"]
+        G1[GitHub Actions<br/>Workflows]
+        G2[Canary<br/>Deployment]
+        G3[Blue/Green<br/>Deployment]
+    end
+    
+    subgraph Prod["Production Infrastructure"]
+        H1[Kubernetes Cluster<br/>AKS]
+        H2[Istio Service<br/>Mesh]
+        H3[Azure Monitor +<br/>Log Analytics]
+    end
+    
+    subgraph Obs["Observability & Audit"]
+        I1[OpenTelemetry<br/>Traces]
+        I2[Audit Trail<br/>Immutable]
+        I3[Compliance<br/>Dashboards]
+    end
+    
+    Developer --> GitEvent
+    GitEvent --> D
+    D --> AI
+    AI --> Policy
+    Policy --> CICD
+    G1 --> G2
+    G1 --> G3
+    CICD --> Prod
+    Prod --> Obs
 ```
 
 ### Technology Stack
