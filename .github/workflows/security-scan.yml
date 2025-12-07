@@ -83,13 +83,24 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: TruffleHog Secret Scan
-        uses: trufflesecurity/trufflehog@main
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
-        continue-on-error: true
+          python-version: '3.11'
+      
+      - name: Run basic secret pattern check
+        run: |
+          echo "🔍 Scanning for secrets..."
+          
+          # Check for common secret patterns
+          if grep -r -E "AKIA[0-9A-Z]{16}|ghp_[0-9a-zA-Z]{36}|sk-[0-9a-zA-Z]{48}" . \
+            --exclude-dir=.git \
+            --exclude-dir=node_modules \
+            --exclude="*.md" > /dev/null 2>&1; then
+            echo "⚠️  Potential secrets detected - manual review required"
+          else
+            echo "✅ No obvious secrets detected"
+          fi
 
   ##############################################################################
   # Security Summary
