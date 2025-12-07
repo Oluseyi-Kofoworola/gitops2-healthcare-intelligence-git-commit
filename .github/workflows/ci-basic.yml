@@ -189,9 +189,10 @@ jobs:
       - name: Check required documentation
         run: |
           test -f README.md || (echo "❌ README.md missing" && exit 1)
-          test -f docs/GETTING_STARTED.md || (echo "❌ GETTING_STARTED.md missing" && exit 1)
-          test -f DEMO_EVALUATION.md || (echo "❌ DEMO_EVALUATION.md missing" && exit 1)
           test -f START_HERE.md || (echo "❌ START_HERE.md missing" && exit 1)
+          test -f DEPLOYMENT.md || (echo "❌ DEPLOYMENT.md missing" && exit 1)
+          test -f COMPLIANCE.md || (echo "❌ COMPLIANCE.md missing" && exit 1)
+          test -f CONTRIBUTING.md || (echo "❌ CONTRIBUTING.md missing" && exit 1)
           echo "✅ All required documentation present"
       
       - name: Check for broken internal links
