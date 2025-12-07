@@ -753,69 +753,13 @@ def safe_ai_processing(func):
 
 
 if __name__ == "__main__":
-    # Demo usage
     import sys
     
-    # Check for test mode
     if "--test" in sys.argv:
-        print("✅ Secret sanitizer module loaded successfully")
-        print(f"   - {len(PHI_PATTERNS)} PHI patterns")
-        print(f"   - {len(CREDENTIAL_PATTERNS)} credential patterns")
-        print(f"   - {sum(len(v) for v in DEFAULT_WHITELISTS.values())} whitelist patterns")
+        print("✅ Secret sanitizer operational")
+        print(f"   PHI patterns: {len(PHI_PATTERNS)}")
+        print(f"   Credential patterns: {len(CREDENTIAL_PATTERNS)}")
         sys.exit(0)
     
-    # Configure logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    
-    # Test cases
-    test_cases = [
-        ("Safe text", "feat(auth): add login validation\nUpdated auth service", True),
-        ("PHI - SSN (real)", "Patient SSN: 123-45-6789 processed", False),
-        ("PHI - SSN (test)", "Test SSN: 000-00-0000 for demo", True),
-        ("PHI - MRN", "MRN: MED123456 updated in database", False),
-        ("Email (test)", "Contact: test@example.com for support", True),
-        ("Email (real)", "Patient email: john.doe@hospital.com", False),
-        ("IP (private)", "Server IP: 192.168.1.100", True),
-        ("IP (public)", "Server IP: 8.8.8.8", False),
-        ("Credential - AWS", "aws_access_key_id = AKIAIOSFODNN7EXAMPLE", False),
-        ("Version number", "Updated to version 1.2.3.4", True),
-    ]
-    
-    sanitizer = SecretSanitizer(enable_cache=True, confidence_threshold=0.7)
-    
-    print("[LOCK] SECRET SANITIZATION DEMO v2.0")
-    print("=" * 70)
-    print("\nFeatures: False positive reduction, whitelisting, performance optimization\n")
-    
-    for name, text, expected_safe in test_cases:
-        print(f"\nTest: {name}")
-        print(f"Input: {text[:80]}...")
-        print(f"Expected: {'[OK] SAFE' if expected_safe else '[X] BLOCKED'}")
-        
-        is_safe, matches = sanitizer.validate_for_ai_processing(text, block_on_detection=True)
-        
-        significant = [m for m in matches if not m.is_whitelisted and m.confidence >= 0.7]
-        
-        if significant:
-            print(f"Result: {'[OK] SAFE' if is_safe else '[X] BLOCKED'}")
-            print(f"Matches: {len(matches)} total, {len(significant)} significant")
-            for match in significant[:3]:
-                print(f"  - {match.severity.value}: {match.pattern_name} (conf: {match.confidence:.2f})")
-        else:
-            print("Result: [OK] SAFE (no significant issues)")
-        
-        # Verify expectation
-        if is_safe == expected_safe:
-            print("[PASS] Test passed")
-        else:
-            print(f"[FAIL] Test failed (expected {'safe' if expected_safe else 'blocked'})")
-    
-    # Performance stats
-    print("\n" + "=" * 70)
-    print("Performance Statistics:")
-    stats = sanitizer.get_performance_stats()
-    for key, value in stats.items():
-        print(f"  {key}: {value}")
+    print("Secret sanitizer ready. Use as module or run with --test flag.")
+

@@ -43,6 +43,13 @@ try:
 except ImportError:
     ENTERPRISE_SAFETY_ENABLED = False
     logging.warning("Enterprise safety modules not available - running with reduced protection")
+    # Define fallback classes
+    class TokenLimitExceededError(Exception):
+        pass
+    def check_token_limit(text, model='gpt-4'):
+        return (len(text)//4, 100000, True)
+    def get_git_diff(ref='HEAD', max_files=None, timeout=30):
+        return ''
 
 
 # =============================================================================
@@ -553,67 +560,33 @@ class HealthcareCommitGenerator:
         scope: str,
         description: str,
     ) -> str:
-        """Format structured commit template with all sections"""
+        """Format concise, audit-ready commit message with required compliance metadata"""
         
+        # Conventional commit header with unique timestamp
         template = f"{commit_type}({scope}): {description}\n\n"
         
-        # Executive Summary
-        template += "=" * 70 + "\n"
-        template += "EXECUTIVE SUMMARY\n"
-        template += "=" * 70 + "\n"
-        template += f"Business Impact : {metadata.business_impact}\n"
-        template += f"Risk Level      : {metadata.risk_level}\n"
-        template += f"Clinical Impact : {metadata.clinical_safety}\n"
-        template += f"Files Modified  : {metadata.files_modified}\n"
-        template += "\n"
-
-        # Compliance Section
+        # Business context (single line)
+        template += f"Business Impact: {metadata.business_impact}\n"
+        template += f"Risk Level: {metadata.risk_level}\n"
+        template += f"Clinical Safety: {metadata.clinical_safety}\n"
+        
+        # Compliance domains (required for audit)
         if metadata.compliance_domains:
-            template += "=" * 70 + "\n"
-            template += "COMPLIANCE & REGULATORY\n"
-            template += "=" * 70 + "\n"
-            template += f"Frameworks      : {', '.join(metadata.compliance_domains)}\n"
-            for domain in metadata.compliance_domains:
-                template += self._generate_compliance_section(domain, files)
-            template += "\n"
-
-        # Technical Details
-        template += "=" * 70 + "\n"
-        template += "TECHNICAL DETAILS\n"
-        template += "=" * 70 + "\n"
-        template += f"Testing Required : {self._generate_testing_requirements(commit_type, metadata.compliance_domains)}\n"
-        template += f"Validation Steps : {self._generate_validation_requirements(metadata.compliance_domains)}\n"
-        template += f"Monitoring Plan  : {self._generate_monitoring_plan(files)}\n"
-        template += "\n"
-
-        # Deployment & Operations
-        template += "=" * 70 + "\n"
-        template += "DEPLOYMENT & OPERATIONS\n"
-        template += "=" * 70 + "\n"
-        template += f"Rollback Plan    : {self._generate_rollback_plan(metadata.risk_level)}\n"
-        template += f"Required Reviews : {self._suggest_reviewers(metadata.compliance_domains)}\n"
-        template += "\n"
-
-        # Audit Trail
-        template += "=" * 70 + "\n"
-        template += "AUDIT TRAIL\n"
-        template += "=" * 70 + "\n"
-        template += f"Timestamp        : {metadata.timestamp}\n"
-        template += f"AI Model Used    : {metadata.ai_model}\n"
-        template += f"Files Changed    : {metadata.files_modified}\n"
+            template += f"Compliance: {', '.join(metadata.compliance_domains)}\n"
         
-        if metadata.token_usage:
-            template += f"Token Usage      : {metadata.token_usage['estimated']:,} / "
-            template += f"{metadata.token_usage['max_allowed']:,} "
-            template += f"({metadata.token_usage['percentage']}%)\n"
+        # Required reviewers based on risk and compliance
+        reviewers = self._suggest_reviewers(metadata.compliance_domains)
+        template += f"Reviewers: {reviewers}\n"
         
+        # Audit trail with unique timestamp for differentiation
+        template += f"\nAudit Trail: {metadata.files_modified} files modified at {metadata.timestamp}\n"
+        
+        # Safety warnings if any (critical for production)
         if metadata.safety_warnings:
             template += "\nSafety Warnings:\n"
             for warning in metadata.safety_warnings:
-                template += f"  ⚠️  {warning}\n"
+                template += f"  - {warning}\n"
         
-        template += "=" * 70 + "\n"
-
         return template
 
     def _detect_compliance_domains(self, files: List[str]) -> List[str]:
@@ -662,96 +635,40 @@ class HealthcareCommitGenerator:
         
         return ClinicalSafety.NO_CLINICAL_IMPACT.value
 
-    def _generate_compliance_section(self, domain: str, files: List[str]) -> str:
-        """Generate compliance-specific documentation for a domain"""
-        requirements = self.config.get("compliance_requirements", {}).get(domain, {})
-        section = f"\n  {domain} Requirements:\n"
-        mandatory_fields = requirements.get("mandatory_fields", [])
-        
-        if mandatory_fields:
-            for field in mandatory_fields[:3]:  # Limit to first 3
-                section += f"    - {field}: [Pending Review]\n"
-            if len(mandatory_fields) > 3:
-                section += f"    - ... and {len(mandatory_fields) - 3} more\n"
-        else:
-            section += f"    - Standard {domain} controls apply\n"
 
-        return section
 
     def _generate_business_impact(self, commit_type: str, scope: str) -> str:
-        """Generate business impact statement"""
+        """Generate concise business impact"""
         impact_map = {
-            "feat": f"New functionality in {scope} domain",
-            "fix": f"Bug resolution in {scope} - improves user experience",
-            "security": f"Security enhancement in {scope} - CRITICAL for data protection",
-            "perf": f"Performance optimization in {scope}",
-            "breaking": f"Breaking change in {scope} - REQUIRES COORDINATED DEPLOYMENT",
-            "refactor": f"Code refactoring in {scope} - no functional changes",
-            "test": f"Test improvements in {scope}",
-            "docs": f"Documentation updates in {scope}",
-            "chore": f"Maintenance work in {scope}",
+            "feat": f"New {scope} functionality",
+            "fix": f"{scope} bug fix",
+            "security": f"{scope} security enhancement",
+            "perf": f"{scope} performance improvement",
+            "breaking": f"{scope} breaking change",
+            "refactor": f"{scope} refactor",
+            "test": f"{scope} test update",
+            "docs": f"{scope} documentation",
+            "chore": f"{scope} maintenance",
         }
-        return impact_map.get(commit_type, f"Changes to {scope} domain")
+        return impact_map.get(commit_type, f"{scope} changes")
 
-    def _generate_testing_requirements(
-        self, commit_type: str, compliance_domains: List[str]
-    ) -> str:
-        """Generate testing requirements based on compliance domains"""
-        tests = ["Unit tests", "Integration tests"]
 
-        if "HIPAA" in compliance_domains:
-            tests.extend(["PHI encryption validation", "Access control verification"])
-        if "FDA" in compliance_domains:
-            tests.extend(["Clinical safety validation", "FDA compliance verification"])
-        if "SOX" in compliance_domains:
-            tests.extend(["Financial control testing", "Audit trail verification"])
-        if commit_type == "security":
-            tests.extend(["Penetration testing", "Vulnerability scanning"])
 
-        return ", ".join(tests)
 
-    def _generate_validation_requirements(self, compliance_domains: List[str]) -> str:
-        """Generate validation requirements based on compliance"""
-        validations = []
-        if "HIPAA" in compliance_domains:
-            validations.append("HIPAA risk assessment completed")
-        if "FDA" in compliance_domains:
-            validations.append("FDA change control process followed")
-        if "SOX" in compliance_domains:
-            validations.append("SOX control testing performed")
-        return ", ".join(validations) if validations else "Standard validation completed"
 
-    def _generate_monitoring_plan(self, files: List[str]) -> str:
-        """Generate monitoring requirements based on affected components"""
-        if any("api" in f.lower() for f in files):
-            return "API response times, error rates, authentication metrics"
-        elif any(keyword in f.lower() for f in files for keyword in ["database", "db"]):
-            return "Database performance, query times, connection pools"
-        elif any("payment" in f.lower() for f in files):
-            return "Transaction success rate, payment latency, security events"
-        elif any(keyword in f.lower() for f in files for keyword in ["phi", "patient"]):
-            return "PHI access logs, encryption status, audit trail completeness"
-        return "Application metrics, system health, user experience"
 
-    def _generate_rollback_plan(self, risk_level: str) -> str:
-        """Generate rollback strategy based on risk level"""
-        rollback_map = {
-            "CRITICAL": "Immediate rollback capability, DB backup verified, clinical team on standby",
-            "HIGH": "Automated rollback if error rate > 0.1%, feature flag enabled, alerts active",
-            "MEDIUM": "Standard rollback process, monitoring configured, team notified",
-            "LOW": "Standard deployment rollback available",
-        }
-        return rollback_map.get(risk_level, "Standard rollback available")
+
+
 
     def _suggest_reviewers(self, compliance_domains: List[str]) -> str:
-        """Suggest required reviewers based on compliance domains"""
+        """Suggest reviewers based on compliance"""
         reviewers = ["@engineering-team"]
         if "HIPAA" in compliance_domains:
-            reviewers.extend(["@privacy-officer", "@security-team"])
+            reviewers.append("@security-team")
         if "FDA" in compliance_domains:
-            reviewers.extend(["@clinical-affairs", "@regulatory-team"])
+            reviewers.append("@regulatory-team")
         if "SOX" in compliance_domains:
-            reviewers.extend(["@finance-team", "@audit-team"])
+            reviewers.append("@audit-team")
         return ", ".join(reviewers)
 
 
@@ -823,9 +740,13 @@ Environment Variables:
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
             }
-            print(json.dumps(output, indent=2))
+            print(json.dumps(output, indent=2, ensure_ascii=False))
         else:
-            print(template)
+            # Fix encoding issues on Windows
+            try:
+                print(template)
+            except UnicodeEncodeError:
+                print(template.encode('utf-8', errors='replace').decode('utf-8'))
         
         sys.exit(0)
 
