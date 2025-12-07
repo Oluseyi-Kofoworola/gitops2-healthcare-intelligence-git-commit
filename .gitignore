@@ -8,7 +8,6 @@ dist/
 
 # Go
 go.sum
-go.work.sum
 *.test
 *.out
 coverage.html
