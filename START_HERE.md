@@ -328,8 +328,8 @@ go build ./cmd/phi-service
 ## Getting Help
 
 - **Docs**: [docs/](docs/) folder
-- **Issues**: [GitHub Issues](https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit/issues)
-- **Examples**: [docs/END_TO_END_SCENARIO.md](docs/END_TO_END_SCENARIO.md)
+- **Issues**: [GitHub Issues](https://github.com/okofoworola_microsoft/gitops2-healthcare-intelligence/issues)
+- **Examples**: See [DEPLOYMENT.md](DEPLOYMENT.md) and [COMPLIANCE.md](COMPLIANCE.md)
 
 ---
 

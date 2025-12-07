@@ -13,7 +13,7 @@ AI-powered compliance automation for healthcare software. Generate HIPAA/FDA/SOX
 
 ```bash
 # Clone and run
-git clone https://github.com/YOUR_ORG/gitops2-healthcare-intelligence.git
+git clone https://github.com/okofoworola_microsoft/gitops2-healthcare-intelligence.git
 cd gitops2-healthcare-intelligence
 ./setup.sh && ./demo.sh
 ```
@@ -164,7 +164,7 @@ make coverage-html && open coverage.html
 
 ```bash
 # 1. Fork & clone
-git clone https://github.com/YOUR_USERNAME/gitops2-healthcare-intelligence.git
+git clone https://github.com/okofoworola_microsoft/gitops2-healthcare-intelligence.git
 
 # 2. Create branch
 git checkout -b feat/your-feature
@@ -220,8 +220,8 @@ MIT License - see [LICENSE](LICENSE)
 
 ## Support
 
-- **[GitHub Issues](https://github.com/YOUR_ORG/gitops2-healthcare-intelligence/issues)** - Bugs & features
-- **[GitHub Discussions](https://github.com/YOUR_ORG/gitops2-healthcare-intelligence/discussions)** - Q&A
+- **[GitHub Issues](https://github.com/okofoworola_microsoft/gitops2-healthcare-intelligence/issues)** - Bugs & features
+- **[GitHub Discussions](https://github.com/okofoworola_microsoft/gitops2-healthcare-intelligence/discussions)** - Q&A
 - **[ROADMAP.md](ROADMAP.md)** - Future development
 
 ---
