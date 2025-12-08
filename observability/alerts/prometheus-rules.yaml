@@ -1,0 +1,241 @@
+groups:
+  - name: healthcare_gitops_critical
+    interval: 30s
+    rules:
+      # Service Down Alert
+      - alert: ServiceDown
+        expr: up{job="healthcare-gitops"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: sre
+        annotations:
+          summary: "Service {{ $labels.service }} is down"
+          description: "Service {{ $labels.service }} on {{ $labels.instance }} has been unreachable for more than 2 minutes."
+          runbook_url: "https://wiki.company.com/runbooks/service-down"
+          pagerduty_priority: "P1"
+
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m])) by (service)
+            /
+            sum(rate(http_requests_total[5m])) by (service)
+          ) * 100 > 5
+        for: 5m
+        labels:
+          severity: critical
+          team: sre
+        annotations:
+          summary: "High error rate on {{ $labels.service }}"
+          description: "Service {{ $labels.service }} error rate is {{ $value }}% (threshold: 5%)"
+          runbook_url: "https://wiki.company.com/runbooks/high-error-rate"
+          pagerduty_priority: "P1"
+
+      # Database Connection Failure
+      - alert: DatabaseConnectionFailure
+        expr: go_sql_connections_open{service=~".*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: sre
+        annotations:
+          summary: "Database connection lost for {{ $labels.service }}"
+          description: "Service {{ $labels.service }} has no open database connections."
+          runbook_url: "https://wiki.company.com/runbooks/database-connection-failure"
+          pagerduty_priority: "P1"
+
+      # High P99 Latency
+      - alert: HighP99Latency
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (service, le)
+          ) > 2
+        for: 10m
+        labels:
+          severity: critical
+          team: sre
+        annotations:
+          summary: "High P99 latency on {{ $labels.service }}"
+          description: "P99 latency for {{ $labels.service }} is {{ $value }}s (threshold: 2s)"
+          runbook_url: "https://wiki.company.com/runbooks/high-latency"
+          pagerduty_priority: "P2"
+
+      # Service Unavailable
+      - alert: ServiceUnavailable
+        expr: |
+          (
+            avg_over_time(up{job="healthcare-gitops"}[5m]) < 0.95
+          )
+        for: 5m
+        labels:
+          severity: critical
+          team: sre
+        annotations:
+          summary: "Service {{ $labels.service }} availability below SLO"
+          description: "Service {{ $labels.service }} availability is {{ $value }}% (SLO: 99.9%)"
+          runbook_url: "https://wiki.company.com/runbooks/service-unavailable"
+          pagerduty_priority: "P1"
+
+      # Database Connection Pool Exhausted
+      - alert: DatabaseConnectionPoolExhausted
+        expr: |
+          (
+            go_sql_connections_in_use{service=~".*"}
+            /
+            go_sql_connections_open{service=~".*"}
+          ) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          team: sre
+        annotations:
+          summary: "Database connection pool near exhaustion for {{ $labels.service }}"
+          description: "Connection pool is {{ $value }}% utilized (threshold: 90%)"
+          runbook_url: "https://wiki.company.com/runbooks/connection-pool-exhausted"
+          pagerduty_priority: "P2"
+
+  - name: healthcare_gitops_warning
+    interval: 1m
+    rules:
+      # Error Budget 75% Consumed
+      - alert: ErrorBudget75Percent
+        expr: |
+          (error_budget_consumed / error_budget_total) > 0.75
+        for: 5m
+        labels:
+          severity: warning
+          team: sre
+        annotations:
+          summary: "Error budget 75% consumed for {{ $labels.service }}"
+          description: "Service {{ $labels.service }} has consumed {{ $value }}% of error budget"
+          runbook_url: "https://wiki.company.com/runbooks/error-budget-policy"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: |
+          process_resident_memory_bytes{job="healthcare-gitops"} / 1e9 > 2
+        for: 15m
+        labels:
+          severity: warning
+          team: sre
+        annotations:
+          summary: "High memory usage on {{ $labels.service }}"
+          description: "Service {{ $labels.service }} is using {{ $value }}GB memory (threshold: 2GB)"
+          runbook_url: "https://wiki.company.com/runbooks/high-memory-usage"
+
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: |
+          rate(process_cpu_seconds_total{job="healthcare-gitops"}[5m]) > 0.8
+        for: 15m
+        labels:
+          severity: warning
+          team: sre
+        annotations:
+          summary: "High CPU usage on {{ $labels.service }}"
+          description: "Service {{ $labels.service }} CPU usage is {{ $value }} (threshold: 0.8)"
+          runbook_url: "https://wiki.company.com/runbooks/high-cpu-usage"
+
+      # OpenAI API Cost Spike
+      - alert: OpenAICostSpike
+        expr: |
+          rate(openai_api_cost_dollars_total[1h]) > 10
+        for: 30m
+        labels:
+          severity: warning
+          team: engineering
+        annotations:
+          summary: "OpenAI API cost spike detected"
+          description: "Current rate: ${{ $value }}/hour (threshold: $10/hour)"
+          runbook_url: "https://wiki.company.com/runbooks/cost-spike"
+
+      # High Goroutine Count
+      - alert: HighGoroutineCount
+        expr: |
+          go_goroutines{job="healthcare-gitops"} > 10000
+        for: 10m
+        labels:
+          severity: warning
+          team: sre
+        annotations:
+          summary: "High goroutine count on {{ $labels.service }}"
+          description: "Service {{ $labels.service }} has {{ $value }} goroutines (threshold: 10000)"
+          runbook_url: "https://wiki.company.com/runbooks/goroutine-leak"
+
+      # Slow Database Queries
+      - alert: SlowDatabaseQueries
+        expr: |
+          histogram_quantile(0.95,
+            rate(db_query_duration_seconds_bucket[5m])
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+          team: engineering
+        annotations:
+          summary: "Slow database queries on {{ $labels.service }}"
+          description: "P95 query duration is {{ $value }}s (threshold: 1s)"
+          runbook_url: "https://wiki.company.com/runbooks/slow-queries"
+
+      # Compliance Validation Failures
+      - alert: ComplianceValidationFailures
+        expr: |
+          rate(compliance_validation_failed_total[5m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          team: compliance
+        annotations:
+          summary: "High compliance validation failure rate"
+          description: "Compliance validation failure rate: {{ $value }}/sec"
+          runbook_url: "https://wiki.company.com/runbooks/compliance-failures"
+
+  - name: healthcare_gitops_info
+    interval: 5m
+    rules:
+      # Service Restarted
+      - alert: ServiceRestarted
+        expr: |
+          changes(process_start_time_seconds{job="healthcare-gitops"}[5m]) > 0
+        labels:
+          severity: info
+          team: sre
+        annotations:
+          summary: "Service {{ $labels.service }} restarted"
+          description: "Service {{ $labels.service }} on {{ $labels.instance }} was restarted."
+
+      # New Version Deployed
+      - alert: NewVersionDeployed
+        expr: |
+          changes(app_version{job="healthcare-gitops"}[5m]) > 0
+        labels:
+          severity: info
+          team: engineering
+        annotations:
+          summary: "New version deployed for {{ $labels.service }}"
+          description: "Service {{ $labels.service }} updated to version {{ $labels.version }}"
+
+      # Daily Budget Alert
+      - alert: DailyBudget50Percent
+        expr: |
+          (daily_cost_dollars / daily_budget_dollars) > 0.5
+        labels:
+          severity: info
+          team: engineering
+        annotations:
+          summary: "Daily budget 50% consumed"
+          description: "Current daily cost: ${{ $value }} (budget: $200)"
+
+      # Certificate Expiring Soon
+      - alert: CertificateExpiringSoon
+        expr: |
+          (ssl_certificate_expiry_seconds - time()) / 86400 < 30
+        labels:
+          severity: info
+          team: sre
+        annotations:
+          summary: "SSL certificate expiring soon"
+          description: "Certificate for {{ $labels.domain }} expires in {{ $value }} days"
+          runbook_url: "https://wiki.company.com/runbooks/certificate-renewal"
