@@ -1,8 +1,6 @@
-module github.com/example/gitops2-enterprise/services/medical-device
+module github.com/ITcredibl/gitops2-enterprise-git-intel-demo/medical-device
 
-go 1.24.0
-
-toolchain go1.24.3
+go 1.22
 
 require (
 	github.com/go-chi/chi/v5 v5.2.3

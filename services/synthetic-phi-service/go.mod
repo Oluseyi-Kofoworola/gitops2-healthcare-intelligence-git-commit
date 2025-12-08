@@ -1,8 +1,6 @@
 module github.com/ITcredibl/gitops2-enterprise-git-intel-demo/synthetic-phi-service
 
-go 1.24.0
-
-toolchain go1.24.3
+go 1.22
 
 // Synthetic PHI service for healthcare compliance testing
 // Enhanced with OpenTelemetry, structured logging, and metrics

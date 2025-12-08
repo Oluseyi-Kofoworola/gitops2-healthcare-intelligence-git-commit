@@ -1,8 +1,6 @@
 module github.com/ITcredibl/gitops2-enterprise-git-intel-demo/auth-service
 
-go 1.24.0
-
-toolchain go1.24.3
+go 1.22
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.2.0
