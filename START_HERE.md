@@ -129,15 +129,15 @@ sequenceDiagram
 ./scripts/flow-1-ai-commit.sh
 
 # What it does:
-# 1. Creates services/phi-service/internal/handlers/encryption.go
+# 1. Creates services/phi-service/encryption.go
 # 2. Implements working AES-256-GCM encryption functions
 # 3. Generates .gitops/commit_message.txt with HIPAA metadata
 # 4. Creates .gitops/commit_metadata.json with compliance data
 # 5. Stages files for commit (doesn't commit automatically)
 
 # Review what was created:
-cat services/phi-service/internal/handlers/encryption.go  # Real encryption code
-cat .gitops/commit_metadata.json | jq '.'                # Real metadata
+cat services/phi-service/encryption.go  # Real encryption code
+cat .gitops/commit_metadata.json | jq '.'  # Real metadata
 
 # Commit if you want:
 git commit -F .gitops/commit_message.txt
@@ -237,7 +237,7 @@ flowchart LR
 
 # What it does:
 # 1. Creates demo branch (doesn't touch your main code)
-# 2. Creates patient_test.go with real Go benchmark
+# 2. Creates benchmark_test.go with real Go benchmark
 # 3. Makes 19 commits with 50ms latency (good performance)
 # 4. Makes 1 commit with 250ms latency (regression!)
 # 5. Runs git bisect with actual Go tests
@@ -292,11 +292,11 @@ You've experienced all three flagship flows:
 ## Next Steps
 
 ### Explore the Code (Article Deep Dive)
-- **AI Commit Generator**: [`tools/healthcare_commit_generator.py`](tools/healthcare_commit_generator.py) - See the LLM integration
-- **OPA Policies**: [`policies/healthcare/`](policies/healthcare/) - All 12+ compliance rules
+- **Commit Generator**: [`tools/healthcare_commit_generator.py`](tools/healthcare_commit_generator.py) - Template-based commit generation
+- **OPA Policies**: [`policies/healthcare/`](policies/healthcare/) - Compliance validation rules
 - **Secret Detection**: [`tools/secret_sanitizer.py`](tools/secret_sanitizer.py) - PHI/PII leak prevention
 - **Services**: [`services/phi-service/`](services/phi-service/) - HIPAA encryption patterns
-- **GitHub Copilot Config**: [`.copilot/enterprise-git.yml`](.copilot/enterprise-git.yml) - Team guidance rules
+- **Risk Scoring**: [`tools/git_intel/risk_scorer.py`](tools/git_intel/risk_scorer.py) - Deployment risk calculation
 
 ### Read Documentation
 - [docs/README.md](docs/README.md) - System architecture
@@ -306,13 +306,14 @@ You've experienced all three flagship flows:
 
 ### Run Tests
 ```bash
-# Golden path tests (validates all 3 workflows)
-pytest tests/python/test_golden_path.py -v
+# Python tests
+pytest tests/python/test_risk_scorer.py -v
 
-# All test suites
-pytest tests/python/ -v        # Python tests (2,465 LoC coverage)
-go test ./services/... -v      # Go tests
-./tests/e2e/run-all-flows.sh   # E2E tests
+# Go service tests
+cd services/phi-service && go test -v
+
+# All Go services
+go test ./services/... -v
 ```
 
 ### Customize for Your Org

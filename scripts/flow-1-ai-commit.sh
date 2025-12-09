@@ -10,10 +10,9 @@ print_header "Flow 1: AI-Assisted Healthcare Commit"
 echo "Scenario: Adding encryption to patient records service"
 echo ""
 
-# Create sample change
-mkdir -p services/phi-service/internal/handlers
-cat > services/phi-service/internal/handlers/encryption.go << 'EOF'
-package handlers
+# Create actual encryption code in the correct location
+cat > services/phi-service/encryption.go << 'EOF'
+package main
 
 import (
     "crypto/aes"
@@ -26,6 +25,10 @@ import (
 // EncryptPatientData encrypts patient data using AES-256-GCM
 // Compliance: HIPAA Security Rule §164.312(a)(2)(iv)
 func EncryptPatientData(plaintext []byte, key []byte) ([]byte, error) {
+    if len(key) != 32 {
+        return nil, errors.New("key must be 32 bytes for AES-256")
+    }
+
     block, err := aes.NewCipher(key)
     if err != nil {
         return nil, err
@@ -46,6 +49,10 @@ func EncryptPatientData(plaintext []byte, key []byte) ([]byte, error) {
 
 // DecryptPatientData decrypts AES-256-GCM encrypted data
 func DecryptPatientData(ciphertext []byte, key []byte) ([]byte, error) {
+    if len(key) != 32 {
+        return nil, errors.New("key must be 32 bytes for AES-256")
+    }
+
     block, err := aes.NewCipher(key)
     if err != nil {
         return nil, err
@@ -66,14 +73,20 @@ func DecryptPatientData(ciphertext []byte, key []byte) ([]byte, error) {
 }
 EOF
 
-git add services/phi-service/internal/handlers/encryption.go 2>/dev/null || true
+git add services/phi-service/encryption.go 2>/dev/null || true
 
-echo "Running AI commit generator..."
+echo "Running commit generator..."
 python3 tools/healthcare_commit_generator.py \
     --type security \
     --scope phi \
     --description "implement AES-256-GCM encryption for patient records" \
     --auto
+
+# Verify files were created
+if [ ! -f ".gitops/commit_message.txt" ]; then
+    echo "Error: commit message not generated"
+    exit 1
+fi
 
 echo ""
 print_success "Flow 1 Complete!"

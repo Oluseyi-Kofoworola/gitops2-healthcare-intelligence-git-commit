@@ -25,9 +25,8 @@ echo "Creating demo branch: $DEMO_BRANCH"
 git checkout -b "$DEMO_BRANCH"
 
 # Create real test suite if it doesn't exist
-mkdir -p services/phi-service/internal/handlers
-cat > services/phi-service/internal/handlers/patient_test.go << 'EOF'
-package handlers
+cat > services/phi-service/benchmark_test.go << 'EOF'
+package main
 
 import (
     "testing"
@@ -52,7 +51,6 @@ func BenchmarkPatientDataProcessing(b *testing.B) {
 
 // processPatientData simulates patient data processing
 func processPatientData(data []byte) []byte {
-    // Simulate processing
     result := make([]byte, len(data))
     copy(result, data)
     
@@ -68,16 +66,16 @@ func getProcessingDelay() int {
 }
 EOF
 
-git add services/phi-service/internal/handlers/patient_test.go
+git add services/phi-service/benchmark_test.go
 git commit -m "test: add patient data processing benchmark" --no-verify
 
 # Create 19 normal commits
 echo ""
 echo "Creating 19 normal commits with good performance..."
 for i in $(seq 1 19); do
-    # Make small changes to other files
-    echo "// Iteration $i - $(date +%s)" >> services/phi-service/internal/handlers/patient_test.go
-    git add services/phi-service/internal/handlers/patient_test.go
+    # Make small changes to test file
+    echo "// Iteration $i - $(date +%s)" >> services/phi-service/benchmark_test.go
+    git add services/phi-service/benchmark_test.go
     git commit -m "chore: update test suite iteration $i" --no-verify
     echo -n "."
 done
@@ -86,8 +84,8 @@ echo ""
 # Create commit #20 with REGRESSION
 echo ""
 echo "Creating commit #20 with performance regression..."
-cat > services/phi-service/internal/handlers/patient_test.go << 'EOF'
-package handlers
+cat > services/phi-service/benchmark_test.go << 'EOF'
+package main
 
 import (
     "testing"
@@ -112,7 +110,6 @@ func BenchmarkPatientDataProcessing(b *testing.B) {
 
 // processPatientData simulates patient data processing
 func processPatientData(data []byte) []byte {
-    // Simulate processing
     result := make([]byte, len(data))
     copy(result, data)
     
@@ -128,7 +125,7 @@ func getProcessingDelay() int {
 }
 EOF
 
-git add services/phi-service/internal/handlers/patient_test.go
+git add services/phi-service/benchmark_test.go
 git commit -m "perf: optimize patient data processing" --no-verify
 
 # Get commit range
