@@ -56,7 +56,7 @@ var (
 var (
 	logger    zerolog.Logger
 	tracer    trace.Tracer
-	jwtSecret = []byte("demo-secret-change-in-production")
+	jwtSecret []byte
 )
 
 // TokenClaims represents JWT token claims
@@ -418,6 +418,17 @@ func StartAuthServer(addr string) *http.Server {
 func main() {
 	// Initialize logger
 	logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
+
+	// Validate JWT secret from environment
+	secretEnv := os.Getenv("JWT_SECRET")
+	if secretEnv == "" {
+		logger.Fatal().Msg("JWT_SECRET environment variable is required (minimum 32 characters)")
+	}
+	if len(secretEnv) < 32 {
+		logger.Fatal().Int("length", len(secretEnv)).Msg("JWT_SECRET must be at least 32 characters")
+	}
+	jwtSecret = []byte(secretEnv)
+	logger.Info().Msg("JWT secret loaded from environment")
 
 	// Initialize OpenTelemetry
 	ctx := context.Background()

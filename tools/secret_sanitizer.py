@@ -388,12 +388,18 @@ class SecretSanitizer:
         
         if config_file and Path(config_file).exists():
             try:
-                with open(config_file, 'r') as f:
+                with open(config_file, 'r', encoding='utf-8') as f:
                     config = yaml.safe_load(f)
                 logger.info(f"Loaded configuration from {config_file}")
                 return config.get('safety', {})
+            except FileNotFoundError:
+                logger.debug(f"Config file not found: {config_file}")
+            except yaml.YAMLError as e:
+                logger.error(f"YAML parsing error in {config_file}: {e}", exc_info=True)
+            except PermissionError as e:
+                logger.error(f"Permission denied reading {config_file}: {e}")
             except Exception as e:
-                logger.warning(f"Failed to load config from {config_file}: {e}")
+                logger.error(f"Unexpected error loading config from {config_file}: {e}", exc_info=True)
         
         return {}
     

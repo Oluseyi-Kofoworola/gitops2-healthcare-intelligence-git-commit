@@ -30,7 +30,13 @@ func main() {
 
 	// Load configuration from environment
 	port := getEnv("PORT", "8083")
-	masterKey := getEnv("MASTER_KEY", "default-master-key-change-in-production")
+	masterKey := os.Getenv("MASTER_KEY")
+	if masterKey == "" {
+		log.Fatal().Msg("MASTER_KEY environment variable is required (must be 32 bytes for AES-256)")
+	}
+	if len(masterKey) != 32 {
+		log.Fatal().Int("length", len(masterKey)).Msg("MASTER_KEY must be exactly 32 bytes for AES-256-GCM")
+	}
 
 	// Initialize encryption service
 	var err error
