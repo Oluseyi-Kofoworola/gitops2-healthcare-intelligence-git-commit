@@ -1,8 +1,6 @@
-# GitOps Health - Test Suite
+# Test Suite
 
-**Status**: Section F - Testing Suite  
-**Coverage Target**: >85%  
-**Framework**: pytest (Python), Go test (Go), OPA test (Rego)
+Testing infrastructure for the Healthcare GitOps Intelligence demo.
 
 ---
 
@@ -10,407 +8,127 @@
 
 ```
 tests/
-├── python/           # Python unit & integration tests
-│   ├── conftest.py              # Shared pytest fixtures
-│   ├── test_risk_scorer.py      # Risk scoring tests
-│   ├── test_compliance.py       # Compliance validation tests
-│   ├── test_bisect.py           # Intelligent bisect tests
-│   ├── test_commitgen.py        # Commit generation tests
-│   ├── test_sanitize.py         # PHI sanitization tests
-│   └── test_audit.py            # Audit trail tests
+├── python/              # Python tests for tools
+│   ├── test_risk_scorer.py
+│   ├── test_compliance.py
+│   └── conftest.py
 │
-├── go/               # Go microservice tests
-│   ├── risk_scorer_test.go
-│   ├── compliance_analyzer_test.go
-│   └── phi_detector_test.go
+├── integration/         # Docker Compose integration tests
+│   └── docker-compose.yml
 │
-├── opa/              # OPA policy tests
-│   ├── hipaa_test.rego
-│   ├── fda_test.rego
-│   └── sox_test.rego
-│
-├── e2e/              # End-to-end workflow tests
-│   ├── test_full_workflow.py
-│   ├── test_regression_detection.py
-│   └── test_incident_response.py
-│
-├── performance/      # Performance & load tests
-│   └── load_testing.py
-│
-├── data/             # Test fixtures & sample data
-│   ├── sample_commits.json
-│   ├── phi_test_data.json
-│   └── compliance_violations.json
-│
-└── README.md         # This file
+└── README.md           # This file
 ```
+
+**Note**: Services have their own Go tests in `services/*/main_test.go`
 
 ---
 
 ## Running Tests
 
-### All Tests
-```bash
-# Run entire test suite
-pytest tests/python/ -v
+### Python Tests
 
-# With coverage
-pytest tests/python/ --cov=tools/gitops_health --cov-report=html
-```
-
-### Specific Test Files
 ```bash
-# Risk scorer tests
+# All Python tests
+pytest tests/python/
+
+# Specific test
 pytest tests/python/test_risk_scorer.py -v
 
-# Compliance tests
-pytest tests/python/test_compliance.py -v
-
-# Sanitization tests
-pytest tests/python/test_sanitize.py -v
+# With coverage
+pytest tests/python/ --cov=tools --cov-report=html
 ```
 
-### By Marker
-```bash
-# Skip slow tests
-pytest tests/python/ -m "not slow"
-
-# Only integration tests
-pytest tests/python/ -m integration
-
-# Only unit tests
-pytest tests/python/ -m "not integration and not slow"
-```
-
-### With Different Verbosity
-```bash
-# Minimal output
-pytest tests/python/ -q
-
-# Verbose output
-pytest tests/python/ -v
-
-# Very verbose (show all output)
-pytest tests/python/ -vv -s
-```
-
----
-
-## Test Categories
-
-### Unit Tests
-Fast, isolated tests of individual components.
+### Go Service Tests
 
 ```bash
-pytest tests/python/test_risk_scorer.py::TestRiskScorer::test_scorer_initialization
+# All service tests
+go test ./services/...
+
+# Specific service
+cd services/phi-service
+go test -v
+
+# With coverage
+go test -cover ./services/...
 ```
 
-**Characteristics**:
-- No external dependencies
-- Fast execution (<100ms per test)
-- Mock external services
-- Test single functions/classes
+### OPA Policy Tests
+
+```bash
+# All policies
+opa test policies/healthcare/
+
+# Specific policy
+opa test policies/healthcare/commit_metadata_required.rego -v
+```
 
 ### Integration Tests
-Tests that verify component interactions.
 
 ```bash
-pytest tests/python/ -m integration
-```
+# Start all services
+cd tests/integration
+docker-compose up -d
 
-**Characteristics**:
-- May require git, OPA, or other tools
-- Slower execution (1-5s per test)
-- Test multiple components together
-- Verify end-to-end flows
+# Test services are running
+curl http://localhost:8081/health  # auth-service
+curl http://localhost:8082/health  # phi-service
+curl http://localhost:8083/health  # payment-gateway
 
-### E2E Tests
-Full workflow tests simulating real usage.
-
-```bash
-pytest tests/e2e/
-```
-
-**Characteristics**:
-- Require full environment setup
-- Slowest execution (10-60s per test)
-- Test complete user scenarios
-- Verify production-like behavior
-
----
-
-## Test Fixtures
-
-### Provided by `conftest.py`
-
-#### `temp_repo`
-Temporary git repository with initial commit.
-
-```python
-def test_something(temp_repo):
-    # temp_repo is a Path to initialized git repo
-    assert (temp_repo / ".git").exists()
-```
-
-#### `temp_dir`
-Temporary directory for file operations.
-
-```python
-def test_file_ops(temp_dir):
-    test_file = temp_dir / "test.txt"
-    test_file.write_text("content")
-```
-
-#### `sample_files`
-Pre-created test files (Python, JSON, text).
-
-```python
-def test_sanitize(sample_files):
-    py_file = sample_files["python"]
-    # Contains PHI patterns for testing
-```
-
-#### `sample_config`
-Sample YAML configuration file.
-
-```python
-def test_config_loading(sample_config):
-    from gitops_health.config import load_config
-    config = load_config(sample_config)
-```
-
-#### `mock_opa_binary`
-Mock OPA binary for testing without installation.
-
-```python
-def test_compliance(mock_opa_binary):
-    # OPA available in PATH
+# Cleanup
+docker-compose down
 ```
 
 ---
 
-## Custom Markers
+## Writing Tests
 
-### `@pytest.mark.slow`
-Mark tests that take >1 second.
-
-```python
-@pytest.mark.slow
-def test_large_repository():
-    # Long-running test
-    pass
-```
-
-### `@pytest.mark.integration`
-Mark integration tests.
+### Python Test Example
 
 ```python
-@pytest.mark.integration
-def test_full_workflow():
-    pass
-```
-
-### `@pytest.mark.requires_git`
-Mark tests requiring git.
-
-```python
-@pytest.mark.requires_git
-def test_git_operations():
-    pass
-```
-
-### `@pytest.mark.requires_opa`
-Mark tests requiring OPA.
-
-```python
-@pytest.mark.requires_opa
-def test_policy_validation():
-    pass
-```
-
-### `@pytest.mark.requires_api`
-Mark tests requiring API keys (OpenAI, etc.).
-
-```python
-@pytest.mark.requires_api
-def test_ai_commit_generation():
-    pass
-```
-
----
-
-## Coverage Requirements
-
-### Minimum Coverage
-- **Overall**: 85%
-- **Critical modules**: 90%
-  - `risk.py`
-  - `compliance.py`
-  - `sanitize.py`
-  - `audit.py`
-
-### Generate Coverage Report
-```bash
-# HTML report
-pytest tests/python/ --cov=tools/gitops_health --cov-report=html
-open htmlcov/index.html
-
-# Terminal report
-pytest tests/python/ --cov=tools/gitops_health --cov-report=term-missing
-
-# XML report (for CI/CD)
-pytest tests/python/ --cov=tools/gitops_health --cov-report=xml
-```
-
----
-
-## CI/CD Integration
-
-### GitHub Actions
-```yaml
-- name: Run Tests
-  run: |
-    pip install -e .[dev]
-    pytest tests/python/ --cov=tools/gitops_health --cov-report=xml
+# tests/python/test_my_tool.py
+def test_my_function():
+    from tools.my_tool import my_function
     
-- name: Upload Coverage
-  uses: codecov/codecov-action@v3
-  with:
-    files: ./coverage.xml
+    result = my_function("input")
+    assert result == "expected_output"
 ```
 
-### Pre-commit Hook
-```bash
-# .git/hooks/pre-commit
-#!/bin/bash
-pytest tests/python/ -m "not slow" -x
-```
+### Go Test Example
 
----
-
-## Writing New Tests
-
-### Test File Naming
-- `test_*.py` - Pytest will discover these
-- `*_test.go` - Go test will discover these
-- `*_test.rego` - OPA test will discover these
-
-### Test Function Naming
-```python
-def test_<what_is_being_tested>():
-    """One-line description of test."""
-    # Arrange
-    # Act
-    # Assert
-```
-
-### Example Test
-```python
-import pytest
-from gitops_health.risk import RiskScorer
-
-def test_risk_scorer_initialization(temp_repo):
-    """Test RiskScorer can be initialized with repo path."""
-    # Arrange
-    repo_path = temp_repo
+```go
+// services/my-service/main_test.go
+func TestMyHandler(t *testing.T) {
+    req := httptest.NewRequest("GET", "/health", nil)
+    w := httptest.NewRecorder()
     
-    # Act
-    scorer = RiskScorer(repo_path=repo_path)
+    healthHandler(w, req)
     
-    # Assert
-    assert scorer is not None
-    assert scorer.repo_path == repo_path
+    assert.Equal(t, 200, w.Code)
+}
+```
 
-@pytest.mark.slow
-@pytest.mark.requires_git
-def test_large_repository_analysis():
-    """Test analyzing a large repository."""
-    # This test is marked as slow and requires git
-    pass
+### OPA Policy Test Example
+
+```rego
+# policies/healthcare/my_policy_test.rego
+test_valid_commit {
+    result = violation with input as {"type": "feat", "scope": "api"}
+    count(result) == 0
+}
+
+test_invalid_commit {
+    result = violation with input as {"type": "invalid"}
+    count(result) > 0
+}
 ```
 
 ---
 
-## Test Data
+## CI/CD
 
-### Location
-`tests/data/` contains sample data for tests:
-- `sample_commits.json` - Example commit metadata
-- `phi_test_data.json` - PHI patterns for sanitization tests
-- `compliance_violations.json` - Known violations for testing
+Tests run automatically on:
+- Pre-commit hooks (OPA policies)
+- Pull requests (all tests)
+- Main branch pushes (all tests + coverage)
 
-### Usage
-```python
-def test_with_sample_data():
-    data_file = Path(__file__).parent.parent / "data" / "sample_commits.json"
-    with open(data_file) as f:
-        commits = json.load(f)
-    # Use commits for testing
-```
-
----
-
-## Debugging Tests
-
-### Run Single Test
-```bash
-pytest tests/python/test_risk_scorer.py::TestRiskScorer::test_scorer_initialization -v
-```
-
-### Show Print Statements
-```bash
-pytest tests/python/ -s
-```
-
-### Drop into Debugger on Failure
-```bash
-pytest tests/python/ --pdb
-```
-
-### Show Local Variables on Failure
-```bash
-pytest tests/python/ -l
-```
-
----
-
-## Current Status
-
-### Implemented Tests
-- ✅ `test_risk_scorer.py` - Risk scoring unit tests
-- ⏳ `test_compliance.py` - Pending
-- ⏳ `test_bisect.py` - Pending
-- ⏳ `test_commitgen.py` - Pending
-- ⏳ `test_sanitize.py` - Pending
-- ⏳ `test_audit.py` - Pending
-
-### Test Coverage
-```
-Module                    Statements    Missing    Coverage
---------------------------------------------------------
-risk.py                   150           15         90%
-compliance.py             180           90         50%
-bisect.py                 200           150        25%
-commitgen.py              220           180        18%
-sanitize.py               200           160        20%
-audit.py                  210           170        19%
---------------------------------------------------------
-TOTAL                     1160          765        34%
-```
-
-**Target**: 85% coverage by end of Section F
-
----
-
-## Next Steps
-
-1. Implement remaining test files
-2. Increase coverage to >85%
-3. Add Go tests for microservices
-4. Add OPA policy tests
-5. Create E2E test suite
-6. Setup coverage reporting in CI/CD
-
----
-
-**Last Updated**: November 23, 2025
+See `.github/workflows/` for CI configuration.

@@ -1,54 +1,27 @@
-# Roadmap - GitOps 2.0 Healthcare Intelligence Platform
+# Roadmap
 
-**Purpose**: Track planned features, enhancements, and production-readiness work.
-
-**Last Updated**: November 23, 2025
+**Purpose**: Future enhancements for this demo repository.
 
 ---
 
-## Version 2.1.0 - Production Hardening (Q1 2026)
+## Next Steps
 
-### Security & Compliance
-- [ ] **Complete security audit** with third-party penetration testing
-- [ ] **Secrets management** integration (HashiCorp Vault, AWS Secrets Manager)
-- [ ] **RBAC implementation** for service-to-service authentication
-- [ ] **Comprehensive PHI encryption** validation across all services
-- [ ] **Audit logging** with tamper-proof trail (blockchain or immutable storage)
-- [ ] **Automated vulnerability patching** workflow
-- [ ] **HIPAA BAA templates** and documentation
+### Demo Improvements
+- [ ] Add more real policy tests (expand OPA test coverage)
+- [ ] Create video walkthrough of live flows
+- [ ] Add example failing commits to show policy enforcement
+- [ ] Improve risk scorer with more realistic factors
 
-### Testing & Quality
-- [ ] **Increase test coverage** to 90%+ across all components
-- [ ] **Load testing** suite with realistic healthcare traffic patterns
-- [ ] **Chaos engineering** integration (Chaos Mesh, Litmus)
-- [ ] **Contract testing** between services (Pact)
-- [ ] **Performance benchmarks** for all critical paths
-- [ ] **Mutation testing** for critical compliance logic
-- [ ] **Fuzz testing** for API endpoints
+### Technical Debt
+- [ ] Simplify service dependencies (reduce Docker Compose complexity)
+- [ ] Add integration tests for all 3 flows
+- [ ] Clean up unused dependencies in Go services
+- [ ] Optimize OPA policy evaluation speed
 
-### Observability
-- [ ] **Distributed tracing** implementation (OpenTelemetry + Jaeger)
-- [ ] **Production-grade metrics** (Prometheus + Grafana dashboards)
-- [ ] **Structured logging** with correlation IDs
-- [ ] **Alerting** for compliance violations and PHI exposure
-- [ ] **SLO/SLI definitions** and monitoring
-- [ ] **Real user monitoring** (RUM) for patient-facing workflows
-
-### CI/CD
-- [ ] **Real Kubernetes deployments** (not simulated)
-- [ ] **Actual canary traffic splitting** with Istio/Linkerd
-- [ ] **Blue-green environment provisioning** automation
-- [ ] **Automated rollback** based on error rate/latency thresholds
-- [ ] **Progressive delivery** with Flagger or Argo Rollouts
-- [ ] **Multi-region deployment** patterns
-- [ ] **Disaster recovery** procedures and runbooks
-
----
-
-## Version 2.2.0 - AI Enhancement (Q2 2026)
-
-### AI Agents
-- [ ] **Multi-model support** (GPT-4, Claude, Gemini)
+### Documentation
+- [ ] Add troubleshooting section for common setup issues
+- [ ] Create quick-start video (< 5 minutes)
+- [ ] Document how to extend with custom compliance frameworks
 - [ ] **Local LLM option** for air-gapped environments (Llama 2, Mistral)
 - [ ] **Fine-tuned healthcare models** on compliance corpus
 - [ ] **Agent memory** for contextual commit generation

@@ -1,0 +1,13 @@
+security(phi): implement AES-256-GCM encryption for patient records
+
+Business Impact: phi security enhancement
+Risk Level: HIGH
+Clinical Safety: NO_CLINICAL_IMPACT
+Compliance: FDA, HIPAA
+Reviewers: @engineering-team, @security-team, @regulatory-team
+
+Audit Trail: 1 files modified at 2025-12-09T19:48:39.987069+00:00
+
+Safety Warnings:
+  - Enterprise safety checks disabled
+

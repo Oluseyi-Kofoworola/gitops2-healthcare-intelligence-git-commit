@@ -1,0 +1,12 @@
+{
+  "commit_type": "security",
+  "scope": "phi",
+  "description": "implement AES-256-GCM encryption for patient records",
+  "risk_level": "HIGH",
+  "clinical_safety": "NO_CLINICAL_IMPACT",
+  "compliance_domains": ["HIPAA", "FDA-21-CFR-11"],
+  "phi_impact": "DIRECT",
+  "business_impact": "Enables HIPAA-compliant data encryption at rest",
+  "files_modified": 1,
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+}

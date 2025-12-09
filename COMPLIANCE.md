@@ -1,54 +1,92 @@
-# Compliance Reference Guide
+# Compliance Reference
 
-Quick reference for HIPAA, FDA 21 CFR Part 11, and SOX compliance controls in the Healthcare GitOps Intelligence Platform.
+Quick reference for healthcare compliance controls demonstrated in this repository.
 
 ---
 
 ## HIPAA (Health Insurance Portability and Accountability Act)
 
-### Security Rule Requirements
+### Key Controls Demonstrated
 
-| Control | Implementation | Code Location |
-|---------|---------------|---------------|
-| **§164.308(a)(1)(ii)(D)** - Information System Activity Review | Audit logging with 7-year retention | `services/*/main.go` (logging), `tools/healthcare_commit_generator.py` (audit trail) |
-| **§164.312(a)(1)** - Access Control | JWT authentication + RBAC | `services/auth-service/main.go` |
-| **§164.312(b)** - Audit Controls | Structured logging, immutable audit trails | All services (`log.Info()`, `log.Audit()`) |
-| **§164.312(e)(1)** - Transmission Security | TLS 1.3, certificate validation | `services/*/main.go` (HTTPS), `k8s/ingress.yaml` |
-| **§164.312(e)(2)(ii)** - Encryption | AES-256-GCM for PHI at rest | `services/phi-service/main.go` |
-
-### Privacy Rule Requirements
-
-| Control | Implementation |
-|---------|---------------|
-| **Minimum Necessary** | RBAC limits data access to authorized roles |
-| **Accounting of Disclosures** | Audit logs track all PHI access |
-| **Patient Rights** | APIs for data access/export/deletion |
+| Control | Implementation | Location |
+|---------|---------------|----------|
+| **Audit Logging** | Git commit metadata with compliance tags | `tools/healthcare_commit_generator.py` |
+| **Access Control** | JWT authentication + RBAC | `services/auth-service/main.go` |
+| **Encryption** | AES-256-GCM for PHI | `services/phi-service/encryption.go` |
+| **PHI Detection** | Automated scanning in commits | `policies/healthcare/hipaa_phi_required.rego` |
 
 ### Validation
 
 ```bash
-# Check HIPAA-required commit metadata
-git log --grep="HIPAA" --grep="PHI-Impact" --all-match
+# Verify HIPAA metadata in commits
+git log --grep="HIPAA-Impact" --oneline
 
-# Verify encryption enabled
-kubectl exec -it phi-service-0 -- \
-  env | grep ENCRYPTION_ENABLED
+# Test encryption service
+curl -X POST http://localhost:8082/encrypt \
+  -H "Content-Type: application/json" \
+  -d '{"data":"patient-ssn-123-45-6789"}'
 
-# Audit trail integrity
-python tools/ai_compliance_framework.py verify-audit-trail \
-  --framework HIPAA --since 7-years-ago
+# Validate OPA policies
+opa test policies/healthcare/hipaa_phi_required.rego
 ```
 
 ---
 
 ## FDA 21 CFR Part 11 (Electronic Records)
 
-### Subpart B - Electronic Records
+### Key Controls Demonstrated
 
-| Control | Implementation | Code Location |
-|---------|---------------|---------------|
-| **§11.10(a)** - System Validation | Automated testing (150+ tests), validation docs | `tests/` (unit/integration/E2E) |
-| **§11.10(e)** - Audit Trail | Immutable commit history, structured logs | Git history + OpenTelemetry |
+| Control | Implementation | Location |
+|---------|---------------|----------|
+| **Audit Trail** | Immutable git commit history | Git log |
+| **System Validation** | Automated testing | `tests/python/`, `services/*/main_test.go` |
+| **Electronic Signatures** | Git commit signing (GPG) | Git configuration |
+
+### Validation
+
+```bash
+# Verify audit trail integrity
+git log --pretty=format:"%H %an %ad %s" --all
+
+# Run validation tests
+make test
+```
+
+---
+
+## SOX (Sarbanes-Oxley)
+
+### Key Controls Demonstrated
+
+| Control | Implementation | Location |
+|---------|---------------|----------|
+| **Financial Controls** | Payment validation logic | `services/payment-gateway/handlers.go` |
+| **Audit Trail** | Transaction logging | Git commits + service logs |
+| **Segregation of Duties** | Dual approval for high-risk changes | `policies/healthcare/high_risk_dual_approval.rego` |
+
+### Validation
+
+```bash
+# Test dual approval policy
+opa eval -d policies/healthcare/high_risk_dual_approval.rego \
+  'data.healthcare.high_risk_dual_approval.violation' \
+  --input <(echo '{"risk_score": 8.5, "approvers": ["user1"]}')
+
+# Verify payment service
+curl http://localhost:8083/health
+```
+
+---
+
+## Notes
+
+This is a **demo repository** showing compliance patterns. For production use:
+- Implement real secrets management (HashiCorp Vault, AWS Secrets Manager)
+- Add comprehensive audit logging with tamper-proof storage
+- Conduct third-party security audits
+- Implement proper access controls beyond demo JWT
+
+See `START_HERE.md` for running the demos.
 | **§11.10(k)** - Operational System Checks | Health checks, readiness probes | `services/*/main.go` (`/health`, `/ready`) |
 | **§11.10(c)** - Change Control | OPA policies enforce metadata, dual approval | `policies/healthcare/high_risk_dual_approval.rego` |
 

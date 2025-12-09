@@ -1,6 +1,6 @@
 # Contributing Guide
 
-Thank you for contributing to the Healthcare GitOps Intelligence Platform. This guide covers development workflow, testing requirements, and PR process.
+Quick guide for contributing to this healthcare GitOps demo.
 
 ---
 
@@ -17,38 +17,58 @@ cd gitops2-healthcare-intelligence-git-commit
 # 3. Create feature branch
 git checkout -b feat/your-feature
 
-# 4. Make changes
-# ... edit code ...
+# 4. Make changes and run tests
+make test  # Run all tests
 
-# 5. Run tests
-make test
-
-# 6. Generate compliant commit
+# 5. Generate compliant commit
 python tools/healthcare_commit_generator.py \
   --type feat \
   --scope api \
-  --description "Add new endpoint" \
-  --files services/auth-service/main.go
+  --description "Your change description" \
+  --files path/to/changed/file.go
 
-# 7. Push & create PR
+# 6. Push & create PR
 git push origin feat/your-feature
 ```
 
 ---
 
-## Development Workflow
+## Commit Message Format
 
-### 1. Branch Naming
+Use the healthcare commit generator tool for compliant messages:
 
+```bash
+python tools/healthcare_commit_generator.py \
+  --type TYPE \
+  --scope SCOPE \
+  --description "DESCRIPTION" \
+  --files FILE1 FILE2
 ```
-feat/feature-name      # New features
-fix/bug-description    # Bug fixes
-security/cve-number    # Security patches
-docs/what-changed      # Documentation
-refactor/component     # Code refactoring
+
+**Types**: `feat`, `fix`, `security`, `perf`, `breaking`, `refactor`, `test`, `docs`, `chore`
+
+---
+
+## Testing
+
+```bash
+# Run all tests
+make test
+
+# Run specific test suites
+pytest tests/python/
+go test ./services/...
+opa test policies/healthcare/
 ```
 
-### 2. Commit Requirements
+---
+
+## Pull Request Process
+
+1. Ensure all tests pass
+2. Update documentation if needed
+3. Use descriptive PR title (follows conventional commits)
+4. Reference any related issues
 
 **All commits MUST include**:
 - Conventional Commits format: `type(scope): description`
