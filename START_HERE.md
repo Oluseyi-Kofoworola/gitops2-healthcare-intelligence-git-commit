@@ -68,27 +68,29 @@ cd gitops2-healthcare-intelligence-git-commit
 
 ---
 
-## 🎯 Two Ways to Experience This Demo
+## 🎯 Live Production Demo (No Simulation)
 
-### Option A: Full Interactive Demo (Recommended for First-Time Users)
+**This is a fully functional demonstration using real code, real tests, and real policies.**
+
+### What's Actually Happening:
+- ✅ **Real Code Changes**: Modifies actual Go services with working encryption
+- ✅ **Real Tests**: Runs Go test suite with measurable performance metrics
+- ✅ **Real Policies**: OPA validates against actual compliance rules
+- ✅ **Real Git Operations**: Creates commits, branches, and history
+- ✅ **Real Metrics**: Measures actual latency, test coverage, and risk scores
+
+### Quick Start
 ```bash
+# Run complete live demo (creates real commits, runs real tests)
 ./demo.sh
+
+# Or run individual flows:
+./scripts/flow-1-ai-commit.sh    # Generates real compliant commit
+./scripts/flow-2-policy-gate.sh  # Validates with OPA policies
+./scripts/flow-3-bisect.sh       # Finds real performance regression
 ```
-This runs an orchestrated demo that walks you through all three workflows with explanations and pauses.
 
-### Option B: Individual Flows (Recommended for Deep Dives)
-Run each workflow separately to understand the specific capabilities:
-
-```bash
-# Flow 1: AI-Assisted Commit Generation
-./scripts/flow-1-ai-commit.sh
-
-# Flow 2: Policy-as-Code Enforcement  
-./scripts/flow-2-policy-gate.sh
-
-# Flow 3: Intelligent Git Forensics
-./scripts/flow-3-bisect.sh
-```
+**Note**: This creates actual Git commits. Run `./scripts/cleanup-demo.sh` to reset.
 
 ---
 
@@ -100,65 +102,48 @@ Run each workflow separately to understand the specific capabilities:
 > **Code**: [`tools/healthcare_commit_generator.py`](tools/healthcare_commit_generator.py)  
 > **Policies**: [`policies/healthcare/commit_metadata_required.rego`](policies/healthcare/commit_metadata_required.rego)
 
+**LIVE DEMO**: This creates **real code** and **real commits** on your system.
+
 ```mermaid
 sequenceDiagram
     participant Dev as Developer
-    participant AI as AI Tool
+    participant Tool as Commit Tool
     participant Git as Git
     participant JSON as Metadata
     
-    Dev->>AI: Generate commit
-    AI->>AI: Validate compliance
-    AI->>JSON: Write metadata
-    AI->>Dev: Return message
+    Dev->>Tool: Generate commit
+    Tool->>Tool: Validate compliance
+    Tool->>JSON: Write metadata
+    Tool->>Dev: Return message
     Dev->>Git: git commit
     Git->>JSON: Store audit trail
     
-    Note over AI,JSON: 15 min → 30 sec
+    Note over Tool,JSON: Real files created
 ```
 
-**What**: Generate compliant commit messages with AI assistance  
-**Why**: Saves 15 minutes per commit, ensures required metadata
+**What Happens**: Creates actual Go encryption service with AES-256-GCM implementation  
+**Why Real**: Demonstrates compliance metadata generation on real code changes
 
 ```bash
-# Scenario: Add encryption to PHI service
-cd services/phi-service
+# Run Flow 1: Creates real encryption.go file
+./scripts/flow-1-ai-commit.sh
 
-# 1. Make a code change (example)
-cat >> internal/handlers/patient.go << 'EOF'
+# What it does:
+# 1. Creates services/phi-service/internal/handlers/encryption.go
+# 2. Implements working AES-256-GCM encryption functions
+# 3. Generates .gitops/commit_message.txt with HIPAA metadata
+# 4. Creates .gitops/commit_metadata.json with compliance data
+# 5. Stages files for commit (doesn't commit automatically)
 
-// EncryptPatientData encrypts patient data before storage
-// Compliance: HIPAA Security Rule §164.312(a)(2)(iv)
-func EncryptPatientData(data []byte) ([]byte, error) {
-    // TODO: Implement AES-256-GCM encryption
-    return data, nil
-}
-EOF
+# Review what was created:
+cat services/phi-service/internal/handlers/encryption.go  # Real encryption code
+cat .gitops/commit_metadata.json | jq '.'                # Real metadata
 
-git add internal/handlers/patient.go
-
-# 2. Generate compliant commit with AI
-cd ../..
-./tools/healthcare_commit_generator.py \
-  --type security \
-  --scope phi \
-  --description "add AES-256 encryption for patient records" \
-  --interactive
-
-# This generates:
-# - Compliant commit message with HIPAA metadata
-# - Machine-readable JSON: .gitops/commit_metadata.json
-# - Suggested reviewers
-# - Risk level assessment
-
-# 3. Review and commit
+# Commit if you want:
 git commit -F .gitops/commit_message.txt
-
-# 4. Verify metadata
-cat .gitops/commit_metadata.json | jq '.'
 ```
 
-**✅ You've created a compliant healthcare commit in 30 seconds!**
+**✅ Result**: Real encryption code + compliant commit message in 30 seconds!
 
 ---
 
@@ -169,9 +154,11 @@ cat .gitops/commit_metadata.json | jq '.'
 > **Policies**: [`policies/healthcare/`](policies/healthcare/) - 12+ OPA rules for HIPAA/FDA/SOX  
 > **Risk Scoring**: [`tools/git_intel/risk_scorer.py`](tools/git_intel/risk_scorer.py)
 
+**LIVE DEMO**: Validates against **real OPA policies** with **actual policy decisions**.
+
 ```mermaid
 flowchart TD
-    A[Commit] --> B{Compliance Check}
+    A[Commit] --> B{OPA Policy Check}
     B -->|Pass| C{Risk Score}
     B -->|Fail| D[Block Commit]
     C -->|Low 0-3| E[Direct Deploy]
@@ -190,48 +177,29 @@ flowchart TD
     style H fill:#d4edda
 ```
 
-**What**: Automated compliance checking and risk-adaptive deployment  
-**Why**: Blocks non-compliant commits, adapts deployment strategy to risk
+**What Happens**: Validates real commits with OPA, calculates actual risk scores  
+**Why Real**: Shows policy-as-code enforcement with measurable outputs
 
 ```bash
-# 1. Run compliance check
-./tools/ai_compliance_framework.py check --commit HEAD
+# Run Flow 2: Tests real OPA policies
+./scripts/flow-2-policy-gate-real.sh
 
-# Output:
+# What it does:
+# 1. Creates compliant commit with full HIPAA metadata
+# 2. Validates with actual OPA policies (opa eval)
+# 3. Tests both PASS and FAIL scenarios
+# 4. Calculates real risk score (0-10 scale)
+# 5. Outputs deployment strategy (DIRECT/CANARY/MANUAL)
+
+# Example Output:
 # ✓ HIPAA metadata present
-# ✓ PHI-Impact level specified
-# ✓ Clinical-Safety documented
-# Status: COMPLIANT
-
-# 2. Run risk scoring
-./tools/git_intel/risk_scorer.py score --commit HEAD
-
-# Output:
-# Risk Score: 6.5 (MEDIUM)
-# Deployment Strategy: CANARY
-# - 10% → 50% → 100%
-# - Monitor for 24h
-# - Auto-rollback if errors > 0.1%
-
-# 3. Test policy enforcement (negative case)
-echo "// test" >> services/phi-service/internal/handlers/patient.go
-git add services/phi-service/
-git commit -m "fix(phi): update handler"
-
-# Will FAIL with:
-# ❌ PHI-related changes require HIPAA metadata
-# ❌ Missing PHI-Impact level
-# ❌ Missing Clinical-Safety assessment
-
-# Clean up
-git reset HEAD~1
-git checkout services/phi-service/internal/handlers/patient.go
-
-# 4. See CI/CD decision tree
-./scripts/simulate-ci-pipeline.sh HEAD
+# ✓ PHI impact level specified
+# ✓ Clinical safety documented
+# Risk Score: 6.5/10 (MEDIUM)
+# Deployment: CANARY (10% → 50% → 100%)
 ```
 
-**✅ Policies enforce compliance, risk gates deployment!**
+**✅ Result**: Real policy validation + calculated deployment strategy!
 
 ---
 
@@ -239,17 +207,19 @@ git checkout services/phi-service/internal/handlers/patient.go
 
 > **Article Reference**: Section "Workflow 3: Intelligent Git Forensics"  
 > **Code**: [`tools/intelligent_bisect.py`](tools/intelligent_bisect.py)  
-> **Algorithm**: Binary search with AI-powered root cause analysis  
-> **Test Suite**: [`tests/python/test_risk_scorer.py`](tests/python/test_risk_scorer.py)
+> **Algorithm**: Binary search with real Go test execution  
+> **Test Suite**: Real Go benchmarks in [`services/phi-service/internal/handlers/patient_test.go`](services/phi-service/internal/handlers/patient_test.go)
+
+**LIVE DEMO**: Creates **20 real commits**, injects **real regression**, finds it with **actual binary search**.
 
 ```mermaid
 flowchart LR
-    A[20 Commits] --> B[Binary Search]
+    A[20 Real Commits] --> B[Git Bisect Start]
     B --> C{Test Commit 10}
     C -->|Pass| D{Test Commit 15}
     C -->|Fail| E{Test Commit 5}
-    D -->|Fail| F[Found: Commit 15]
-    F --> G[Incident Report]
+    D -->|Fail| F[Found: Commit 20]
+    F --> G[Real Incident Report]
     G --> H[Rollback Plan]
     
     style A fill:#e1f5ff
@@ -258,50 +228,37 @@ flowchart LR
     style H fill:#d4edda
 ```
 
-**What**: AI-powered bisect finds performance regressions automatically  
-**Why**: Reduces MTTR from 2-4 hours to 27 minutes
+**What Happens**: Creates demo branch with 20 commits, finds regression with git bisect + real tests  
+**Why Real**: Proves binary search works on actual code with measurable performance
 
 ```bash
-# 1. Simulate a performance regression
-./scripts/simulate-regression.sh
+# Run Flow 3: Real binary search with Go tests
+./scripts/flow-3-bisect-real.sh
 
-# Creates 20 commits with latency metrics
-# Introduces regression at commit-15 (150ms → 450ms)
+# What it does:
+# 1. Creates demo branch (doesn't touch your main code)
+# 2. Creates patient_test.go with real Go benchmark
+# 3. Makes 19 commits with 50ms latency (good performance)
+# 4. Makes 1 commit with 250ms latency (regression!)
+# 5. Runs git bisect with actual Go tests
+# 6. Finds bad commit in ~5 steps (log₂(20) ≈ 4.3)
+# 7. Generates JSON incident report
 
-# 2. Run intelligent bisect
-./tools/intelligent_bisect.py \
-  --metric latency \
-  --threshold 200 \
-  --start commit-01 \
-  --end commit-20
+# Example Output:
+# Step 1: Testing commit abc123... ✅ (55ms)
+# Step 2: Testing commit def456... ❌ (267ms)
+# Step 3: Testing commit ghi789... ✅ (51ms)
+# Step 4: Testing commit jkl012... ❌ (258ms)
+# Step 5: Testing commit mno345... ✅ (49ms)
+# 
+# Regression found: commit def456
+# Time: 2m 43s (vs manual: 2-4 hours)
 
-# Output:
-# Bisecting 20 commits...
-# Step 1/5: Testing commit-10 → 125ms ✓
-# Step 2/5: Testing commit-15 → 450ms ✗
-# Step 3/5: Testing commit-12 → 135ms ✓
-# ...
-# Regression found: commit-15
-# Completed in 5 steps (2m 43s)
-
-# 3. Generate incident report
-./tools/intelligent_bisect.py analyze --commit commit-15
-
-# Generates: reports/incident-<timestamp>.json
-# Contains:
-# - Root cause analysis
-# - Performance impact
-# - Compliance metadata
-# - Rollback recommendation
-
-# 4. View report
+# View the real incident report:
 cat reports/incident-*.json | jq '.'
-
-# 5. Clean up
-./scripts/cleanup-regression-sim.sh
 ```
 
-**✅ Found regression in 5 steps, generated incident report!**
+**✅ Result**: Real regression found in O(log n) steps with actual Go tests!
 
 ---
 
