@@ -8,8 +8,16 @@ openai>=1.59.0  # OpenAI API client - latest stable version
 pyyaml>=6.0.2   # YAML parser - fixes CVE-2020-14343
 requests>=2.32.3  # HTTP library - fixes multiple CVEs
 
+# CLI & UX Dependencies
+click>=8.1.0  # CLI framework for git_policy, ai_readiness, git_forensics
+rich>=13.9.0  # Rich terminal formatting and progress bars
+
+# Git Integration
+gitpython>=3.1.0  # Git repository interaction for forensics
+
 # Security & Compliance
 cryptography>=44.0.0  # Cryptographic recipes - latest security fixes
+pydantic>=2.10.0  # Data validation for config files
 
 # Testing & Development
 pytest>=8.3.4  # Testing framework

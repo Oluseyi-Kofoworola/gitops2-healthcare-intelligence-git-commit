@@ -1,0 +1,149 @@
+# AI Readiness Manifest for Azure Agent & GitHub Copilot
+# This file defines how AI tools should interact with this healthcare GitOps repository
+
+version: "1.0"
+
+project:
+  name: "Healthcare GitOps Intelligence Platform"
+  type: "healthcare-gitops"
+  compliance_frameworks:
+    - HIPAA
+    - FDA-21-CFR-Part-11
+    - SOC2-Type-II
+    - HITRUST-CSF
+
+# Data classification for PHI protection
+data_classification:
+  phi_sensitive_paths:
+    - "services/phi-service/**"
+    - "services/ehr-auth-service/**"
+    - "services/medical-device/**"
+    - "tools/synthetic_phi_generator.py"
+    - "tests/integration/phi_*.py"
+  
+  pii_paths:
+    - "services/auth-service/**"
+    - "services/payment-gateway/**"
+  
+  public_safe_paths:
+    - "docs/**"
+    - "scripts/**"
+    - "policies/**"
+    - "README.md"
+
+# AI behavior policies
+ai_policies:
+  code_generation:
+    allow_in_phi_paths: false
+    require_human_review_for:
+      - "services/phi-service/**"
+      - "services/payment-gateway/**"
+      - "policies/healthcare/**"
+    
+  logging:
+    redact_phi: true
+    redact_pii: true
+    safe_log_levels: ["INFO", "WARN", "ERROR"]
+    forbidden_log_content:
+      - "patient_id"
+      - "ssn"
+      - "medical_record_number"
+      - "credit_card"
+  
+  encryption:
+    enforce_at_rest: true
+    enforce_in_transit: true
+    approved_algorithms:
+      - "AES-256-GCM"
+      - "RSA-4096"
+      - "ChaCha20-Poly1305"
+
+# Allowed AI tools and their permissions
+allowed_ai_tools:
+  - name: "github-copilot"
+    permissions:
+      - "code-completion"
+      - "code-explanation"
+    restrictions:
+      - "no-phi-data-in-prompts"
+  
+  - name: "azure-openai"
+    permissions:
+      - "commit-message-generation"
+      - "code-review-assistance"
+    restrictions:
+      - "no-phi-data-in-context"
+      - "audit-all-requests"
+
+# Business domains and ownership
+business_domains:
+  ehr:
+    paths:
+      - "services/ehr-auth-service/**"
+    owners: ["@ehr-team"]
+    compliance: ["HIPAA", "HITRUST"]
+  
+  payments:
+    paths:
+      - "services/payment-gateway/**"
+    owners: ["@payments-team"]
+    compliance: ["PCI-DSS", "SOC2"]
+  
+  medical_devices:
+    paths:
+      - "services/medical-device/**"
+    owners: ["@device-team"]
+    compliance: ["FDA-21-CFR-Part-11", "IEC-62304"]
+
+# AI-assisted commit message templates
+commit_templates:
+  security_fix:
+    format: "security({scope}): {description} {ticket}"
+    example: "security(auth): patch JWT validation bypass CVE-2025-12345 EHR-123"
+    require_ticket: true
+  
+  breaking_change:
+    format: "{type}({scope})!: {description} {ticket}"
+    example: "feat(api)!: migrate to v2 authentication EHR-456"
+    require_dual_approval: true
+  
+  phi_change:
+    format: "{type}(phi): {description} {ticket}"
+    example: "fix(phi): correct encryption at rest for MRN storage EHR-789"
+    require_compliance_review: true
+
+# AI readiness checks (run by src/ai_readiness/cli.py)
+readiness_checks:
+  - name: "phi_logging_check"
+    severity: "critical"
+    description: "Ensure no PHI in log statements"
+  
+  - name: "encryption_at_rest"
+    severity: "critical"
+    description: "Verify all PHI storage uses approved encryption"
+  
+  - name: "ai_prompt_safety"
+    severity: "high"
+    description: "Check for PHI in AI tool prompts/context"
+  
+  - name: "third_party_dependencies"
+    severity: "medium"
+    description: "Audit dependencies for HIPAA compliance"
+
+# Git forensics configuration
+forensics:
+  critical_paths:
+    - path: "services/phi-service/**"
+      weight: 10
+      require_approval_from: ["@security-team", "@compliance-team"]
+    
+    - path: "services/payment-gateway/**"
+      weight: 8
+      require_approval_from: ["@payments-team"]
+  
+  impact_scoring:
+    algorithm: "semantic_weighted"
+    thresholds:
+      high_risk: 7.0
+      medium_risk: 4.0
+      low_risk: 0.0

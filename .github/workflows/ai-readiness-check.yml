@@ -1,0 +1,70 @@
+name: AI Readiness Check
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 1'  # Weekly on Mondays
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  ai-readiness-scan:
+    name: AI Readiness & PHI Compliance Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run AI readiness scan
+        id: scan
+        run: |
+          python -m src.ai_readiness.cli --format json > ai-readiness-report.json
+          python -m src.ai_readiness.cli --format markdown > ai-readiness-report.md
+        continue-on-error: true
+      
+      - name: Upload AI readiness report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-readiness-report
+          path: |
+            ai-readiness-report.json
+            ai-readiness-report.md
+          retention-days: 90
+      
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('ai-readiness-report.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.name,
+              body: `## 🤖 AI Readiness Scan Results\n\n${report}`
+            });
+      
+      - name: Fail on critical violations
+        if: steps.scan.outcome == 'failure'
+        run: |
+          echo "❌ AI readiness scan failed due to critical violations"
+          exit 1

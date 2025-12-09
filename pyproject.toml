@@ -51,6 +51,16 @@ dev = [
 ]
 
 [project.scripts]
+# Git policy validation (used by .husky/commit-msg and GitHub Actions)
+git-policy-validate = "src.git_policy.cli:main"
+
+# Git forensics and impact scoring
+git-forensics-report = "src.git_forensics.cli:main"
+
+# AI readiness scanning for PHI compliance
+ai-readiness-scan = "src.ai_readiness.cli:main"
+
+[project.scripts]
 gitops-health = "gitops_health.cli:main"
 
 # Legacy compatibility scripts
