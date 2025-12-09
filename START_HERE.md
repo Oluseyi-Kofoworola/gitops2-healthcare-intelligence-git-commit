@@ -52,15 +52,42 @@ go version         # Should be 1.22+
 git --version      # Should be 2.30+
 opa version        # Install: brew install opa
 
-# 2. Install Python tools
-pip install -e tools/
+# 2. Clone and install
+git clone https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit.git
+cd gitops2-healthcare-intelligence-git-commit
+./setup.sh
 
-# 3. Verify installation
-gitops-health --version
-# Expected: gitops-health version 2.0.0
+# 3. Run interactive demo (all three flows)
+./demo.sh
 
-# 4. Run validation
-./scripts/validate-setup.sh
+# Or run individual flows:
+# ./scripts/flow-1-ai-commit.sh    # AI-assisted commits
+# ./scripts/flow-2-policy-gate.sh  # Policy enforcement
+# ./scripts/flow-3-bisect.sh       # Intelligent forensics
+```
+
+---
+
+## 🎯 Two Ways to Experience This Demo
+
+### Option A: Full Interactive Demo (Recommended for First-Time Users)
+```bash
+./demo.sh
+```
+This runs an orchestrated demo that walks you through all three workflows with explanations and pauses.
+
+### Option B: Individual Flows (Recommended for Deep Dives)
+Run each workflow separately to understand the specific capabilities:
+
+```bash
+# Flow 1: AI-Assisted Commit Generation
+./scripts/flow-1-ai-commit.sh
+
+# Flow 2: Policy-as-Code Enforcement  
+./scripts/flow-2-policy-gate.sh
+
+# Flow 3: Intelligent Git Forensics
+./scripts/flow-3-bisect.sh
 ```
 
 ---
