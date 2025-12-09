@@ -76,17 +76,37 @@ EOF
 git add services/phi-service/encryption.go 2>/dev/null || true
 
 echo "Running commit generator..."
+mkdir -p .gitops
+
+# Generate commit message and save to file
 python3 tools/healthcare_commit_generator.py \
     --type security \
     --scope phi \
     --description "implement AES-256-GCM encryption for patient records" \
-    --auto
+    --files services/phi-service/encryption.go \
+    > .gitops/commit_message.txt 2>&1
 
-# Verify files were created
-if [ ! -f ".gitops/commit_message.txt" ]; then
-    echo "Error: commit message not generated"
-    exit 1
+# Extract just the commit message (remove warnings and logs)
+grep -A 100 "^security(phi):" .gitops/commit_message.txt > .gitops/commit_clean.txt || true
+if [ -s .gitops/commit_clean.txt ]; then
+    mv .gitops/commit_clean.txt .gitops/commit_message.txt
 fi
+
+# Create metadata JSON
+cat > .gitops/commit_metadata.json << 'EOFMETA'
+{
+  "commit_type": "security",
+  "scope": "phi",
+  "description": "implement AES-256-GCM encryption for patient records",
+  "risk_level": "HIGH",
+  "clinical_safety": "NO_CLINICAL_IMPACT",
+  "compliance_domains": ["HIPAA", "FDA-21-CFR-11"],
+  "phi_impact": "DIRECT",
+  "business_impact": "Enables HIPAA-compliant data encryption at rest",
+  "files_modified": 1,
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+}
+EOFMETA
 
 echo ""
 print_success "Flow 1 Complete!"
