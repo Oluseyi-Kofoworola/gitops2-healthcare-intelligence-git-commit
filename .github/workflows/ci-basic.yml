@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  GO_VERSION: '1.22'
+  GO_VERSION: '1.23'
   PYTHON_VERSION: '3.11'
 
 jobs:
@@ -107,7 +107,7 @@ jobs:
       
       - name: Check required documentation
         run: |
-          docs=(README.md START_HERE.md DEPLOYMENT.md COMPLIANCE.md CONTRIBUTING.md SECURITY.md)
+          docs=(README.md START_HERE.md DEPLOYMENT.md COMPLIANCE.md CONTRIBUTING.md ROADMAP.md)
           for doc in "${docs[@]}"; do
             if [ ! -f "$doc" ]; then
               echo "❌ Missing: $doc"
