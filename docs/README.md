@@ -111,6 +111,6 @@ All documentation is now consolidated in root directory:
 
 ## Support
 
-- **Issues**: https://github.com/YOUR_ORG/gitops2-healthcare-intelligence/issues
+- **Issues**: https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit/issues
 - **Security**: security@your-org.com
 

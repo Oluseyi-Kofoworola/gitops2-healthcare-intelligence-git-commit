@@ -17,8 +17,8 @@ Quick reference for deploying the Healthcare GitOps Intelligence Platform to pro
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR_ORG/gitops2-healthcare-intelligence.git
-cd gitops2-healthcare-intelligence
+git clone https://github.com/YOUR_ORG/gitops2-healthcare-intelligence-git-commit.git
+cd gitops2-healthcare-intelligence-git-commit
 
 # Run setup
 ./setup.sh
@@ -387,6 +387,6 @@ python tools/ai_compliance_framework.py audit-report \
 
 ## Support
 
-- **Issues**: https://github.com/YOUR_ORG/gitops2-healthcare-intelligence/issues
+- **Issues**: https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit/issues
 - **Documentation**: See [README.md](README.md)
 - **Security**: security@your-org.com

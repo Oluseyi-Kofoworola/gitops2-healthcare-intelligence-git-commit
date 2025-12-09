@@ -13,10 +13,25 @@ AI-powered compliance automation for healthcare software. Generate HIPAA/FDA/SOX
 
 ```bash
 # Clone and run
-git clone https://github.com/okofoworola_microsoft/gitops2-healthcare-intelligence.git
-cd gitops2-healthcare-intelligence
+git clone https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit.git
+cd gitops2-healthcare-intelligence-git-commit
 ./setup.sh && ./demo.sh
 ```
+
+---
+
+## Relationship to Article
+
+This repository is the **executable reference implementation** for the Medium article:
+
+**📖 [GitOps Intelligence for Healthcare: AI-Powered Compliance Automation](https://medium.com/@your-handle/gitops-healthcare-intelligence)**
+
+The article describes three workflows that **you can run from this repo**:
+1. **AI-Assisted Commits** → See [`tools/healthcare_commit_generator.py`](tools/healthcare_commit_generator.py)
+2. **Policy-as-Code Enforcement** → See [`policies/healthcare/`](policies/healthcare/)
+3. **Intelligent Git Forensics** → See [`tools/intelligent_bisect.py`](tools/intelligent_bisect.py)
+
+**Try the golden path**: Follow [START_HERE.md](START_HERE.md) for a 30-minute hands-on walkthrough with exact commands.
 
 ---
 
@@ -46,11 +61,12 @@ medical-device       → FDA 21 CFR Part 11 compliance
 synthetic-phi        → HIPAA-compliant test data
 ```
 
-### 🧪 Enterprise Testing (150+ tests, 95%+ coverage)
-- Unit, Integration, E2E, Contract (Pact)
-- Load testing (1,000+ concurrent users)
-- Chaos engineering (Chaos Mesh)
-- Security scans (OWASP ZAP, SSL/TLS, JWT)
+### 🧪 Enterprise Testing
+- **Core Test Suite**: Unit, Integration, E2E, Contract (Pact)
+- **Golden Path Tests**: Validates AI-commit → Policy-gate → Forensics workflow
+- **Security Scans**: OWASP ZAP, secret detection, SSL/TLS, JWT validation
+- **Policy Validation**: OPA regression tests for all compliance rules
+- **2,465 LoC of test coverage** across Python and Go services
 
 ### 🔍 Intelligent Forensics
 - Automated git bisect for root cause analysis
@@ -164,7 +180,8 @@ make coverage-html && open coverage.html
 
 ```bash
 # 1. Fork & clone
-git clone https://github.com/okofoworola_microsoft/gitops2-healthcare-intelligence.git
+git clone https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit.git
+cd gitops2-healthcare-intelligence-git-commit
 
 # 2. Create branch
 git checkout -b feat/your-feature
@@ -189,7 +206,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 |--------|-------|
 | **Services** | 5 microservices |
 | **Code** | 37,600+ LoC (Go/Python) |
-| **Tests** | 150+ (8 layers, 95%+ coverage) |
+| **Tests** | 2,465 LoC across 8 test layers |
 | **Policies** | 12+ OPA healthcare rules |
 | **Compliance** | HIPAA, FDA 21 CFR 11, SOX |
 | **Time Savings** | 95% (30 sec vs 15 min commits) |
@@ -220,8 +237,8 @@ MIT License - see [LICENSE](LICENSE)
 
 ## Support
 
-- **[GitHub Issues](https://github.com/okofoworola_microsoft/gitops2-healthcare-intelligence/issues)** - Bugs & features
-- **[GitHub Discussions](https://github.com/okofoworola_microsoft/gitops2-healthcare-intelligence/discussions)** - Q&A
+- **[GitHub Issues](https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit/issues)** - Bugs & features
+- **[GitHub Discussions](https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit/discussions)** - Q&A
 - **[ROADMAP.md](ROADMAP.md)** - Future development
 
 ---

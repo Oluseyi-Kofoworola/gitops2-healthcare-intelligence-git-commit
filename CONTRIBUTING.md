@@ -8,8 +8,8 @@ Thank you for contributing to the Healthcare GitOps Intelligence Platform. This 
 
 ```bash
 # 1. Fork & clone
-git clone https://github.com/YOUR_USERNAME/gitops2-healthcare-intelligence.git
-cd gitops2-healthcare-intelligence
+git clone https://github.com/YOUR_USERNAME/gitops2-healthcare-intelligence-git-commit.git
+cd gitops2-healthcare-intelligence-git-commit
 
 # 2. Setup environment
 ./setup.sh
@@ -319,11 +319,11 @@ python tools/healthcare_commit_generator.py \
 ### Before Asking:
 1. Check [README.md](README.md)
 2. Review [DEPLOYMENT.md](DEPLOYMENT.md)
-3. Search [GitHub Issues](https://github.com/YOUR_ORG/gitops2-healthcare-intelligence/issues)
+3. Search [GitHub Issues](https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit/issues)
 
 ### Where to Ask:
-- **General questions**: [GitHub Discussions](https://github.com/YOUR_ORG/gitops2-healthcare-intelligence/discussions)
-- **Bugs**: [GitHub Issues](https://github.com/YOUR_ORG/gitops2-healthcare-intelligence/issues)
+- **General questions**: [GitHub Discussions](https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit/discussions)
+- **Bugs**: [GitHub Issues](https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit/issues)
 - **Security**: security@your-org.com (private)
 - **Compliance**: compliance@your-org.com
 

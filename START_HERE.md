@@ -1,8 +1,24 @@
 # START HERE: 30-Minute Walkthrough
 
-Welcome! This guide walks you through **three flagship flows** in 30-60 minutes.
+Welcome! This guide walks you through **three flagship flows** described in the Medium article **[GitOps Intelligence for Healthcare: AI-Powered Compliance Automation](https://medium.com/@your-handle/gitops-healthcare-intelligence)**.
+
+Each workflow below maps directly to code in this repository. You'll see exactly how the concepts work in practice.
 
 **Prerequisites**: Python 3.10+, Go 1.22+, Git, OPA CLI
+
+---
+
+## How This Repo Powers the Article
+
+| Article Section | Code Location | What You'll Run |
+|----------------|---------------|-----------------|
+| **Workflow 1: AI-Assisted Commits** | [`tools/healthcare_commit_generator.py`](tools/healthcare_commit_generator.py) | Generate HIPAA-compliant commits in 30 sec |
+| **Workflow 2: Policy-as-Code** | [`policies/healthcare/`](policies/healthcare/) | Validate commits against 12+ OPA rules |
+| **Workflow 3: Intelligent Forensics** | [`tools/intelligent_bisect.py`](tools/intelligent_bisect.py) | Auto-detect regressions with binary search |
+| **GitHub Copilot Integration** | [`.copilot/enterprise-git.yml`](.copilot/enterprise-git.yml) | Team coding standards enforcement |
+| **Secret Detection** | [`tools/secret_sanitizer.py`](tools/secret_sanitizer.py) | Prevent PHI/PII leaks in commits |
+
+**The Golden Path**: Follow all three flows below to experience the complete system end-to-end.
 
 ---
 
@@ -52,6 +68,10 @@ gitops-health --version
 ## The Three Flagship Flows
 
 ### Flow 1: AI-Assisted Healthcare Commit (10 min)
+
+> **Article Reference**: Section "Workflow 1: AI-Assisted Compliance Commits"  
+> **Code**: [`tools/healthcare_commit_generator.py`](tools/healthcare_commit_generator.py)  
+> **Policies**: [`policies/healthcare/commit_metadata_required.rego`](policies/healthcare/commit_metadata_required.rego)
 
 ```mermaid
 sequenceDiagram
@@ -116,6 +136,11 @@ cat .gitops/commit_metadata.json | jq '.'
 ---
 
 ### Flow 2: Policy + Risk Gate (10 min)
+
+> **Article Reference**: Section "Workflow 2: Policy-as-Code Enforcement"  
+> **Code**: [`tools/ai_compliance_framework.py`](tools/ai_compliance_framework.py)  
+> **Policies**: [`policies/healthcare/`](policies/healthcare/) - 12+ OPA rules for HIPAA/FDA/SOX  
+> **Risk Scoring**: [`tools/git_intel/risk_scorer.py`](tools/git_intel/risk_scorer.py)
 
 ```mermaid
 flowchart TD
@@ -184,6 +209,11 @@ git checkout services/phi-service/internal/handlers/patient.go
 ---
 
 ### Flow 3: Intelligent Forensics (10 min)
+
+> **Article Reference**: Section "Workflow 3: Intelligent Git Forensics"  
+> **Code**: [`tools/intelligent_bisect.py`](tools/intelligent_bisect.py)  
+> **Algorithm**: Binary search with AI-powered root cause analysis  
+> **Test Suite**: [`tests/python/test_risk_scorer.py`](tests/python/test_risk_scorer.py)
 
 ```mermaid
 flowchart LR
@@ -277,10 +307,12 @@ You've experienced all three flagship flows:
 
 ## Next Steps
 
-### Explore the Code
-- **Tools**: `tools/` - See how each tool works
-- **Policies**: `policies/` - Understand OPA rules
-- **Services**: `services/phi-service/` - Healthcare patterns
+### Explore the Code (Article Deep Dive)
+- **AI Commit Generator**: [`tools/healthcare_commit_generator.py`](tools/healthcare_commit_generator.py) - See the LLM integration
+- **OPA Policies**: [`policies/healthcare/`](policies/healthcare/) - All 12+ compliance rules
+- **Secret Detection**: [`tools/secret_sanitizer.py`](tools/secret_sanitizer.py) - PHI/PII leak prevention
+- **Services**: [`services/phi-service/`](services/phi-service/) - HIPAA encryption patterns
+- **GitHub Copilot Config**: [`.copilot/enterprise-git.yml`](.copilot/enterprise-git.yml) - Team guidance rules
 
 ### Read Documentation
 - [docs/README.md](docs/README.md) - System architecture
@@ -290,7 +322,11 @@ You've experienced all three flagship flows:
 
 ### Run Tests
 ```bash
-pytest tests/python/ -v        # Python tests
+# Golden path tests (validates all 3 workflows)
+pytest tests/python/test_golden_path.py -v
+
+# All test suites
+pytest tests/python/ -v        # Python tests (2,465 LoC coverage)
 go test ./services/... -v      # Go tests
 ./tests/e2e/run-all-flows.sh   # E2E tests
 ```
@@ -327,8 +363,9 @@ go build ./cmd/phi-service
 
 ## Getting Help
 
-- **Docs**: [docs/](docs/) folder
-- **Issues**: [GitHub Issues](https://github.com/okofoworola_microsoft/gitops2-healthcare-intelligence/issues)
+- **Article**: [GitOps Intelligence for Healthcare](https://medium.com/@your-handle/gitops-healthcare-intelligence) - Conceptual overview
+- **Docs**: [docs/](docs/) folder - Technical deep dive
+- **Issues**: [GitHub Issues](https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit/issues)
 - **Examples**: See [DEPLOYMENT.md](DEPLOYMENT.md) and [COMPLIANCE.md](COMPLIANCE.md)
 
 ---

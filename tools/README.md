@@ -365,6 +365,6 @@ echo "✓ Pre-commit checks passed"
 
 ## Support
 
-- **Tool Issues**: https://github.com/YOUR_ORG/gitops2-healthcare-intelligence/issues
+- **Tool Issues**: https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit/issues
 - **API Docs**: Run `python tools/TOOL_NAME.py --help`
 - **Examples**: See [docs/README.md](../docs/README.md)
