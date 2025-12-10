@@ -1,18 +1,33 @@
 #!/usr/bin/env sh
 
-# Local policy validation (WHY: surface OPA deny reasons before CI)
-SCRIPT_DIR="$(dirname "$0")"
+# Healthcare GitOps Commit Policy Validation
+# Enforces Conventional Commits + HIPAA/FDA/SOX compliance codes
+# WHY: Surface policy violations before CI (faster feedback loop)
+
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-VALIDATOR="$REPO_ROOT/scripts/validate-commit.sh"
 MSG_FILE="$1"
 
-if [ -f "$VALIDATOR" ]; then
-  bash "$VALIDATOR" "$MSG_FILE" || {
-    echo "[commit-msg] OPA validation failed; blocking commit." >&2
-    exit 1
-  }
+# Try Python 3 first, fallback to python
+PYTHON_CMD="python3"
+if ! command -v python3 &> /dev/null; then
+  PYTHON_CMD="python"
 fi
 
-# Commitlint enforcement (disabled - OPA validation provides enterprise compliance)
-# npx commitlint --edit "$1"
-# Deprecated husky sourcing lines removed per upgrade guidance.
+# Activate virtual environment if it exists
+if [ -f "$REPO_ROOT/.venv-mac/bin/activate" ]; then
+  . "$REPO_ROOT/.venv-mac/bin/activate"
+elif [ -f "$REPO_ROOT/.venv/bin/activate" ]; then
+  . "$REPO_ROOT/.venv/bin/activate"
+fi
+
+# Run Python policy validator
+cd "$REPO_ROOT"
+$PYTHON_CMD -m src.git_policy.cli "$MSG_FILE" || {
+  echo "" >&2
+  echo "💡 TIP: Use these formats:" >&2
+  echo "  feat(auth): add MFA support EHR-123" >&2
+  echo "  fix(phi): correct encryption at rest HIPAA-456" >&2
+  echo "  security(api): patch CVE-2025-12345 SEC-789" >&2
+  echo "" >&2
+  exit 1
+}
