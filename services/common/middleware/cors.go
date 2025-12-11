@@ -55,7 +55,7 @@ func getAllowedOrigins() []string {
 			"http://localhost:8080",
 		}
 	}
-	
+
 	origins := strings.Split(originsEnv, ",")
 	for i := range origins {
 		origins[i] = strings.TrimSpace(origins[i])
@@ -78,38 +78,38 @@ func CORSMiddleware(config *CORSConfig) func(http.Handler) http.Handler {
 	if config == nil {
 		config = DefaultCORSConfig()
 	}
-	
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			origin := r.Header.Get("Origin")
-			
+
 			// Check if origin is allowed
 			if origin != "" && config.isOriginAllowed(origin) {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 			}
-			
+
 			// Set other CORS headers
 			w.Header().Set("Access-Control-Allow-Methods", strings.Join(config.AllowedMethods, ", "))
 			w.Header().Set("Access-Control-Allow-Headers", strings.Join(config.AllowedHeaders, ", "))
-			
+
 			if len(config.ExposedHeaders) > 0 {
 				w.Header().Set("Access-Control-Expose-Headers", strings.Join(config.ExposedHeaders, ", "))
 			}
-			
+
 			if config.AllowCredentials {
 				w.Header().Set("Access-Control-Allow-Credentials", "true")
 			}
-			
+
 			if config.MaxAge > 0 {
 				w.Header().Set("Access-Control-Max-Age", string(rune(config.MaxAge)))
 			}
-			
+
 			// Handle preflight requests
 			if r.Method == http.MethodOptions {
 				w.WriteHeader(http.StatusOK)
 				return
 			}
-			
+
 			// Call next handler
 			next.ServeHTTP(w, r)
 		})
@@ -125,6 +125,6 @@ func StrictCORSMiddleware(allowedOrigins []string) func(http.Handler) http.Handl
 		AllowCredentials: false,
 		MaxAge:           3600, // 1 hour
 	}
-	
+
 	return CORSMiddleware(config)
 }

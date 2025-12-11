@@ -46,6 +46,30 @@ tmp/
 temp/
 *.tmp
 
+# Secrets and API Keys (CRITICAL - DO NOT COMMIT)
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+secrets.*
+*_secrets.*
+openai_key.txt
+api_key.txt
+.openai_api_key
+OPENAI_API_KEY
+
+# Incident Reports (May contain sensitive data)
+incident_report_*.json
+incident_report_*.md
+
+# GitOps Configuration (May contain secrets)
+.gitops/config.json
+config/**/production*.yml
+config/**/production*.yaml
+
 # Node
 node_modules/
 package-lock.json

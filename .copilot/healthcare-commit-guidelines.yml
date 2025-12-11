@@ -1,0 +1,163 @@
+# GitHub Copilot Healthcare Commit Guidelines
+# GitOps 2.0 AI-Native Engineering Configuration
+# 
+# This file configures GitHub Copilot to generate structured, 
+# compliance-aware commit messages automatically for healthcare software.
+
+version: "1.0"
+name: "GitOps 2.0 Healthcare Intelligence"
+description: "AI-generated commit messages with HIPAA, FDA, and SOX compliance metadata"
+
+# Commit Message Structure
+# Enforces machine-readable, audit-ready commit intelligence
+structure:
+  format: "conventional-commits-healthcare"
+  required_sections:
+    - type
+    - scope
+    - description
+    - business_impact
+    - risk_level
+    - clinical_safety
+    - compliance_domains
+    - reviewers
+    - testing
+
+# Commit Types
+# Healthcare-specific commit categories
+types:
+  feat: "New feature or capability"
+  fix: "Bug fix or defect correction"
+  security: "Security enhancement or vulnerability fix"
+  perf: "Performance optimization"
+  breaking: "Breaking change requiring migration"
+  chore: "Maintenance or tooling update"
+  docs: "Documentation update"
+  test: "Test addition or modification"
+  refactor: "Code refactoring without behavior change"
+
+# Scopes
+# Healthcare domain boundaries
+scopes:
+  phi: "Protected Health Information processing"
+  auth: "Authentication and authorization"
+  clinical: "Clinical workflows and decision support"
+  device: "Medical device integration"
+  payment: "Financial transactions (SOX)"
+  audit: "Audit logging and compliance"
+  encryption: "Data encryption and key management"
+  api: "API endpoints and contracts"
+  ui: "User interface"
+  infra: "Infrastructure and deployment"
+
+# Risk Assessment Rules
+# Automatic risk level determination based on file patterns
+risk_patterns:
+  CRITICAL:
+    - "services/phi-service/**"
+    - "services/medical-device/**"
+    - "services/auth-service/internal/jwt/**"
+    - "**/*encryption*"
+    - "**/*phi*"
+  HIGH:
+    - "services/payment-gateway/**"
+    - "services/auth-service/**"
+    - "policies/**/*.rego"
+    - "**/*security*"
+  MEDIUM:
+    - "services/*/api/**"
+    - ".github/workflows/**"
+    - "tools/**"
+  LOW:
+    - "docs/**"
+    - "README.md"
+    - "**/*.md"
+    - "tests/**"
+
+# Clinical Safety Assessment
+# Determines patient impact level
+clinical_safety_rules:
+  REQUIRES_CLINICAL_REVIEW:
+    - "services/medical-device/**"
+    - "**/*diagnostic*"
+    - "**/*clinical-decision*"
+  CLINICAL_VALIDATION_NEEDED:
+    - "services/phi-service/**"
+    - "**/*patient*"
+  NO_CLINICAL_IMPACT:
+    - "docs/**"
+    - "tools/**"
+    - ".github/**"
+    - "**/*.md"
+
+# Compliance Domain Detection
+# Maps file paths to regulatory frameworks
+compliance_mapping:
+  HIPAA:
+    - "services/phi-service/**"
+    - "services/auth-service/**"
+    - "**/*phi*"
+    - "**/*patient*"
+    - "**/*encryption*"
+  FDA:
+    - "services/medical-device/**"
+    - "**/*device*"
+    - "**/*diagnostic*"
+    - "**/*510k*"
+  SOX:
+    - "services/payment-gateway/**"
+    - "**/*financial*"
+    - "**/*payment*"
+    - "**/*transaction*"
+  GDPR:
+    - "services/phi-service/**"
+    - "**/*privacy*"
+    - "**/*consent*"
+  PCI-DSS:
+    - "services/payment-gateway/**"
+    - "**/*card*"
+    - "**/*payment*"
+
+# Required Reviewers
+# Automatic reviewer assignment based on compliance domains
+reviewer_mapping:
+  HIPAA:
+    - "@privacy-officer"
+    - "@security-team"
+  FDA:
+    - "@clinical-affairs"
+    - "@regulatory-team"
+  SOX:
+    - "@audit-team"
+    - "@finance-security"
+  CRITICAL_RISK:
+    - "@ciso"
+    - "@compliance-team"
+  HIGH_RISK:
+    - "@security-team"
+    - "@senior-engineers"
+
+# AI Generation Prompts
+# Templates for GitHub Copilot to generate commit messages
+prompts:
+  system_context: |
+    You are an AI assistant specializing in healthcare compliance and GitOps 2.0 engineering.
+    Generate structured, machine-readable commit messages that serve as compliance artifacts.
+    Every commit must be audit-ready and contain all required regulatory metadata.
+
+  commit_template: |
+    {type}({scope}): {description}
+
+    Business Impact: {business_impact}
+    Risk Level: {risk_level}
+    Clinical Safety: {clinical_safety}
+    Compliance: {compliance_domains}
+
+    {compliance_specific_sections}
+
+    Testing: {testing_required}
+    Validation: {validation_status}
+    Reviewers: {required_reviewers}
+
+    Audit Trail: {files_modified} files modified at {timestamp}
+    AI Model: {ai_model}
