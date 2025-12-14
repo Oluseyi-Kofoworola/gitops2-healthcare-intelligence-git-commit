@@ -2,11 +2,21 @@
   "commit_type": "security",
   "scope": "phi",
   "description": "implement AES-256-GCM encryption for patient records",
-  "risk_level": "HIGH",
+  "risk_level": "MEDIUM",
   "clinical_safety": "NO_CLINICAL_IMPACT",
-  "compliance_domains": ["HIPAA", "FDA-21-CFR-11"],
+  "compliance_domains": [
+    "HIPAA",
+    "FDA-21-CFR-11"
+  ],
   "phi_impact": "DIRECT",
-  "business_impact": "Enables HIPAA-compliant data encryption at rest",
-  "files_modified": 1,
-  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  "business_impact": "Enables HIPAA-compliant data storage",
+  "timestamp": "2025-12-14T20:33:34Z",
+  "hipaa_requirements": [
+    "164.312(a)(2)(iv)"
+  ],
+  "approvers": [
+    "security-team",
+    "compliance-officer"
+  ],
+  "files_modified": 1
 }

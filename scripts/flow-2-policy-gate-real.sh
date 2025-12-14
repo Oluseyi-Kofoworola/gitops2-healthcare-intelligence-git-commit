@@ -31,10 +31,6 @@ echo ""
 require_cmd opa jq python3 git
 require_git_repo
 
-# Check prerequisites
-require_cmd opa jq python3 git
-require_git_repo
-
 # Demo workspace to avoid overwriting real code
 DEMO_WORKSPACE="demo_workspace"
 mkdir -p "$DEMO_WORKSPACE"
@@ -105,51 +101,49 @@ func EncryptPHI(plaintext []byte, key []byte) ([]byte, error) {
 }
 EOF
 
-git add .gitops/commit_metadata.json services/phi-service/internal/security/encryption.go 2>/dev/null || true
+git add .gitops/commit_metadata.json "$DEMO_WORKSPACE/services/phi-service/internal/security/encryption_demo.go" 2>/dev/null || true
 
 echo "Running OPA policy validation..."
 echo ""
 
-# Create test input for OPA
-cat > /tmp/opa_test_input.json << EOF
-{
-  "commit": {
-    "message": "security(phi): implement AES-256-GCM encryption for patient records",
-    "metadata": $(cat .gitops/commit_metadata.json)
-  }
-}
-EOF
+# Create test input for OPA using mktemp variable
+jq -n \
+  --arg message "security(phi): implement AES-256-GCM encryption for patient records" \
+  --argjson metadata "$(cat .gitops/commit_metadata.json)" \
+  '{commit: {message: $message, metadata: $metadata}}' > "$OPA_INPUT"
 
 # Test against HIPAA metadata policy
 echo "📋 Checking HIPAA metadata requirements..."
-opa eval -d policies/healthcare/commit_metadata_required.rego \
-         -i /tmp/opa_test_input.json \
-         'data.healthcare.commit_metadata.deny' > /tmp/opa_result.json
+opa eval --format=json \
+         -d policies/healthcare/commit_metadata_required.rego \
+         -i "$OPA_INPUT" \
+         'data.healthcare.metadata.deny' > "$OPA_RESULT"
 
-if [ "$(cat /tmp/opa_result.json | jq -r '.result[0].expressions[0].value')" == "null" ] || \
-   [ "$(cat /tmp/opa_result.json | jq -r '.result[0].expressions[0].value | length')" == "0" ]; then
-    print_success "✓ HIPAA metadata present"
-else
-    print_error "✗ HIPAA metadata validation failed"
-    cat /tmp/opa_result.json | jq -r '.result[0].expressions[0].value[]'
-fi
+HIPAA_VIOLATIONS=$(opa_deny_len "$OPA_RESULT")
+print_policy_result "HIPAA metadata requirements" "$HIPAA_VIOLATIONS" "$OPA_RESULT"
 
 # Test against PHI impact policy
 echo "📋 Checking PHI impact requirements..."
-opa eval -d policies/healthcare/hipaa_phi_required.rego \
-         -i /tmp/opa_test_input.json \
-         'data.healthcare.phi_impact.deny' > /tmp/opa_result.json
+opa eval --format=json \
+         -d policies/healthcare/hipaa_phi_required.rego \
+         -i "$OPA_INPUT" \
+         'data.healthcare.hipaa.deny' > "$OPA_RESULT"
 
-if [ "$(cat /tmp/opa_result.json | jq -r '.result[0].expressions[0].value')" == "null" ] || \
-   [ "$(cat /tmp/opa_result.json | jq -r '.result[0].expressions[0].value | length')" == "0" ]; then
-    print_success "✓ PHI impact level specified"
+PHI_VIOLATIONS=$(opa_deny_len "$OPA_RESULT")
+print_policy_result "PHI impact requirements" "$PHI_VIOLATIONS" "$OPA_RESULT"
+
+# Exit if any violations in enforcement mode
+TOTAL_VIOLATIONS=$((HIPAA_VIOLATIONS + PHI_VIOLATIONS))
+if [ "$TOTAL_VIOLATIONS" -gt 0 ]; then
+    echo ""
+    print_error "Policy gate would BLOCK this commit in CI/CD"
+    if [ "${ENFORCEMENT_MODE:-false}" = "true" ]; then
+        exit 1
+    fi
 else
-    print_error "✗ PHI impact validation failed"
-    cat /tmp/opa_result.json | jq -r '.result[0].expressions[0].value[]'
+    echo ""
+    print_success "All policy checks passed!"
 fi
-
-echo ""
-print_success "All policy checks passed!"
 
 # Calculate real risk score
 echo ""
@@ -160,16 +154,16 @@ echo ""
 
 python3 tools/git_intel/risk_scorer.py score \
     --metadata .gitops/commit_metadata.json \
-    --output /tmp/risk_assessment.json
+    --output "$RISK_OUT"
 
-cat /tmp/risk_assessment.json | jq '.'
+cat "$RISK_OUT" | jq '.'
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 # Test 2: Non-compliant commit
-read -p "Press ENTER to see a NON-COMPLIANT commit example..."
+interactive_prompt "Press ENTER to see a NON-COMPLIANT commit example..."
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -186,29 +180,34 @@ cat > .gitops/commit_metadata.json << 'EOF'
 }
 EOF
 
-cat > /tmp/opa_test_input.json << EOF
-{
-  "commit": {
-    "message": "fix(phi): update patient handler",
-    "metadata": $(cat .gitops/commit_metadata.json)
-  }
-}
-EOF
+# Create test input using mktemp variable
+jq -n \
+  --arg message "fix(phi): update patient handler" \
+  --argjson metadata "$(cat .gitops/commit_metadata.json)" \
+  '{commit: {message: $message, metadata: $metadata}}' > "$OPA_INPUT"
 
 echo "Running OPA policy validation..."
 echo ""
 
 # This should FAIL
-opa eval -d policies/healthcare/commit_metadata_required.rego \
-         -i /tmp/opa_test_input.json \
-         'data.healthcare.commit_metadata.deny' > /tmp/opa_result.json
+opa eval --format=json \
+         -d policies/healthcare/commit_metadata_required.rego \
+         -i "$OPA_INPUT" \
+         'data.healthcare.metadata.deny' > "$OPA_RESULT"
 
-VIOLATIONS=$(cat /tmp/opa_result.json | jq -r '.result[0].expressions[0].value | length')
+VIOLATIONS=$(opa_deny_len "$OPA_RESULT")
 if [ "$VIOLATIONS" -gt 0 ]; then
     print_error "Policy violations detected:"
-    cat /tmp/opa_result.json | jq -r '.result[0].expressions[0].value[]' | while read line; do
+    jq -r '(.result[0].expressions[0].value // [])[]' "$OPA_RESULT" 2>/dev/null | while read -r line; do
         echo "  ❌ $line"
     done
+    
+    # In enforcement mode, exit with error
+    if [ "${ENFORCEMENT_MODE:-false}" = "true" ]; then
+        echo ""
+        print_error "BLOCKING: Cannot proceed with policy violations in enforcement mode"
+        exit 1
+    fi
 else
     echo "  ✓ No violations (unexpected)"
 fi
