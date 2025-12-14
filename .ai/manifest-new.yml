@@ -1,0 +1,99 @@
+---
+# AI Governance Manifest v0.9 (Draft)
+# Generated: 2025-12-11T01:04:01.469357Z
+# Specification: https://github.com/gitops-ai/manifest-spec
+
+version: "0.9"
+
+project:
+  name: "Healthcare GitOps 2.0"
+  type: "healthcare"
+  description: "AI-powered healthcare platform with governance automation"
+  compliance_frameworks:
+    - HIPAA
+    - FDA-21-CFR-Part-11
+    - SOX
+
+ai_governance:
+  risk_tier: "high"
+
+  ai_usage:
+    - purpose: "commit_generation"
+      model: "gpt-4o"
+      data_access: "metadata_only"
+      approved: false
+      approved_by: ""
+      approved_date: ""
+
+    - purpose: "incident_analysis"
+      model: "gpt-4o"
+      data_access: "metadata_only"
+      approved: false
+      approved_by: ""
+      approved_date: ""
+
+    - purpose: "compliance_check"
+      model: "gpt-4o"
+      data_access: "metadata_only"
+      approved: false
+      approved_by: ""
+      approved_date: ""
+
+  human_oversight:
+    required: true
+    reviewers:
+      - "@security-team"
+      - "@compliance-team"
+    approval_threshold: 1
+
+  audit_trail:
+    retention_days: 2555  # 7 years for HIPAA/SOX
+    storage_location: "audit-logs/"
+
+data_classification:
+  phi_sensitive_paths:
+    - services/phi-service/**
+    - services/patient-data/**
+    - services/ehr-integration/**
+
+  pii_sensitive_paths:
+    - "services/user-service/**"
+    - "services/auth-service/**"
+
+  financial_data_paths:
+    - "services/payment-gateway/**"
+    - "services/billing/**"
+
+  encryption:
+    at_rest: true
+    in_transit: true
+    algorithm: "AES-256"
+
+# NIST AI Risk Management Framework (AI RMF 1.0) Mappings
+nist_ai_rmf:
+  govern:
+    - "GOVERN-1.1"  # Policies and procedures
+    - "GOVERN-1.2"  # Roles and responsibilities
+    - "GOVERN-1.3"  # Legal requirements
+    - "GOVERN-4.1"  # Human oversight
+    - "GOVERN-5.1"  # Audit trails
+
+  map:
+    - "MAP-2.3"     # Data classification
+    - "MAP-3.3"     # Privacy risks
+
+  measure: []
+
+  manage:
+    - "MANAGE-1.1"  # Risk response
+    - "MANAGE-3.1"  # Continuous monitoring
+
+metadata:
+  created_date: "2025-12-11T01:04:01.469357Z"
+  last_updated: "2025-12-11T01:04:01.469357Z"
+  owner: "engineering-team"
+  contact: "security@example.com"
+  tags:
+    - "ai-governance"
+    - "healthcare"
+    - "compliance"

@@ -10,14 +10,14 @@ __author__ = "GitOps Health Team"
 __license__ = "MIT"
 
 from .risk import RiskScorer
-from .compliance import ComplianceAnalyzer
+from .compliance import ComplianceChecker
 from .bisect import IntelligentBisect
 from .commitgen import CommitGenerator
 from .sanitize import PHISanitizer
 
 __all__ = [
     "RiskScorer",
-    "ComplianceAnalyzer",
+    "ComplianceChecker",
     "IntelligentBisect",
     "CommitGenerator",
     "PHISanitizer",

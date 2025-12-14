@@ -4,6 +4,7 @@
 *.so
 *.dylib
 bin/
+!bin/.gitkeep
 dist/
 
 # Go
@@ -25,6 +26,8 @@ __pycache__/
 .venv/
 venv/
 ENV/
+.coverage
+htmlcov/
 
 # IDEs
 .vscode/
@@ -46,29 +49,14 @@ tmp/
 temp/
 *.tmp
 
-# Secrets and API Keys (CRITICAL - DO NOT COMMIT)
+# Environment variables
 .env
-.env.*
-*.key
-*.pem
-*.p12
-*.pfx
-secrets/
-secrets.*
-*_secrets.*
-openai_key.txt
-api_key.txt
-.openai_api_key
-OPENAI_API_KEY
+.env.local
+.env.*.local
 
-# Incident Reports (May contain sensitive data)
-incident_report_*.json
-incident_report_*.md
-
-# GitOps Configuration (May contain secrets)
-.gitops/config.json
-config/**/production*.yml
-config/**/production*.yaml
+# Azure credentials
+.env.cosmos
+.azure/
 
 # Node
 node_modules/
@@ -77,6 +65,12 @@ package-lock.json
 # Reports
 reports/
 *.json.bak
+
+# Archive (deleted during cleanup)
+archive/
+
+# Deprecated files
+*.deprecated
 
 # Secrets
 *.key
