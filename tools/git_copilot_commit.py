@@ -357,7 +357,7 @@ AI Model: fallback-template
             print(message)
             print("="*80)
             print("\nTo commit, run:")
-            print(f'  git commit -m """{message}"""')
+            print(f'  git commit -m "{message}"')
             print("\nOr use --auto-commit flag for automatic commit")
 
 
