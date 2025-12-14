@@ -31,3 +31,58 @@ print_warning() {
 print_info() {
     echo -e "${BLUE}ℹ️  $1${NC}"
 }
+
+# Check for required commands
+require_cmd() {
+    for cmd in "$@"; do
+        if ! command -v "$cmd" &> /dev/null; then
+            print_error "Required command not found: $cmd"
+            case "$cmd" in
+                opa) echo "  Install with: brew install opa" ;;
+                jq) echo "  Install with: brew install jq" ;;
+                python3) echo "  Install with: brew install python3" ;;
+                git) echo "  Install with: brew install git" ;;
+            esac
+            exit 1
+        fi
+    done
+}
+
+# Check if inside git repository
+require_git_repo() {
+    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        print_error "Not inside a git repository"
+        exit 1
+    fi
+}
+
+# Get OPA deny violations length safely
+opa_deny_len() {
+    local result_file="$1"
+    jq -r '(.result[0].expressions[0].value // []) | length' "$result_file"
+}
+
+# Print OPA policy result
+print_policy_result() {
+    local policy_name="$1"
+    local violations="$2"
+    local result_file="$3"
+    
+    if [ "$violations" -eq 0 ]; then
+        print_success "✓ $policy_name"
+        return 0
+    else
+        print_error "✗ $policy_name - $violations violation(s)"
+        jq -r '(.result[0].expressions[0].value // [])[]' "$result_file" 2>/dev/null | while read -r line; do
+            echo "    → $line"
+        done
+        return 1
+    fi
+}
+
+# Interactive prompt that respects CI mode
+interactive_prompt() {
+    if [ "${CI:-}" != "true" ] && [ "${NON_INTERACTIVE:-}" != "true" ]; then
+        read -r -p "$1"
+    fi
+}

@@ -2,9 +2,21 @@
 # Flow 2: Policy-as-Code Enforcement (REAL VERSION)
 # This validates actual commits against real OPA policies
 
-set -e
+set -euo pipefail
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
+
+# Setup cleanup for temporary files
+cleanup() {
+    rm -f "$OPA_INPUT" "$OPA_RESULT" "$RISK_OUT"
+}
+
+# Create temp files
+OPA_INPUT=$(mktemp)
+OPA_RESULT=$(mktemp)
+RISK_OUT=$(mktemp)
+trap cleanup EXIT
 
 print_header "Flow 2: Policy-as-Code Enforcement (Live Demo)"
 
@@ -15,11 +27,17 @@ echo "  3. Calculate real risk score"
 echo "  4. Determine deployment strategy"
 echo ""
 
-# Check if OPA is installed
-if ! command -v opa &> /dev/null; then
-    print_error "OPA not found. Install with: brew install opa"
-    exit 1
-fi
+# Check prerequisites
+require_cmd opa jq python3 git
+require_git_repo
+
+# Check prerequisites
+require_cmd opa jq python3 git
+require_git_repo
+
+# Demo workspace to avoid overwriting real code
+DEMO_WORKSPACE="demo_workspace"
+mkdir -p "$DEMO_WORKSPACE"
 
 # Test 1: Compliant commit
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -27,28 +45,30 @@ echo "Test 1: Creating COMPLIANT commit with proper metadata"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Create commit metadata
+# Create commit metadata using jq for proper JSON generation
 mkdir -p .gitops
-cat > .gitops/commit_metadata.json << 'EOF'
-{
-  "commit_type": "security",
-  "scope": "phi",
-  "description": "implement AES-256-GCM encryption for patient records",
-  "risk_level": "MEDIUM",
-  "clinical_safety": "NO_CLINICAL_IMPACT",
-  "compliance_domains": ["HIPAA", "FDA-21-CFR-11"],
-  "phi_impact": "DIRECT",
-  "business_impact": "Enables HIPAA-compliant data storage",
-  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-  "hipaa_requirements": ["164.312(a)(2)(iv)"],
-  "approvers": ["security-team", "compliance-officer"],
-  "files_modified": 1
-}
-EOF
+jq -n \
+  --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  '{
+    commit_type: "security",
+    scope: "phi",
+    description: "implement AES-256-GCM encryption for patient records",
+    risk_level: "MEDIUM",
+    clinical_safety: "NO_CLINICAL_IMPACT",
+    compliance_domains: ["HIPAA", "FDA-21-CFR-11"],
+    phi_impact: "DIRECT",
+    business_impact: "Enables HIPAA-compliant data storage",
+    timestamp: $timestamp,
+    hipaa_requirements: ["164.312(a)(2)(iv)"],
+    approvers: ["security-team", "compliance-officer"],
+    files_modified: 1
+  }' > .gitops/commit_metadata.json
 
-# Create actual code change
-mkdir -p services/phi-service/internal/security
-cat > services/phi-service/internal/security/encryption.go << 'EOF'
+print_success "Generated commit metadata with timestamp: $(jq -r '.timestamp' .gitops/commit_metadata.json)"
+
+# Create actual code change in demo workspace
+mkdir -p "$DEMO_WORKSPACE/services/phi-service/internal/security"
+cat > "$DEMO_WORKSPACE/services/phi-service/internal/security/encryption_demo.go" << 'EOF'
 package security
 
 import (
