@@ -49,6 +49,11 @@ tmp/
 temp/
 *.tmp
 
+# Demo artifacts (generated during testing)
+demo_workspace/
+incident_report_*.json
+incident_report_*.md
+
 # Environment variables
 .env
 .env.local
