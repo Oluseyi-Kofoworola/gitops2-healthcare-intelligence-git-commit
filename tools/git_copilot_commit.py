@@ -272,6 +272,18 @@ Generate the commit message now following the exact format specified."""
             )
 
             commit_message = response.choices[0].message.content.strip()
+            
+            # Remove markdown code block formatting if present
+            # Handle various markdown formats: ```plaintext, ```, etc.
+            if commit_message.startswith("```plaintext"):
+                commit_message = commit_message[len("```plaintext"):].lstrip('\n')
+            elif commit_message.startswith("```"):
+                commit_message = commit_message[3:].lstrip('\n')
+            
+            if commit_message.endswith("```"):
+                commit_message = commit_message[:-3].rstrip('\n')
+            
+            commit_message = commit_message.strip()
 
             # Inject actual metadata
             commit_message = commit_message.replace("<risk_level>", risk_level)
