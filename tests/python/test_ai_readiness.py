@@ -6,7 +6,7 @@ Tests PHI compliance scanning, encryption checks, and AI prompt safety.
 
 import pytest
 from pathlib import Path
-from src.ai_readiness.cli import (
+from gitops_ai.readiness.cli import (
     check_phi_logging,
     check_encryption_at_rest,
     check_ai_prompt_safety,

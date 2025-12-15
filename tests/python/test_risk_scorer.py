@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from gitops_health.risk import RiskScorer, DeploymentStrategy
+from gitops_health.risk import RiskScorer, RiskScore
 
 
 class TestRiskScorer:
@@ -57,15 +57,14 @@ class TestRiskScorer:
         scorer = RiskScorer(repo_path=temp_repo)
         
         # Low risk - should recommend STANDARD
-        # (We'll use the initial commit from temp_repo fixture)
-        result = scorer.analyze_commit("HEAD")
+        # (We'll use the initial commit from temp_repo fixture)        result = scorer.analyze_commit("HEAD")
         
         # Should have a deployment strategy
         assert "deployment_strategy" in result
         assert result["deployment_strategy"] in [
-            DeploymentStrategy.STANDARD,
-            DeploymentStrategy.CANARY,
-            DeploymentStrategy.BLUE_GREEN
+            "STANDARD",
+            "CANARY",
+            "BLUE_GREEN"
         ]
     
     @pytest.mark.slow
@@ -116,8 +115,7 @@ class TestDeploymentStrategy:
     def test_low_risk_standard_deployment(self, temp_repo):
         """Test low risk commits get STANDARD deployment."""
         scorer = RiskScorer(repo_path=temp_repo)
-        
-        # Simple documentation change
+          # Simple documentation change
         readme = temp_repo / "README.md"
         readme.write_text("# Updated README\n")
         
@@ -134,7 +132,7 @@ class TestDeploymentStrategy:
         
         # Documentation changes should be low risk
         assert result["risk_level"] == "LOW"
-        assert result["deployment_strategy"] == DeploymentStrategy.STANDARD
+        assert result["deployment_strategy"] == "STANDARD"
     
     def test_high_risk_blue_green_deployment(self, temp_repo):
         """Test high risk commits get BLUE_GREEN deployment."""
@@ -143,8 +141,7 @@ class TestDeploymentStrategy:
         # Large change to critical service
         payment_service = temp_repo / "services" / "payment-gateway" / "handler.go"
         payment_service.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Create a large change
+          # Create a large change
         large_code = "package main\n\n" + "\n".join([
             f"func Handler{i}() {{}}" for i in range(100)
         ])
@@ -164,8 +161,8 @@ class TestDeploymentStrategy:
         # Should be high risk due to critical path + large change
         assert result["risk_level"] in ["HIGH", "CRITICAL"]
         assert result["deployment_strategy"] in [
-            DeploymentStrategy.CANARY,
-            DeploymentStrategy.BLUE_GREEN
+            "CANARY",
+            "BLUE_GREEN"
         ]
 
 

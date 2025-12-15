@@ -5,7 +5,7 @@ Tests Conventional Commits validation, tier-based rules, and healthcare complian
 """
 
 import pytest
-from src.git_policy.cli import validate_commit_message
+from gitops_ai.policy.cli import validate_commit_message
 
 
 class TestConventionalCommits:
