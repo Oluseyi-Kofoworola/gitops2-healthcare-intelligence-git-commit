@@ -89,31 +89,31 @@ Query Performance:
 
 ### System Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│   GitOps 2.0 Healthcare Intelligence Platform       │
-│                                                      │
-│   ┌──────────────────┐    ┌──────────────────┐    │
-│   │ git_copilot_     │───▶│ azure_cosmos_    │    │
-│   │ commit.py        │    │ store.py         │    │
-│   └──────────────────┘    └─────────┬────────┘    │
-│                                      │              │
-└──────────────────────────────────────┼──────────────┘
-                                       │
-                                       ▼
-┌─────────────────────────────────────────────────────┐
-│   Azure Cosmos DB for NoSQL                         │
-│                                                      │
-│   Database: gitops-healthcare                       │
-│   Container: commits                                │
-│   Partition: [/tenantId, /commitDate]               │
-│   TTL: 190,512,000 seconds (7 years)               │
-│                                                      │
-│   ┌─────────────┐         ┌─────────────┐         │
-│   │  East US    │◀───────▶│ West Europe │         │
-│   │  (Primary)  │         │  (Failover) │         │
-│   └─────────────┘         └─────────────┘         │
-└─────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph GITOPS[GitOps 2.0 Healthcare Intelligence Platform]
+        COMMIT[git_copilot_commit.py]
+        STORE[azure_cosmos_store.py]
+        COMMIT --> STORE
+    end
+    
+    subgraph COSMOS[Azure Cosmos DB for NoSQL]
+        DB[Database: gitops-healthcare<br/>Container: commits<br/>Partition: /tenantId, /commitDate<br/>TTL: 7 years]
+        
+        subgraph REGIONS[Multi-Region Setup]
+            PRIMARY[East US<br/>Primary]
+            SECONDARY[West Europe<br/>Failover]
+            PRIMARY <--> SECONDARY
+        end
+        
+        DB --> REGIONS
+    end
+    
+    STORE --> COSMOS
+    
+    style GITOPS fill:#e1f5ff
+    style COSMOS fill:#d4edda
+    style REGIONS fill:#fff3cd
 ```
 
 ---

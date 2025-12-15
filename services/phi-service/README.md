@@ -395,80 +395,60 @@ curl http://localhost:8083/health
 
 ### Encryption Flow
 
-```
-┌─────────────┐
-│   Client    │
-└──────┬──────┘
-       │ POST /api/v1/encrypt
-       │ {"data": "PHI"}
-       ▼
-┌─────────────────────────┐
-│  Tracing Middleware     │
-│  (OpenTelemetry)        │
-└──────────┬──────────────┘
-           │
-           ▼
-┌─────────────────────────┐
-│  Logging Middleware     │
-│  (Zerolog)              │
-└──────────┬──────────────┘
-           │
-           ▼
-┌─────────────────────────┐
-│  Prometheus Middleware  │
-│  (Metrics Collection)   │
-└──────────┬──────────────┘
-           │
-           ▼
-┌─────────────────────────┐
-│  Encrypt Handler        │
-│  - Validate input       │
-│  - Call EncryptService  │
-└──────────┬──────────────┘
-           │
-           ▼
-┌─────────────────────────┐
-│  EncryptionService      │
-│  - Generate salt        │
-│  - Derive key (PBKDF2)  │
-│  - Encrypt (AES-256-GCM)│
-│  - Encode (Base64)      │
-└──────────┬──────────────┘
-           │
-           ▼
-┌─────────────────────────┐
-│  Response               │
-│  {"encrypted_data":...} │
-└─────────────────────────┘
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Tracing as Tracing Middleware<br/>(OpenTelemetry)
+    participant Logging as Logging Middleware<br/>(Zerolog)
+    participant Prometheus as Prometheus Middleware<br/>(Metrics)
+    participant Handler as Encrypt Handler
+    participant Service as EncryptionService<br/>(AES-256-GCM)
+    
+    Client->>Tracing: POST /api/v1/encrypt<br/>{"data": "PHI"}
+    Tracing->>Logging: Pass request
+    Logging->>Prometheus: Pass request
+    Prometheus->>Handler: Pass request
+    Handler->>Handler: Validate input
+    Handler->>Service: Call EncryptService
+    Service->>Service: Generate salt
+    Service->>Service: Derive key (PBKDF2)
+    Service->>Service: Encrypt (AES-256-GCM)
+    Service->>Service: Encode (Base64)
+    Service-->>Handler: Encrypted data
+    Handler-->>Client: {"encrypted_data": "..."}
 ```
 
 ### Component Diagram
 
-```
-┌────────────────────────────────────────────┐
-│           PHI Service                      │
-│                                            │
-│  ┌──────────────┐    ┌─────────────────┐  │
-│  │   HTTP       │───▶│  Encryption     │  │
-│  │   Server     │    │  Service        │  │
-│  │  (chi/v5)    │    │  (AES-256-GCM)  │  │
-│  └──────┬───────┘    └─────────────────┘  │
-│         │                                  │
-│  ┌──────▼──────────────────────────────┐  │
-│  │         Middleware Stack            │  │
-│  │  • Logging (zerolog)                │  │
-│  │  • Tracing (OpenTelemetry)          │  │
-│  │  • Metrics (Prometheus)             │  │
-│  │  • CORS                             │  │
-│  └─────────────────────────────────────┘  │
-│                                            │
-│  ┌─────────────────────────────────────┐  │
-│  │      Observability Exports          │  │
-│  │  • Traces → OTLP Collector          │  │
-│  │  • Metrics → Prometheus             │  │
-│  │  • Logs → stdout (JSON)             │  │
-│  └─────────────────────────────────────┘  │
-└────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph PHI[PHI Service]
+        HTTP[HTTP Server<br/>chi/v5]
+        ENC[Encryption Service<br/>AES-256-GCM]
+        
+        HTTP --> ENC
+        
+        subgraph MW[Middleware Stack]
+            LOG[Logging - zerolog]
+            TRACE[Tracing - OpenTelemetry]
+            MET[Metrics - Prometheus]
+            CORS[CORS]
+        end
+        
+        HTTP --> MW
+        
+        subgraph OBS[Observability Exports]
+            OTLP[Traces → OTLP Collector]
+            PROM[Metrics → Prometheus]
+            STDOUT[Logs → stdout JSON]
+        end
+        
+        MW --> OBS
+    end
+    
+    style PHI fill:#e1f5ff
+    style MW fill:#fff3cd
+    style OBS fill:#d4edda
 ```
 
 ## 🔒 Security & Compliance
