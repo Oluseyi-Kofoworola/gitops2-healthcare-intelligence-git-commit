@@ -187,7 +187,7 @@ jobs:
           done
       
       - name: Upload binaries
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: production-binaries-${{ github.sha }}
           path: bin/
@@ -299,7 +299,7 @@ jobs:
           echo "✅ Compliance evidence generated"
       
       - name: Upload compliance evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: compliance-evidence-${{ github.sha }}
           path: compliance-evidence/
