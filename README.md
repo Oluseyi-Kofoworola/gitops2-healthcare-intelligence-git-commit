@@ -15,18 +15,13 @@
 
 ---
 
-## 🚀 New Here? [START HERE](START_HERE.md) for a 5-minute overview!
-
----
-
 ## 📚 Documentation
 
 | Document | Purpose |
 |----------|---------|
 | **[Getting Started](docs/GETTING_STARTED.md)** | 30-minute hands-on walkthrough |
 | **[Quick Reference](docs/QUICK_REFERENCE.md)** | Command cheatsheet & API guide |
-| **[Implementation Status](docs/IMPLEMENTATION_STATUS.md)** | Full GitOps 2.0 implementation details |
-| **[Migration Guide](docs/MIGRATION_GUIDE.md)** | Upgrade from GitOps 1.5 to 2.0 |
+| **[Azure Cosmos DB](docs/COSMOS_DB.md)** | Database integration guide |
 | [Contributing](CONTRIBUTING.md) | How to contribute to this project |
 | [Security Policy](SECURITY.md) | Vulnerability reporting & security practices |
 
@@ -205,15 +200,16 @@ python tools/git_intelligent_bisect.py --incident-type performance
 
 ## Documentation
 
-### Essential Guides
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Production deployment (Kubernetes, cloud platforms)
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development workflow, PR process
-- **[COMPLIANCE.md](COMPLIANCE.md)** - HIPAA/FDA/SOX frameworks reference
+### Detailed Guides
+- **[Getting Started](docs/GETTING_STARTED.md)** - 30-minute hands-on walkthrough
+- **[Quick Reference](docs/QUICK_REFERENCE.md)** - Command cheatsheet
+- **[Azure Cosmos DB](docs/COSMOS_DB.md)** - Database integration
 
-### Quick References
-- **[START_HERE.md](START_HERE.md)** - 5-minute interactive demo
-- **[tools/README.md](tools/README.md)** - AI tools CLI reference
-- **[policies/healthcare/README.md](policies/healthcare/README.md)** - OPA policy guide
+### Additional Resources
+- **[Contributing](CONTRIBUTING.md)** - Development workflow, PR process
+- **[Security Policy](SECURITY.md)** - Vulnerability reporting
+- **[Tools README](tools/README.md)** - AI tools CLI reference
+- **[OPA Policies](policies/healthcare/README.md)** - Policy guide
 
 ---
 
@@ -327,7 +323,7 @@ MIT License - see [LICENSE](LICENSE)
 
 <div align="center">
 
-**[Quick Start](START_HERE.md)** • **[Deploy](DEPLOYMENT.md)** • **[Contribute](CONTRIBUTING.md)** • **[Compliance](COMPLIANCE.md)**
+**[Getting Started](docs/GETTING_STARTED.md)** • **[Quick Reference](docs/QUICK_REFERENCE.md)** • **[Contributing](CONTRIBUTING.md)**
 
 Made for healthcare engineering teams
 
