@@ -44,13 +44,31 @@
 | [Contributing](CONTRIBUTING.md) | How to contribute to this project |
 | [Security Policy](SECURITY.md) | Vulnerability reporting & security practices |
 
+## 🔒 Security First
+
+**Before running the demo:**
+1. Copy `.env.example` to `.env`
+2. Add your OpenAI API key (get it from https://platform.openai.com/api-keys)
+3. **Never commit `.env` to Git** (already in `.gitignore`)
+
+```bash
+cp .env.example .env
+# Edit .env and add your OPENAI_API_KEY
+```
+
 ## Quick Start
 
 ```bash
 # Clone and run interactive demo (all features tested and working)
 git clone https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit.git
 cd gitops2-healthcare-intelligence-git-commit
-./setup.sh && ./GITOPS_2_0_DEMO.sh
+
+# Setup environment
+cp .env.example .env
+# Edit .env and add your OPENAI_API_KEY
+
+# Run demo
+./setup.sh && ./DEMO.sh
 ```
 
 **What This Demo Does** (Real Code, Not Simulation):
@@ -294,7 +312,7 @@ python tools/git_intelligent_bisect.py --incident-type performance
 ├── scripts/                  # Demo workflows
 │   ├── flow-2-policy-gate-real.sh   # OPA validation (✅ 9.2/10 evaluation)
 │   ├── common.sh                     # Helper functions (✅ tested)
-│   └── GITOPS_2_0_DEMO.sh           # Interactive demo (✅ all features working)
+│   └── DEMO.sh           # Interactive demo (✅ all features working)
 ├── policies/healthcare/      # OPA policies (✅ validated)
 │   ├── metadata.rego                # Commit metadata validation
 │   ├── hipaa.rego                   # HIPAA compliance rules
@@ -352,7 +370,7 @@ pytest tests/python/test_git_policy.py -v    # Git policy tests
 pytest tests/python/test_risk_scorer.py -v   # Risk scoring
 
 # Run complete interactive demo (all features)
-./GITOPS_2_0_DEMO.sh
+./DEMO.sh
 ```
 
 **Test Results**:

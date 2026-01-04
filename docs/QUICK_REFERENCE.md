@@ -29,7 +29,7 @@ export OPENAI_API_KEY="sk-..."
 
 ```bash
 # All 3 features (5-10 minutes)
-./GITOPS_2_0_DEMO.sh
+./DEMO.sh
 
 # Quick validation (30 seconds)
 ./QUICK_TEST.sh
@@ -248,7 +248,7 @@ git clean -fd
 
 ### Key Files
 - **AI Tools**: `tools/git_copilot_commit.py`, `tools/git_intelligent_bisect.py`
-- **Scripts**: `scripts/flow-2-policy-gate-real.sh`, `GITOPS_2_0_DEMO.sh`
+- **Scripts**: `scripts/flow-2-policy-gate-real.sh`, `DEMO.sh`
 - **Policies**: `policies/healthcare/*.rego`
 - **Tests**: `tests/python/test_*.py`
 
@@ -353,7 +353,7 @@ git log --oneline | wc -l
 
 ### For Developers (5 minutes)
 1. Read this Quick Start Guide
-2. Run `./GITOPS_2_0_DEMO.sh`
+2. Run `./DEMO.sh`
 3. Generate your first AI commit
 
 ### For DevOps Engineers (15 minutes)
@@ -372,7 +372,7 @@ git log --oneline | wc -l
 
 - [ ] OpenAI API key configured in `.env`
 - [ ] Dependencies installed (`pip install -r requirements.txt`)
-- [ ] Demo script runs successfully (`./GITOPS_2_0_DEMO.sh`)
+- [ ] Demo script runs successfully (`./DEMO.sh`)
 - [ ] AI commit generation works (test with sample change)
 - [ ] Risk-adaptive pipeline YAML validates
 - [ ] Incident response tool executes
