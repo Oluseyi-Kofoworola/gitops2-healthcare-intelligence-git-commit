@@ -21,7 +21,7 @@
 |----------|---------|
 | **[Getting Started](docs/GETTING_STARTED.md)** | 30-minute hands-on walkthrough |
 | **[Quick Reference](docs/QUICK_REFERENCE.md)** | Command cheatsheet & API guide |
-| **[Azure Cosmos DB](docs/COSMOS_DB.md)** | Database integration guide |
+| **[Azure Cosmos DB](docs/AZURE_COSMOS_DB.md)** | Database integration guide |
 | [Contributing](CONTRIBUTING.md) | How to contribute to this project |
 | [Security Policy](SECURITY.md) | Vulnerability reporting & security practices |
 
