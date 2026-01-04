@@ -194,13 +194,11 @@ Audit Trail: Implements §164.312(a)(2)(i) technical safeguards
 - **Secret Detection**: Prevents PHI/PII leaks (70% false positive reduction)
 - **Policy Enforcement**: 12+ OPA policies validate commits in real-time
 
-### 🏥 Production Microservices (5)
+### 🏥 Production Microservices (3)
 ```
 auth-service         → JWT + RBAC authentication
 payment-gateway      → SOX-compliant transactions
 phi-service          → AES-256-GCM HIPAA encryption
-medical-device       → FDA 21 CFR Part 11 compliance
-synthetic-phi        → HIPAA-compliant test data
 ```
 
 ### 🧪 Enterprise Testing

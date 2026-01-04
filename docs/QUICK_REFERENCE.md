@@ -272,7 +272,6 @@ MODEL=gpt-4o  # Optional: default model
 risk_patterns:
   CRITICAL:
     - services/phi-service/**
-    - services/medical-device/**
   HIGH:
     - services/payment-gateway/**
     - services/auth-service/**
@@ -282,7 +281,6 @@ compliance_mapping:
     - services/phi-service/**
     - **/*phi*
   FDA:
-    - services/medical-device/**
 ```
 
 ### `.github/workflows/risk-adaptive-cicd.yml` - Pipeline

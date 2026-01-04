@@ -17,8 +17,6 @@ data_classification:
   phi_sensitive_paths:
     - "services/phi-service/**"
     - "services/ehr-auth-service/**"
-    - "services/medical-device/**"
-    - "tools/synthetic_phi_generator.py"
     - "tests/integration/phi_*.py"
   
   pii_paths:
@@ -91,7 +89,6 @@ business_domains:
   
   medical_devices:
     paths:
-      - "services/medical-device/**"
     owners: ["@device-team"]
     compliance: ["FDA-21-CFR-Part-11", "IEC-62304"]
 

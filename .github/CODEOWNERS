@@ -27,10 +27,6 @@ pyproject.toml @Oluseyi-Kofoworola
 
 # PHI service - requires compliance review
 /services/phi-service/ @Oluseyi-Kofoworola
-/services/synthetic-phi-service/ @Oluseyi-Kofoworola
-
-# Medical device - requires regulatory review
-/services/medical-device/ @Oluseyi-Kofoworola
 
 # === COMPLIANCE & SECURITY ===
 /policies/ @Oluseyi-Kofoworola

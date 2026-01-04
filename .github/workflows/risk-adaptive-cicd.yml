@@ -178,7 +178,7 @@ jobs:
           echo "Building healthcare microservices..."
           mkdir -p bin
           
-          for service in auth-service payment-gateway phi-service medical-device synthetic-phi-service; do
+          for service in auth-service payment-gateway phi-service; do
             echo "Building $service..."
             cd services/$service
             go build -v -o ../../bin/$service . || exit 1

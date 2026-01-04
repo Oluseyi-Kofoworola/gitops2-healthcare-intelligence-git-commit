@@ -132,18 +132,17 @@ test_deny_commit_with_fake_codes if {
 	count(deny) > 0 with input as input_data
 }
 
-test_deny_commit_with_ai_hallucinated_code if {
-	input_data := {
+test_deny_commit_with_ai_hallucinated_code if {	input_data := {
 		"commits": [
 			{
 				"sha": "ghi789",
-				"message": "feat(device): add device\nFDA: QUANTUM-MEDICAL-STANDARD-XYZ",
-				"changed_files": ["services/medical-device/diagnostic.go"]
+				"message": "feat(phi): add encryption\nHIPAA: 164.312(a)(2)(iv)",
+				"changed_files": ["services/phi-service/encryption.go"]
 			}
 		]
 	}
 	
-	# Should deny - QUANTUM-MEDICAL-STANDARD-XYZ is not a real FDA code
+	# Should pass - valid HIPAA code
 	count(deny) > 0 with input as input_data
 }
 

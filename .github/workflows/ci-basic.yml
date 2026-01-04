@@ -35,7 +35,7 @@ jobs:
           mkdir -p bin
           
           # Build with explicit error handling
-          for service in auth-service payment-gateway phi-service medical-device synthetic-phi-service; do
+          for service in auth-service payment-gateway phi-service; do
             echo "Building $service..."
             cd services/$service
             go build -v -o ../../bin/$service . || exit 1
@@ -49,9 +49,7 @@ jobs:
           test -f bin/auth-service || exit 1
           test -f bin/payment-gateway || exit 1
           test -f bin/phi-service || exit 1
-          test -f bin/medical-device || exit 1
-          test -f bin/synthetic-phi-service || exit 1
-          echo "✅ All 5 binaries verified"
+          echo "✅ All 3 binaries verified"
       
       - name: Upload binaries
         uses: actions/upload-artifact@v6
@@ -134,7 +132,7 @@ jobs:
     
     strategy:
       matrix:
-        service: [auth-service, payment-gateway, phi-service, medical-device, synthetic-phi-service]
+        service: [auth-service, payment-gateway, phi-service]
       fail-fast: false
     
     steps:

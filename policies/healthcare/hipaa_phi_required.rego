@@ -48,7 +48,7 @@ phi_related(commit) if {
 }
 
 phi_related(commit) if {
-    phi_paths := ["services/phi-service/", "services/medical-device/", "services/patient-"]
+    phi_paths := ["services/phi-service/", "services/patient-"]
     some path in phi_paths
     some file in commit.changed_files
     startswith(file, path)

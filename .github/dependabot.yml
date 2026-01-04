@@ -12,8 +12,7 @@ updates:
       - "dependencies"
       - "payment-gateway"
       - "high-risk"
-  
-  # Authentication Service (HIPAA-compliant, high-risk)
+    # Authentication Service (HIPAA-compliant, high-risk)
   - package-ecosystem: "gomod"
     directory: "/services/auth-service"
     schedule:
@@ -24,9 +23,9 @@ updates:
       - "auth-service"
       - "high-risk"
   
-  # Synthetic PHI Service (HIPAA-compliant, healthcare data)
+  # PHI Service (HIPAA-compliant, healthcare data)
   - package-ecosystem: "gomod"
-    directory: "/services/synthetic-phi-service"
+    directory: "/services/phi-service"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5

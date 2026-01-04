@@ -56,8 +56,6 @@ jobs:
           - auth-service
           - payment-gateway
           - phi-service
-          - medical-device
-          - synthetic-phi-service
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
