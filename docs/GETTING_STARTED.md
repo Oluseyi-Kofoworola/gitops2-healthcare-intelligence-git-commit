@@ -39,13 +39,13 @@
 
 ### Verify Installation
 
-\`\`\`bash
+```bash
 # Check all prerequisites
 go version      # Should show 1.24 or higher
 python3 --version  # Should show 3.11 or higher
 git --version   # Should show 2.40 or higher
 docker --version   # Should show 24.0 or higher
-\`\`\`
+```
 
 ---
 
@@ -53,7 +53,7 @@ docker --version   # Should show 24.0 or higher
 
 ### System Architecture
 
-\`\`\`mermaid
+```mermaid
 graph TB
     subgraph "Client Layer"
         CLI[Developer CLI]
@@ -119,11 +119,11 @@ graph TB
     class AUTH,PAY,PHI service
     class COSMOS,REDIS data
     class PROM,OTEL obs
-\`\`\`
+```
 
 ### Service Communication Flow
 
-\`\`\`mermaid
+```mermaid
 sequenceDiagram
     participant Dev as Developer
     participant AI as AI Commit Gen
@@ -153,7 +153,7 @@ sequenceDiagram
         PHI-->>Auth: Success response
         Auth-->>Dev: ✅ Commit successful
     end
-\`\`\`
+```
 
 ---
 
@@ -161,17 +161,17 @@ sequenceDiagram
 
 ### 1. Clone Repository
 
-\`\`\`bash
+```bash
 git clone https://github.com/Oluseyi-Kofoworola/gitops2-healthcare-intelligence-git-commit.git
 cd gitops2-healthcare-intelligence-git-commit
-\`\`\`
+```
 
 ### 2. Run Setup Script
 
-\`\`\`bash
+```bash
 # Automated setup (installs dependencies, builds services, configures environment)
 ./setup.sh
-\`\`\`
+```
 
 **What \`setup.sh\` Does:**
 - ✅ Installs Python dependencies (\`requirements.txt\`)
@@ -193,7 +193,7 @@ cd gitops2-healthcare-intelligence-git-commit
    - Copy the key (starts with \`sk-...\`)
 
 2. **Set Environment Variable**:
-   \`\`\`bash
+   ```bash
    # Option 1: Export for current session
    export OPENAI_API_KEY='sk-your-actual-api-key-here'
    
@@ -203,34 +203,34 @@ cd gitops2-healthcare-intelligence-git-commit
    # Option 3: Add to shell profile (global)
    echo "export OPENAI_API_KEY='sk-your-actual-api-key-here'" >> ~/.bashrc
    source ~/.bashrc
-   \`\`\`
+   ```
 
 3. **Verify Configuration**:
-   \`\`\`bash
+   ```bash
    # Should output your API key
    echo $OPENAI_API_KEY
-   \`\`\`
+   ```
 
 #### Azure Cosmos DB (Optional - for production)
 
-\`\`\`bash
+```bash
 # Add to .env file
 AZURE_COSMOS_ENDPOINT='https://your-account.documents.azure.com:443/'
 AZURE_COSMOS_KEY='your-primary-key-here'
 AZURE_COSMOS_DATABASE='healthcare_demo'
-\`\`\`
+```
 
 </details>
 
 ### 4. Verify Installation
 
-\`\`\`bash
+```bash
 # Run quick test suite (5 passing tests)
 ./QUICK_TEST.sh
-\`\`\`
+```
 
 **Expected Output:**
-\`\`\`
+```
 ✅ Policy validation test passed
 ✅ AI commit generation test passed
 ✅ Intelligent bisect test passed
@@ -238,7 +238,7 @@ AZURE_COSMOS_DATABASE='healthcare_demo'
 ✅ Integration test passed
 
 🎉 All systems operational!
-\`\`\`
+```
 
 ---
 
@@ -250,7 +250,7 @@ AZURE_COSMOS_DATABASE='healthcare_demo'
 
 #### Flow Diagram
 
-\`\`\`mermaid
+```mermaid
 flowchart LR
     A[Developer makes<br/>code changes] --> B{Run AI<br/>Commit Tool}
     B --> C[Analyze code diff]
@@ -269,31 +269,31 @@ flowchart LR
     style A fill:#E8F5E9
     style K fill:#C8E6C9,stroke:#2E7D32,stroke-width:3px
     style L fill:#FFCDD2,stroke:#C62828,stroke-width:3px
-\`\`\`
+```
 
 #### Step-by-Step Guide
 
 **Step 1: Make Code Changes**
-\`\`\`bash
+```bash
 # Example: Add MFA to auth service
 cd services/auth-service
 # Edit main.go to add MFA middleware
-\`\`\`
+```
 
 **Step 2: Run AI Commit Generator**
-\`\`\`bash
+```bash
 # Interactive mode with intelligent analysis
 python tools/git_copilot_commit.py --analyze
 
 # Or specify service context
 python tools/git_copilot_commit.py --service auth-service --analyze
-\`\`\`
+```
 
 **Step 3: Review Generated Commit**
 
 The tool generates a structured commit message like:
 
-\`\`\`
+```
 feat(auth-service): implement MFA for PHI access endpoints
 
 Add multi-factor authentication requirement for all endpoints
@@ -313,16 +313,16 @@ Changes:
 
 Audit Trail: Implements §164.312(a)(2)(i) technical safeguards
 Risk Score: 8/10 (high-risk change requires dual approval)
-\`\`\`
+```
 
 **Step 4: Commit Changes**
-\`\`\`bash
+```bash
 # Option 1: Use the generated message
 git commit -m "$(python tools/git_copilot_commit.py --generate-only)"
 
 # Option 2: Let the tool commit automatically
 python tools/git_copilot_commit.py --auto-commit
-\`\`\`
+```
 
 #### Real-World Results
 
@@ -340,7 +340,7 @@ python tools/git_copilot_commit.py --auto-commit
 
 #### Policy Decision Flow
 
-\`\`\`mermaid
+```mermaid
 flowchart TB
     START[Commit Submitted] --> EXTRACT[Extract Metadata<br/>Service, PHI-Impact, Safety]
     EXTRACT --> HIPAA{HIPAA<br/>Policy Check}
@@ -376,7 +376,7 @@ flowchart TB
     style FAIL2 fill:#FFCDD2,stroke:#C62828,stroke-width:2px
     style FAIL3 fill:#FFCDD2,stroke:#C62828,stroke-width:2px
     style APPROVE fill:#A5D6A7,stroke:#1B5E20,stroke-width:3px
-\`\`\`
+```
 
 ---
 
@@ -388,7 +388,7 @@ flowchart TB
 **Cause**: OpenAI API key not configured in environment.
 
 **Solution**:
-\`\`\`bash
+```bash
 # Check if key is set
 echo $OPENAI_API_KEY
 
@@ -398,7 +398,7 @@ export OPENAI_API_KEY='sk-your-actual-api-key-here'
 # Or add to .env file:
 echo "OPENAI_API_KEY='sk-your-actual-api-key-here'" >> .env
 source .env
-\`\`\`
+```
 
 </details>
 
