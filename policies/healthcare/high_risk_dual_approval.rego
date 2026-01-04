@@ -99,10 +99,10 @@ medical_device_change(commit) if {
 }
 
 medical_device_change(commit) if {
-    # No device paths check needed - service removed
-    some path in device_paths
+    # Check if changes involve medical device service
+    device_path := "services/medical-device/"
     some file in commit.changed_files
-    startswith(file, path)
+    startswith(file, device_path)
 }
 
 # Deny rules with specific guidance
