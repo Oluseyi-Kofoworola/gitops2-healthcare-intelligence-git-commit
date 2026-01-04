@@ -22,25 +22,10 @@ scrape_configs:
       - targets: ['payment-gateway:8081']
     metrics_path: '/metrics'
     scrape_interval: 5s
-
   # PHI Service
   - job_name: 'phi-service'
     static_configs:
       - targets: ['phi-service:8083']
-    metrics_path: '/metrics'
-    scrape_interval: 5s
-
-  # Medical Device Service
-  - job_name: 'medical-device'
-    static_configs:
-      - targets: ['medical-device:8084']
-    metrics_path: '/metrics'
-    scrape_interval: 5s
-
-  # Synthetic PHI Service
-  - job_name: 'synthetic-phi'
-    static_configs:
-      - targets: ['synthetic-phi:8085']
     metrics_path: '/metrics'
     scrape_interval: 5s
 

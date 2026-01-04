@@ -1,9 +1,10 @@
-go 1.22
+go 1.24.0
+
+toolchain go1.24.3
 
 use (
 	./services/auth-service
-	./services/medical-device
+	./services/common
 	./services/payment-gateway
 	./services/phi-service
-	./services/synthetic-phi-service
 )

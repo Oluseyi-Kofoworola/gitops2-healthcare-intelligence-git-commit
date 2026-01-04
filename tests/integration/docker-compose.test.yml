@@ -1,5 +1,5 @@
 # Docker Compose - Integration Test Environment
-# Runs all 5 microservices locally for integration testing
+# Runs all 3 microservices locally for integration testing
 
 version: '3.8'
 
@@ -76,7 +76,6 @@ services:
       - otel-collector
     networks:
       - test-network
-
   # PHI Service
   phi-service:
     build:
@@ -92,51 +91,6 @@ services:
       - "8083:8083"
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:8083/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    depends_on:
-      - otel-collector
-    networks:
-      - test-network
-
-  # Medical Device Service
-  medical-device:
-    build:
-      context: ./services/medical-device
-      dockerfile: Dockerfile
-    environment:
-      - PORT=8084
-      - OTLP_ENDPOINT=otel-collector:4317
-      - LOG_LEVEL=debug
-      - ENV=integration
-      - ENABLE_SIMULATOR=true
-    ports:
-      - "8084:8084"
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:8084/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    depends_on:
-      - otel-collector
-    networks:
-      - test-network
-
-  # Synthetic PHI Service
-  synthetic-phi:
-    build:
-      context: ./services/synthetic-phi-service
-      dockerfile: Dockerfile
-    environment:
-      - PORT=8085
-      - OTLP_ENDPOINT=otel-collector:4317
-      - LOG_LEVEL=debug
-      - ENV=integration
-    ports:
-      - "8085:8085"
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:8085/health"]
       interval: 10s
       timeout: 5s
       retries: 3

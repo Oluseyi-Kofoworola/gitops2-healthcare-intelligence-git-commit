@@ -55,7 +55,6 @@ scopes:
 risk_patterns:
   CRITICAL:
     - "services/phi-service/**"
-    - "services/medical-device/**"
     - "services/auth-service/internal/jwt/**"
     - "**/*encryption*"
     - "**/*phi*"
@@ -77,10 +76,6 @@ risk_patterns:
 # Clinical Safety Assessment
 # Determines patient impact level
 clinical_safety_rules:
-  REQUIRES_CLINICAL_REVIEW:
-    - "services/medical-device/**"
-    - "**/*diagnostic*"
-    - "**/*clinical-decision*"
   CLINICAL_VALIDATION_NEEDED:
     - "services/phi-service/**"
     - "**/*patient*"
@@ -99,11 +94,6 @@ compliance_mapping:
     - "**/*phi*"
     - "**/*patient*"
     - "**/*encryption*"
-  FDA:
-    - "services/medical-device/**"
-    - "**/*device*"
-    - "**/*diagnostic*"
-    - "**/*510k*"
   SOX:
     - "services/payment-gateway/**"
     - "**/*financial*"

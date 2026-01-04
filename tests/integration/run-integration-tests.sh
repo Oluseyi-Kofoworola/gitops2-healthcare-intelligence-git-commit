@@ -80,8 +80,6 @@ services=(
     "services/auth-service"
     "services/payment-gateway"
     "services/phi-service"
-    "services/medical-device"
-    "services/synthetic-phi-service"
 )
 
 for service in "${services[@]}"; do

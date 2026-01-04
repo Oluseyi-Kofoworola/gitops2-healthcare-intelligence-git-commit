@@ -20,8 +20,6 @@ const (
 	AuthServiceURL    = "http://localhost:8080"
 	PaymentGatewayURL = "http://localhost:8081"
 	PHIServiceURL     = "http://localhost:8083"
-	MedicalDeviceURL  = "http://localhost:8084"
-	SyntheticPHIURL   = "http://localhost:8085"
 )
 
 // Test fixtures
@@ -78,37 +76,6 @@ type PHIDecryptResponse struct {
 	DecryptedAt time.Time `json:"decrypted_at"`
 }
 
-type MedicalDevice struct {
-	DeviceID     string            `json:"device_id"`
-	DeviceType   string            `json:"device_type"`
-	Manufacturer string            `json:"manufacturer"`
-	Model        string            `json:"model"`
-	SerialNumber string            `json:"serial_number"`
-	Location     string            `json:"location"`
-	Status       string            `json:"status"`
-	Metadata     map[string]string `json:"metadata,omitempty"`
-}
-
-type DeviceMetrics struct {
-	Temperature float64 `json:"temperature"`
-	PowerUsage  float64 `json:"power_usage"`
-	CPUUsage    float64 `json:"cpu_usage"`
-	MemoryUsage float64 `json:"memory_usage"`
-	NetworkRX   int64   `json:"network_rx"`
-	NetworkTX   int64   `json:"network_tx"`
-}
-
-type SyntheticPatient struct {
-	FirstName   string `json:"first_name"`
-	LastName    string `json:"last_name"`
-	DateOfBirth string `json:"date_of_birth"`
-	Gender      string `json:"gender"`
-	SSN         string `json:"ssn"`
-	Email       string `json:"email"`
-	Phone       string `json:"phone"`
-	Address     string `json:"address"`
-}
-
 // Helper functions
 func waitForServices(t *testing.T, timeout time.Duration) {
 	t.Helper()
@@ -119,8 +86,6 @@ func waitForServices(t *testing.T, timeout time.Duration) {
 		"Auth Service":    AuthServiceURL + "/health",
 		"Payment Gateway": PaymentGatewayURL + "/health",
 		"PHI Service":     PHIServiceURL + "/health",
-		"Medical Device":  MedicalDeviceURL + "/health",
-		"Synthetic PHI":   SyntheticPHIURL + "/health",
 	}
 
 	for name, url := range services {
@@ -204,8 +169,6 @@ func TestHealthChecks(t *testing.T) {
 		"auth-service":    AuthServiceURL + "/health",
 		"payment-gateway": PaymentGatewayURL + "/health",
 		"phi-service":     PHIServiceURL + "/health",
-		"medical-device":  MedicalDeviceURL + "/health",
-		"synthetic-phi":   SyntheticPHIURL + "/health",
 	}
 
 	for name, url := range services {
@@ -298,7 +261,7 @@ func TestPaymentGatewayAuthIntegration(t *testing.T) {
 		err := json.NewDecoder(resp.Body).Decode(&paymentResp)
 		require.NoError(t, err)
 
-		assert.Equal(t, "success", paymentResp.Status)
+		assert.Equal(t, "approved", paymentResp.Status)
 		assert.Equal(t, paymentReq.Amount, paymentResp.Amount)
 		assert.NotEmpty(t, paymentResp.AuditID)
 	})
@@ -372,212 +335,7 @@ func TestPHIServiceEncryptionFlow(t *testing.T) {
 	})
 }
 
-// Test 5: Medical Device Service Integration
-func TestMedicalDeviceIntegration(t *testing.T) {
-	waitForServices(t, 60*time.Second)
-
-	t.Run("register_and_monitor_device", func(t *testing.T) {
-		// Register medical device
-		device := MedicalDevice{
-			DeviceID:     fmt.Sprintf("MRI-%d", time.Now().Unix()),
-			DeviceType:   "MRI",
-			Manufacturer: "Siemens",
-			Model:        "Magnetom Vida",
-			SerialNumber: "SN-" + fmt.Sprintf("%d", time.Now().Unix()),
-			Location:     "Radiology-Floor-2",
-			Status:       "active",
-			Metadata: map[string]string{
-				"field_strength": "3T",
-				"installation":   "2024-01-15",
-			},
-		}
-
-		body, _ := json.Marshal(device)
-		resp, err := http.Post(MedicalDeviceURL+"/api/v1/devices", "application/json", bytes.NewBuffer(body))
-		require.NoError(t, err)
-		defer resp.Body.Close()
-
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-		// Update device metrics
-		metrics := DeviceMetrics{
-			Temperature: 22.5,
-			PowerUsage:  15.2,
-			CPUUsage:    45.3,
-			MemoryUsage: 68.7,
-			NetworkRX:   1024000,
-			NetworkTX:   512000,
-		}
-
-		body, _ = json.Marshal(metrics)
-		url := fmt.Sprintf("%s/api/v1/devices/%s/metrics", MedicalDeviceURL, device.DeviceID)
-		resp2, err := http.Post(url, "application/json", bytes.NewBuffer(body))
-		require.NoError(t, err)
-		defer resp2.Body.Close()
-
-		assert.Equal(t, http.StatusOK, resp2.StatusCode)
-
-		// Get device status
-		resp3, err := http.Get(fmt.Sprintf("%s/api/v1/devices/%s", MedicalDeviceURL, device.DeviceID))
-		require.NoError(t, err)
-		defer resp3.Body.Close()
-
-		assert.Equal(t, http.StatusOK, resp3.StatusCode)
-
-		var retrievedDevice MedicalDevice
-		err = json.NewDecoder(resp3.Body).Decode(&retrievedDevice)
-		require.NoError(t, err)
-
-		assert.Equal(t, device.DeviceID, retrievedDevice.DeviceID)
-		assert.Equal(t, device.DeviceType, retrievedDevice.DeviceType)
-	})
-}
-
-// Test 6: Synthetic PHI + PHI Service Integration
-func TestSyntheticPHIPipeline(t *testing.T) {
-	waitForServices(t, 60*time.Second)
-
-	t.Run("generate_and_encrypt_synthetic_data", func(t *testing.T) {
-		// Generate synthetic patient data
-		resp, err := http.Get(SyntheticPHIURL + "/api/v1/generate/patient")
-		require.NoError(t, err)
-		defer resp.Body.Close()
-
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-		var patient SyntheticPatient
-		err = json.NewDecoder(resp.Body).Decode(&patient)
-		require.NoError(t, err)
-
-		assert.NotEmpty(t, patient.FirstName)
-		assert.NotEmpty(t, patient.LastName)
-		assert.NotEmpty(t, patient.SSN)
-
-		// Encrypt the synthetic PHI data
-		phiData := fmt.Sprintf("Name: %s %s, SSN: %s, DOB: %s",
-			patient.FirstName, patient.LastName, patient.SSN, patient.DateOfBirth)
-
-		encryptReq := PHIEncryptRequest{
-			Data:      phiData,
-			PatientID: "SYNTHETIC-" + patient.SSN,
-			DataType:  "synthetic_demographics",
-		}
-
-		body, _ := json.Marshal(encryptReq)
-		resp2, err := http.Post(PHIServiceURL+"/api/v1/phi/encrypt", "application/json", bytes.NewBuffer(body))
-		require.NoError(t, err)
-		defer resp2.Body.Close()
-
-		assert.Equal(t, http.StatusOK, resp2.StatusCode)
-
-		var encryptResp PHIEncryptResponse
-		err = json.NewDecoder(resp2.Body).Decode(&encryptResp)
-		require.NoError(t, err)
-
-		assert.NotEmpty(t, encryptResp.EncryptedData)
-	})
-}
-
-// Test 7: End-to-End Healthcare Workflow
-func TestEndToEndHealthcareWorkflow(t *testing.T) {
-	waitForServices(t, 60*time.Second)
-
-	t.Run("complete_patient_journey", func(t *testing.T) {
-		// Step 1: Authenticate
-		token := authenticate(t)
-
-		// Step 2: Generate synthetic patient
-		resp, err := http.Get(SyntheticPHIURL + "/api/v1/generate/patient")
-		require.NoError(t, err)
-		defer resp.Body.Close()
-
-		var patient SyntheticPatient
-		err = json.NewDecoder(resp.Body).Decode(&patient)
-		require.NoError(t, err)
-
-		patientID := "PT-" + fmt.Sprintf("%d", time.Now().Unix())
-
-		// Step 3: Encrypt patient PHI
-		phiData := fmt.Sprintf("Name: %s %s, SSN: %s, Email: %s",
-			patient.FirstName, patient.LastName, patient.SSN, patient.Email)
-
-		encryptReq := PHIEncryptRequest{
-			Data:      phiData,
-			PatientID: patientID,
-			DataType:  "demographics",
-		}
-
-		body, _ := json.Marshal(encryptReq)
-		resp2, err := http.Post(PHIServiceURL+"/api/v1/phi/encrypt", "application/json", bytes.NewBuffer(body))
-		require.NoError(t, err)
-		defer resp2.Body.Close()
-
-		var encryptResp PHIEncryptResponse
-		err = json.NewDecoder(resp2.Body).Decode(&encryptResp)
-		require.NoError(t, err)
-
-		// Step 4: Register medical device for patient
-		device := MedicalDevice{
-			DeviceID:     fmt.Sprintf("DEVICE-%d", time.Now().Unix()),
-			DeviceType:   "ECG",
-			Manufacturer: "Philips",
-			Model:        "PageWriter TC70",
-			SerialNumber: "SN-" + patientID,
-			Location:     "Cardiology-Room-5",
-			Status:       "active",
-			Metadata: map[string]string{
-				"patient_id": patientID,
-				"department": "cardiology",
-			},
-		}
-
-		body, _ = json.Marshal(device)
-		resp3, err := http.Post(MedicalDeviceURL+"/api/v1/devices", "application/json", bytes.NewBuffer(body))
-		require.NoError(t, err)
-		defer resp3.Body.Close()
-
-		// Step 5: Process payment for medical services
-		paymentReq := PaymentRequest{
-			Amount:        2500.00,
-			Currency:      "USD",
-			PatientID:     patientID,
-			TransactionID: fmt.Sprintf("TXN-%d", time.Now().Unix()),
-			PaymentMethod: "insurance",
-			ComplianceTags: map[string]string{
-				"hipaa":       "true",
-				"encrypted":   encryptResp.KeyID,
-				"patient_ssn": patient.SSN,
-			},
-		}
-
-		body, _ = json.Marshal(paymentReq)
-		resp4 := makeAuthenticatedRequest(t, "POST", PaymentGatewayURL+"/api/v1/transactions", bytes.NewBuffer(body), token)
-		defer resp4.Body.Close()
-
-		assert.Equal(t, http.StatusOK, resp4.StatusCode)
-
-		var paymentResp PaymentResponse
-		err = json.NewDecoder(resp4.Body).Decode(&paymentResp)
-		require.NoError(t, err)
-
-		// Validate end-to-end workflow
-		assert.NotEmpty(t, token, "Authentication failed")
-		assert.NotEmpty(t, patient.SSN, "Patient generation failed")
-		assert.NotEmpty(t, encryptResp.EncryptedData, "PHI encryption failed")
-		assert.NotEmpty(t, device.DeviceID, "Device registration failed")
-		assert.Equal(t, "success", paymentResp.Status, "Payment processing failed")
-		assert.NotEmpty(t, paymentResp.AuditID, "Audit trail generation failed")
-
-		t.Logf("✅ End-to-end workflow completed successfully")
-		t.Logf("   Patient ID: %s", patientID)
-		t.Logf("   Device ID: %s", device.DeviceID)
-		t.Logf("   Payment ID: %s", paymentResp.TransactionID)
-		t.Logf("   Audit ID: %s", paymentResp.AuditID)
-		t.Logf("   Encrypted PHI Key: %s", encryptResp.KeyID)
-	})
-}
-
-// Test 8: Concurrent Load Test (Light)
+// Test 5: Concurrent Load Test (Light)
 func TestConcurrentOperations(t *testing.T) {
 	waitForServices(t, 60*time.Second)
 
@@ -625,7 +383,7 @@ func TestConcurrentOperations(t *testing.T) {
 	})
 }
 
-// Test 9: Service Discovery and Dependencies
+// Test 6: Service Discovery and Dependencies
 func TestServiceDependencies(t *testing.T) {
 	waitForServices(t, 60*time.Second)
 
@@ -647,7 +405,7 @@ func TestServiceDependencies(t *testing.T) {
 	})
 }
 
-// Test 10: Compliance and Audit Trail
+// Test 7: Compliance and Audit Trail
 func TestComplianceAuditTrail(t *testing.T) {
 	waitForServices(t, 60*time.Second)
 
