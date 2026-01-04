@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/healthcare-gitops/common/config"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -25,11 +26,10 @@ var (
 func main() {
 	// Initialize structured logging
 	initLogging()
-
 	log.Info().Msg("Starting PHI Encryption Service...")
 
 	// Load configuration from environment
-	port := getEnv("PORT", "8083")
+	port := config.GetEnv("PORT", "8083")
 	masterKey := os.Getenv("MASTER_KEY")
 	if masterKey == "" {
 		log.Fatal().Msg("MASTER_KEY environment variable is required (must be 32 bytes for AES-256)")
@@ -150,14 +150,7 @@ func initLogging() {
 	}
 }
 
-// getEnv retrieves environment variable with default value
-func getEnv(key, defaultValue string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue
-	}
-	return value
-}
+
 
 // HealthHandler handles health check endpoint
 func HealthHandler(w http.ResponseWriter, r *http.Request) {

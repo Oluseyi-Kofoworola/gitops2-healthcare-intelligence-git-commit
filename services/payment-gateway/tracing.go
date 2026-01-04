@@ -1,17 +1,18 @@
 package main
 
 import (
-	"context"
 
+	"context"
+	"github.com/healthcare-gitops/common/config"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 )
 
 // InitTracerProvider initializes OpenTelemetry tracer provider
@@ -32,7 +33,7 @@ func InitTracerProvider(serviceName, otlpEndpoint string) (*sdktrace.TracerProvi
 		resource.WithAttributes(
 			semconv.ServiceName(serviceName),
 			semconv.ServiceVersion("1.0.0"),
-			attribute.String("environment", getEnv("ENVIRONMENT", "production")),
+			attribute.String("environment", config.GetEnv("ENVIRONMENT", "production")),
 			attribute.String("compliance", "hipaa,fda,sox"),
 		),
 	)
