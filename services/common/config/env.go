@@ -23,7 +23,7 @@ func GetEnvInt(key string, defaultValue int) int {
 	if valueStr == "" {
 		return defaultValue
 	}
-	
+
 	value, err := strconv.Atoi(valueStr)
 	if err != nil {
 		return defaultValue
@@ -38,7 +38,7 @@ func GetEnvBool(key string, defaultValue bool) bool {
 	if valueStr == "" {
 		return defaultValue
 	}
-	
+
 	value, err := strconv.ParseBool(valueStr)
 	if err != nil {
 		return defaultValue
