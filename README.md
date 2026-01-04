@@ -2,16 +2,35 @@
 ## AI-Native Engineering Revolution for Healthcare
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Compliance](https://img.shields.io/badge/HIPAA%20%7C%20FDA%20%7C%20SOX-Compliant-green)](#compliance)
+[![Educational](https://img.shields.io/badge/Purpose-Educational%20%26%20Demo-blue)](#disclaimer)
 [![GitOps 2.0](https://img.shields.io/badge/GitOps-2.0%20AI--Native-purple)](GITOPS_2_0_IMPLEMENTATION.md)
-[![Go 1.23+](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev/)
+[![Go 1.24+](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go)](https://go.dev/)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python)](https://python.org/)
 
-**The future of healthcare engineering**: AI-powered commit generation, risk-adaptive pipelines, and intelligent incident response. Make compliance your competitive advantage.
+**Educational demonstration** of AI-powered commit generation, risk-adaptive pipelines, and intelligent incident response for healthcare compliance workflows.
 
-> 🎯 **Status**: ✅ Tested & Working (86% test pass rate)
-> 📊 **Script Quality**: 9.2/10 (Enterprise evaluation)
-> 🏥 **Compliance**: HIPAA, FDA 21 CFR Part 11, SOX (mapped to actual code)
+> 📚 **Purpose**: Educational & demonstration platform  
+> 🎯 **Status**: Functional demo with working code examples  
+> 🏥 **Focus**: HIPAA, FDA 21 CFR Part 11, SOX compliance patterns
+
+---
+
+## ⚠️ Important Disclaimer
+
+**This is an educational and demonstration platform designed for learning purposes.**
+
+- ✅ **What This Is**: A fully functional demonstration of GitOps 2.0 concepts with working code
+- ✅ **What You Can Do**: Learn AI-assisted compliance patterns, run demos, explore architectures
+- ⚠️ **What This Is NOT**: Production-ready software or a certified compliance solution
+- ⚠️ **Usage**: For educational, research, and demonstration purposes only
+
+**Before Production Use**: This platform demonstrates concepts and patterns. Any production deployment requires:
+- Comprehensive security audits
+- Legal compliance review by qualified professionals
+- Thorough testing and validation for your specific use case
+- Proper certifications (SOC 2, HITRUST, etc.) as needed
+
+**No Warranties**: This software is provided "as is" under the MIT License without warranties of any kind.
 
 ---
 
@@ -141,14 +160,18 @@ Audit Trail: Implements §164.312(a)(2)(i) technical safeguards
    # Provides explanations without blocking commits
    ```
 
-### 📊 Real Results
+### 📊 Potential Benefits (Illustrative Examples)
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| **Time per commit** | 15 min | 30 sec | **-97%** |
-| **Compliance violations** | 12/month | 1/month | **-92%** |
-| **Audit prep time** | 5 days | 6 hours | **-88%** |
-| **Developer friction** | High | Near-zero | **✅** |
+> **Note**: These are hypothetical examples to illustrate potential time savings. Actual results will vary based on team size, workflow, and specific requirements.
+
+| Metric | Traditional Approach | With Automation | Potential Improvement |
+|--------|---------------------|-----------------|---------------------|
+| **Time per commit** | ~15 min (manual metadata) | ~30 sec (AI-generated) | **Estimated ~97% reduction** |
+| **Compliance checks** | Manual review required | Automated OPA validation | **Immediate feedback** |
+| **Audit preparation** | Days of manual gathering | Git history as audit trail | **Significantly faster** |
+| **Developer experience** | Context switching overhead | Integrated workflow | **Improved** |
+
+*These metrics are illustrative and for educational purposes. Your results may vary.*
 
 ### 🎯 Get Started
 

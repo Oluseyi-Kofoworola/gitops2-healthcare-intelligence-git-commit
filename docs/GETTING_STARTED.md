@@ -5,6 +5,22 @@
 > **🎯 Outcome**: Fully functional GitOps 2.0 demo environment with 3 production-grade microservices
 
 ---
+## Important Disclaimer
+
+**This is an educational and demonstration platform designed for learning purposes.**
+
+- **What This Is**: A fully functional demonstration of GitOps 2.0 concepts with working code examples
+- **What You Can Do**: Learn AI-assisted compliance patterns, run demos, explore architectures
+- **What This Is NOT**: Production-ready software or a certified compliance solution
+- **Usage**: For educational, research, and demonstration purposes only
+
+**Before Production Use**: This platform demonstrates concepts and patterns. Any production deployment requires comprehensive security audits, legal compliance review, thorough testing, and proper certifications.
+
+**No Warranties**: This software is provided "as is" under the MIT License without warranties of any kind.
+
+---
+
+
 
 ## 📋 Table of Contents
 
@@ -324,13 +340,15 @@ git commit -m "$(python tools/git_copilot_commit.py --generate-only)"
 python tools/git_copilot_commit.py --auto-commit
 ```
 
-#### Real-World Results
+#### Potential Benefits (Illustrative)
 
-| Metric | Before GitOps 2.0 | After GitOps 2.0 | Improvement |
-|--------|-------------------|------------------|-------------|
-| **Time per commit** | 15 minutes | 30 seconds | **-97%** |
-| **Compliance violations** | 12/month | 1/month | **-92%** |
-| **Audit prep time** | 5 days | 6 hours | **-88%** |
+> **Educational Note**: These are hypothetical examples to demonstrate potential time savings. Actual results will vary based on your specific use case, team size, and implementation.
+
+| Metric | Traditional Approach | With Automation | Potential Improvement |
+|--------|---------------------|------------------|----------------------|
+| **Time per commit** | ~15 min (manual metadata entry) | ~30 sec (AI-generated) | **~97% time reduction** |
+| **Compliance violations** | ~12/month (manual tracking) | ~1/month (automated checks) | **~92% reduction** |
+| **Audit prep time** | ~5 days (manual documentation) | ~6 hours (automated reports) | **~88% time savings** |
 
 ---
 
