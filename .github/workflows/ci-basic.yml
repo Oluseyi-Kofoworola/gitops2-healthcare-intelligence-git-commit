@@ -151,7 +151,7 @@ jobs:
       
       - name: Upload coverage (if token exists)
         if: success() && env.CODECOV_TOKEN != ''
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: ./services/${{ matrix.service }}/coverage.out
           flags: ${{ matrix.service }}
