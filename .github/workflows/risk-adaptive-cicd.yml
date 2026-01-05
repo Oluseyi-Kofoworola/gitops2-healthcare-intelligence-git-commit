@@ -57,6 +57,23 @@ jobs:
         with:
           fetch-depth: 2  # Need parent commit for diff
       
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Calculate Risk Score with AI
+        id: risk_scorer
+        run: |
+          #!/bin/bash
+          set -e
+          
+          echo "🤖 Calculating risk score using AI-powered analysis..."
+          python tools/git_intel/risk_scorer.py --format github
+          
+          # Capture outputs for workflow
+          echo "Risk scoring complete"
+      
       - name: Parse commit metadata
         id: parse
         run: |
@@ -69,10 +86,20 @@ jobs:
           echo "📋 Analyzing commit message..."
           echo "$COMMIT_MSG"
           
-          # Extract Risk Level
+          # Use AI-calculated risk level if available, otherwise parse from commit
           if [[ "${{ github.event.inputs.force_risk_level }}" != "" && "${{ github.event.inputs.force_risk_level }}" != "AUTO" ]]; then
             RISK_LEVEL="${{ github.event.inputs.force_risk_level }}"
             echo "⚠️  Risk level overridden: $RISK_LEVEL"
+          elif [[ "${{ steps.risk_scorer.outputs.level }}" != "" ]]; then
+            # Use AI-calculated risk level
+            AI_LEVEL="${{ steps.risk_scorer.outputs.level }}"
+            case "$AI_LEVEL" in
+              high) RISK_LEVEL="HIGH" ;;
+              medium) RISK_LEVEL="MEDIUM" ;;
+              low) RISK_LEVEL="LOW" ;;
+              *) RISK_LEVEL="MEDIUM" ;;
+            esac
+            echo "🤖 AI-calculated risk level: $RISK_LEVEL (score: ${{ steps.risk_scorer.outputs.score }}/100)"
           elif echo "$COMMIT_MSG" | grep -q "Risk Level: CRITICAL"; then
             RISK_LEVEL="CRITICAL"
           elif echo "$COMMIT_MSG" | grep -q "Risk Level: HIGH"; then
